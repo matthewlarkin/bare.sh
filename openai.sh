@@ -14,19 +14,34 @@ OPENAI_API_KEY=$(printf '%q' "$OPENAI_API_KEY")
 if [ "$1" == "chat" ]; then
     # if $2 is 'help' then print help
     if [ "$2" == "help" ]; then
-        echo "🌿 chat <message> 👉 Returns the response as a string"
+        echo "🌿 chat <message> [model] 👉 Returns the response as a string"
         exit 0
     fi
     if [ -z "$2" ]; then
         echo "🚨 chat requires a message"
         exit 1
     fi
-    message=$(printf '%q' "$2")
+    # check for given model
+    if [ -z "$3" ]; then
+        model="gpt-3.5-turbo-0125"
+    else
+        model="$3"
+    fi
+    message="$2"
+    message_payload=$(jq -n --arg model "$model" --arg content "$message" '{
+        model: $model,
+        messages: [
+            {
+                role: "user",
+                content: $content
+            }
+        ]
+    }')
     curl "https://api.openai.com/v1/chat/completions" \
         --silent \
         -H "Content-Type: application/json" \
         -H "Authorization: Bearer $OPENAI_API_KEY" \
-        -d '{"model": "gpt-3.5-turbo","messages": [{"role": "user", "content": "'"$message"'"}]}' | jq -r '.choices[0].message.content'
+        -d "$message_payload" | jq -r '.choices[0].message.content'
 fi
 
 
@@ -45,22 +60,23 @@ if [ "$1" == "assistants.create" ]; then
         echo "🚨 assistants.create requires instructions"
         exit 1
     fi
-    name=$(printf '%q' "$2")
-    instructions=$(printf '%q' "$3")
-    model=$(printf '%q' "$4")
+    name="$2"
+    instructions="$3"
+    model="$4"
     if [ -z "$model" ]; then
         model="gpt-3.5-turbo-0125"
     fi
+    payload=$(jq -n --arg instructions "$instructions" --arg name "$name" --arg model "$model" '{
+        instructions: $instructions,
+        name: $name,
+        model: $model
+    }')
     curl "https://api.openai.com/v1/assistants" \
         --silent \
         -H "Content-Type: application/json" \
         -H "Authorization: Bearer $OPENAI_API_KEY" \
         -H "OpenAI-Beta: assistants=v1" \
-        -d "{
-            \"instructions\": \"$instructions\",
-            \"name\": \"$name\",
-            \"model\": \"$model\"
-        }" | jq -r '.id'
+        -d "$payload" | jq -r '.id'
 fi
         
 
@@ -76,20 +92,21 @@ if [ "$1" == "threads.create" ]; then
         echo "🚨 threads.create requires an initial message"
         exit 1
     fi
-    message=$(printf '%q' "$2")
+    initial_message="$2"
+    payload=$(jq -n --arg initial_message "$initial_message" '{
+        messages: [
+            {
+                role: "user",
+                content: $initial_message
+            }
+        ]
+    }')
     curl https://api.openai.com/v1/threads \
         --silent \
         -H "Authorization: Bearer $OPENAI_API_KEY" \
         -H 'Content-Type: application/json' \
         -H 'OpenAI-Beta: assistants=v1' \
-        -d "{
-            \"messages\": [
-                {
-                    \"role\": \"user\",
-                    \"content\": \"$message\"
-                }
-            ]
-        }" | jq -r '.id'
+        -d "$payload" | jq -r '.id'
 fi
 
 
@@ -113,15 +130,17 @@ if [ "$1" == "thread.messages.append" ]; then
         exit 1
     fi
     thread_id=$(printf '%q' "$2")
-    message=$(printf '%q' "$3")
+    message="$3"
+    payload=$(jq -n --arg role "user" --arg content "$message" '{
+        role: $role,
+        content: $content
+    }')
     curl https://api.openai.com/v1/threads/$thread_id/messages \
+        --silent \
         -H "Content-Type: application/json" \
         -H "Authorization: Bearer $OPENAI_API_KEY" \
         -H "OpenAI-Beta: assistants=v1" \
-        -d "{
-            \"role\": \"user\",
-            \"content\": \"$message\"
-        }" | jq -r '.id'
+        -d "$payload" | jq -r '.thread_id'
 fi
 
 
@@ -129,7 +148,7 @@ fi
 # Returns an array of messages
 if [ "$1" == "thread.messages.list" ]; then
     if [ "$2" == "help" ]; then
-        echo "🌿 thread.messages.list <thread_id> 👉 Returns an array of messages"
+        echo "🌿 thread.messages.list <thread_id> [limit '20'] 👉 Returns an array of messages"
         exit 0
     fi
     if [ -z "$2" ]; then
@@ -141,28 +160,36 @@ if [ "$1" == "thread.messages.list" ]; then
         exit 1
     fi
     thread_id=$(printf '%q' "$2")
-    message=$(printf '%q' "$2")
-    curl https://api.openai.com/v1/threads/$thread_id/messages \
+    if [ -z "$3" ]; then
+        limit=20
+    else
+        limit="$3"
+        if ! [[ $limit =~ ^[0-9]+$ ]]; then
+            echo "🚨 limit must be an integer"
+            exit 1
+        fi
+    fi
+    curl https://api.openai.com/v1/threads/$thread_id/messages?limit=$limit \
         --silent \
         -H "Authorization: Bearer $OPENAI_API_KEY" \
         -H 'Content-Type: application/json' \
-        -H 'OpenAI-Beta: assistants=v1' | jq -r '.data[] | {role: .role, message: .content[].text.value}'
+        -H 'OpenAI-Beta: assistants=v1' | jq  '{thread_id: .data[0].thread_id, messages: [.data[] | {role: .role, value: .content[0].text.value, created_at: .created_at}]}'
 fi
 
 
 # Create run with an assistant and thread
 # Returns the run_id
-if [ "$1" == "runs.create" ]; then
+if [ "$1" == "thread.runs.create" ]; then
     if [ "$2" == "help" ]; then
-        echo "🌿 runs.create <assistant_id> <thread_id> 👉 Returns the run_id as a string"
+        echo "🌿 thread.runs.create <assistant_id> <thread_id> 👉 Returns the run_id as a string"
         exit 0
     fi
     if [ -z "$2" ]; then
-        echo "🚨 runs.create requires an assistant_id"
+        echo "🚨 requires an assistant_id"
         exit 1
     fi
     if [ -z "$3" ]; then
-        echo "🚨 runs.create requires a thread_id"
+        echo "🚨 requires a thread_id"
         exit 1
     fi
     if [[ $2 == *" "* ]]; then
@@ -173,31 +200,33 @@ if [ "$1" == "runs.create" ]; then
         echo "🚨 thread_id cannot contain spaces"
         exit 1
     fi
-    assistant_id=$(printf '%q' "$2")
+    assistant_id="$2"
     thread_id=$(printf '%q' "$3")
+    payload=$(jq -n --arg assistant_id "$assistant_id" '{
+        assistant_id: $assistant_id
+    }')
     curl "https://api.openai.com/v1/threads/$thread_id/runs" \
+        --silent \
         -H "Authorization: Bearer $OPENAI_API_KEY" \
         -H 'Content-Type: application/json' \
         -H 'OpenAI-Beta: assistants=v1' \
-        -d "{
-            \"assistant_id\": \"$assistant_id\"
-        }" | jq
+        -d "$payload" | jq -r '.id'
 fi
 
 
 # Poll for completion of a run
-# If not complete, returns null, otherwise returns the thread_id
-if [ "$1" == "run.poll" ]; then
+# Returns an object { "thread_id": <string>, "run_id", <string>, "status": <string> [queued | completed] }
+if [ "$1" == "thread.run.poll" ]; then
     if [ "$2" == "help" ]; then
-        echo "🌿 run.poll <thread_id> <run_id> 👉 Returns the thread_id as a string"
+        echo "🌿 thread.run.poll <thread_id> <run_id> 👉 Returns an object with thread_id and status"
         exit 0
     fi
     if [ -z "$2" ]; then
-        echo "🚨 run.poll requires a thread_id"
+        echo "🚨 requires a thread_id"
         exit 1
     fi
     if [ -z "$3" ]; then
-        echo "🚨 run.poll requires a run_id"
+        echo "🚨 requires a run_id"
         exit 1
     fi
     if [[ $2 == *" "* ]]; then
@@ -211,6 +240,7 @@ if [ "$1" == "run.poll" ]; then
     thread_id=$(printf '%q' "$2")
     run_id=$(printf '%q' "$3")
     curl https://api.openai.com/v1/threads/$thread_id/runs/$run_id \
+        --silent \
         -H "Authorization: Bearer $OPENAI_API_KEY" \
-        -H "OpenAI-Beta: assistants=v1" | jq -r '.data | if .status == "completed" then .thread_id else null end'
+        -H "OpenAI-Beta: assistants=v1" | jq
 fi
