@@ -233,9 +233,9 @@ bash ./example.sh
 ```
 Output:
 ```plaintext
-✅ Assistant created: asst_mPzxldkzQKf9Cuj1ROySai94
-✅ Thread created: thread_xkKBONqV2gHlxe9Ne0G4X1df
-✅ Run created: run_S4QZtQ58qTIQC5HS9r4pUsVr
+✅ Assistant created: asst_xxxxxxxxxxxxx
+✅ Thread created: thread_xxxxxxxxxxxxx
+✅ Run created: run_xxxxxxxxxxxxx
 🔄 Polling for completion...
 🔄 🙄...
 🔄 👀
