@@ -30,7 +30,7 @@ chmod 700 openai.sh
 ```
 ```bash
 # download the file directly
-curl -O https://raw.githubusercontent.com/matthewlarkin/openai/main/openai.sh
+curl -O https://raw.githubusercontent.com/matthewlarkin/openai/root/openai.sh
 chmod 700 openai.sh
 ```
 
