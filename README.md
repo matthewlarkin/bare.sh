@@ -223,22 +223,23 @@ Automate polling for a run's completion and retrieve the latest message. In this
 # this from a datastore, but for the sake of this
 # example, we'll create them on the fly.
 assistant_id=$(./openai.sh assistants.create "Adventure Guide" "Helps plan adventure trips." | jq -r '.assistant_id')
-echo "✅ Assistant ID: $assistant_id"
+echo "✅ Assistant created: $assistant_id"
 thread_id=$(./openai.sh threads.create "Planning an adventure in the Rockies." | jq -r '.thread_id')
-echo "✅ Thread ID: $thread_id"
+echo "✅ Thread created: $thread_id"
 
 # Now that we have an assistant and a thread, we can run
 # the thread by the assistant and poll for completion.
 run_id=$(./openai.sh thread.run $thread_id $assistant_id | jq -r '.run_id')
-echo "✅ Run ID: $run_id"
+echo "✅ Run created: $run_id"
 status=$(./openai.sh thread.run.poll $thread_id $run_id | jq -r '.status')
 echo "🔄 Polling for completion..."
 
 # Polling...
 while [[ "$status" == "in_progress" || "$status" == "queued" ]]; do
     sleep 2 # Adjust polling interval as needed
-    echo "🔄 🙄..."
     status=$(./openai.sh thread.run.poll $thread_id $run_id | jq -r '.status')
+    [ "$status" == "in_progress" ] && echo "🔄 🙄..."
+    [ "$status" == "completed" ] && echo "🔄 👀"
 done
 
 # If we've reached this point, the run is completed.
@@ -246,7 +247,7 @@ done
 # thread_id and a limit of 1).
 if [[ "$status" == "completed" ]]; then
     echo "🎉 Run completed!"
-    echo("📜 Latest message: $(./openai.sh thread.messages.list $thread_id 1 | jq -r '.data[0].value')")
+    echo "🤖 ASSISTANT: $(./openai.sh thread.messages.list $thread_id 1 | jq -r '.messages[0].value')"
 fi
 ```
 Run the script and observe the output:
@@ -256,11 +257,12 @@ bash ./example.sh
 ```
 Output:
 ```plaintext
-☑️ Assistant ID: asst_xxxxxxxxxxxxx
-☑️ Thread ID: thrd_xxxxxxxxxxxxx
-☑️ Run ID: run_xxxxxxxxxxxxx
+✅ Assistant created: asst_mPzxldkzQKf9Cuj1ROySai94
+✅ Thread created: thread_xkKBONqV2gHlxe9Ne0G4X1df
+✅ Run created: run_S4QZtQ58qTIQC5HS9r4pUsVr
 🔄 Polling for completion...
 🔄 🙄...
-✅ Run completed!
+🔄 👀
+🎉 Run completed!
 🤖 ASSISTANT: "You should definitely visit Banff National Park!"
 ```
