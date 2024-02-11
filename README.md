@@ -39,30 +39,13 @@ chmod 700 openai.sh
 ### Quick examples
 **Simple chat, returning full JSON response**
 ```bash
-./openai.sh chat "What's the weather like in Tokyo?"
+./openai.sh chat "Hello there!"
 ```
 ```json
 {
-    "response" : "As an AI language model, I don't have up-to-date weather info, but I can point you to a function of yours that does!"
+    "response" : "General Kenobi! You are a bold one."
 }
 ```
--------
-**Create an assistant, returning the assistant ID JSON formatted string**
-```bash
-./openai.sh assistants.create "Travel Buddy" "Provide travel advice and information." | jq '.assistand_id'
-```
-```json
-"asst_xxxxxxxxxxxxx"
-```
--------
-**Create a thread, returning plaintext string**
-```bash
-./openai.sh threads.create "I'm planning a trip to Japan." | jq -r '.thread_id'
-```
-```plaintext
-thread_xxxxxxxxxxxxx
-```
-
 Invoke the script with an available command, followed by its arguments. `[]` = required; `()` = optional. Responses are in JSON format, which is easily parsed with `jq` or similar tools.
 
 **Available commands**
@@ -178,7 +161,9 @@ Run a thread by an assistant for their input. Pass in the `thread_id` and the `a
 ```
 ```json
 {
-    "run_id" : "run_xxxxxxxxxxxxx"
+    "thread" : "thread_xxxxxxxxxxxxx",
+    "run_id" : "run_xxxxxxxxxxxxx",
+    "status" : "queued"
 }
 ```
 
@@ -188,13 +173,6 @@ Check the completion status of a run:
 
 ```bash
 ./openai.sh thread.run.poll [thread_id] [run_id]
-```
-```json
-{
-    "thread_id" : "thread_xxxxxxxxxxxxx",
-    "run_id" : "run_xxxxxxxxxxxxx",
-    "status" : "queued"
-}
 ```
 ```json
 {
