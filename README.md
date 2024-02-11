@@ -1,8 +1,6 @@
 
 # openai.sh
-A dead simple bash script for basic OpenAI API calls, without bells and whistles, that helps you steamline your interactions with chat, threads, and assistants.
-
-This tool is designed to be straightforward, enabling quick and effective communication with OpenAI's powerful models without getting bogged down in complexity. Embrace the simplicity 🏖️.
+A dead simple bash script for basic OpenAI API calls, without bells and whistles, that helps you steamline your interactions with chat, threads, and assistants. This tool is designed to be straightforward, enabling quick and effective communication with OpenAI's powerful models without getting bogged down in complexity. Embrace the simplicity 🏖️.
 
 ## ⭐️ Features
 - Create one-off chat requests
@@ -62,7 +60,7 @@ chmod 700 openai.sh
 ./openai.sh threads.create "I'm planning a trip to Japan." | jq -r '.thread_id'
 ```
 ```plaintext
-thrd_xxxxxxxxxxxxx
+thread_xxxxxxxxxxxxx
 ```
 
 Invoke the script with an available command, followed by its arguments. `[]` = required; `()` = optional. Responses are in JSON format, which is easily parsed with `jq` or similar tools.
@@ -122,7 +120,7 @@ Create a thread to manage a conversation. Pass an `initial_message` to start the
 ```
 ```json
 {
-    "thread_id" : "thrd_xxxxxxxxxxxxx"
+    "thread_id" : "thread_xxxxxxxxxxxxx"
 }
 ```
 
@@ -134,7 +132,7 @@ Add a message to an existing thread. Pass the `thread_id` and the new `message`.
 ```
 ```json
 {
-    "message_id" : "msg_xxxxxxxxxxxxx"
+    "thread_id" : "thread_xxxxxxxxxxxxx"
 }
 ```
 
@@ -142,11 +140,11 @@ Add a message to an existing thread. Pass the `thread_id` and the new `message`.
 Display all messages within a thread. Defaults to 20 messages, but you can specify a limit (up to 100).
 
 ```bash
-./openai.sh thread.messages.list thrd_xxxxxxxxxxxxx 40
+./openai.sh thread.messages.list thread_xxxxxxxxxxxxx 40
 ```
 ```json
 {
-    "thread_id" : "thrd_xxxxxxxxxxxxx",
+    "thread_id" : "thread_xxxxxxxxxxxxx",
     "messages" : [
         {
             "role" : "assistant",
@@ -193,21 +191,21 @@ Check the completion status of a run:
 ```
 ```json
 {
-    "thread_id" : "thrd_xxxxxxxxxxxxx",
+    "thread_id" : "thread_xxxxxxxxxxxxx",
     "run_id" : "run_xxxxxxxxxxxxx",
     "status" : "queued"
 }
 ```
 ```json
 {
-    "thread_id" : "thrd_xxxxxxxxxxxxx",
+    "thread_id" : "thread_xxxxxxxxxxxxx",
     "run_id" : "run_xxxxxxxxxxxxx",
     "status" : "in_progress"
 }
 ```
 ```json
 {
-    "thread_id" : "thrd_xxxxxxxxxxxxx",
+    "thread_id" : "thread_xxxxxxxxxxxxx",
     "run_id" : "run_xxxxxxxxxxxxx",
     "status" : "completed"
 }
