@@ -7,9 +7,12 @@ default_model="gpt-3.5-turbo-0125"
 function curlRequest() {
     url=$1
     payload=$2
-    headers=$3
 
-    response=$(curl "$url" --silent -H "Content-Type: application/json" -H "Authorization: Bearer $OPENAI_API_KEY" -d "$payload" | jq -r)
+    if [[ -z "$payload" ]]; then
+        response=$(curl -G "$url" --silent -H "Content-Type: application/json" -H "Authorization: Bearer $OPENAI_API_KEY" -H "OpenAI-Beta: assistants=v1" | jq -r)
+    else
+        response=$(curl "$url" --silent -H "Content-Type: application/json" -H "Authorization: Bearer $OPENAI_API_KEY" -d "$payload" -H "OpenAI-Beta: assistants=v1" | jq -r)
+    fi
 
     echo $response
 }
@@ -72,19 +75,19 @@ case $1 in
         ;;
 
     "thread.run")
-        [ -z "$2" ] || [ -z "$3" ] && echo "🌿 ./openai.sh thread.run <thread_id> <model>" && exit 1 || thread_id="$2" && model="$3"
+        [ -z "$2" ] || [ -z "$3" ] && echo "🌿 ./openai.sh thread.run [thread_id] [assistant_id]" && exit 1 || thread_id="$2" && assistant_id="$3"
 
         payload=$(jq -n --arg assistant_id "$assistant_id" '{
             assistant_id: $assistant_id
         }')
 
-        curlRequest "https://api.openai.com/v1/threads/$thread_id/runs" "$payload" | jq -r '{thread_id: .thread_id, run_id: .id}'
+        curlRequest "https://api.openai.com/v1/threads/$thread_id/runs" "$payload" | jq -r '{thread_id: .thread_id, run_id: .id, status: .status}'
         ;;
 
     "thread.run.poll")
         [ -z "$2" ] || [ -z "$3" ] && { echo "🌿 ./openai.sh thread.run.poll <thread_id> <run_id>"; exit 1; } || thread_id="$2" && run_id="$3"
 
-        curlRequest "https://api.openai.com/v1/threads/$thread_id/runs/$run_id" "" | jq -r '{thread_id: .thread_id, status: .status}'
+        curlRequest "https://api.openai.com/v1/threads/$thread_id/runs/$run_id" | jq -r '{thread_id: .thread_id, run_id: .id, status: .status}'
         ;;
 
     *)
