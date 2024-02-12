@@ -35,18 +35,79 @@ case $1 in
         ;;
 
     "assistants.create")
-        [ -z "$2" ] && echo "🌿 ./openai.sh assistants.create [name] [instructions]" && exit 0 || { name="$2"; instructions="$3"; }
+        if [ -z "$2" ] || [ -z "$3" ]; then
+            echo "🌿 Usage: ./openai.sh assistants.create [name] [instructions] [model] 'tool_definition'"
+            exit 1
+        else
+            assistant_name="$2" # Use a different variable name for the assistant's name
+            instructions="$3"
+        fi
 
-        [ -z "$4" ] && model=$default_model || model="$4"
+        if [ -z "$4" ]; then
+            model=$default_model
+        else
+            model="$4"
+        fi
 
-        payload=$(jq -n --arg instructions "$instructions" --arg name "$name" --arg model "$model" '{
+        if [ "$5" != "[]" ]; then
+            tool_definition="$5"
+            # Assume $5 is the input for the tools, which should be correctly split here
+            IFS='|' read -r function_name description parameters_str <<< "$tool_definition"
+        
+            # Start constructing the JSON for the tool
+            json=$(jq -n --arg fn "$function_name" --arg desc "$description" \
+                '{
+                    type: "function",
+                    function: {
+                        name: $fn,
+                        description: $desc,
+                        parameters: {
+                            type: "object",
+                            properties: {},
+                            required: []
+                        }
+                    }
+                }')
+        
+            # Split the parameters string into an array
+            IFS=';' read -r -a parameters <<< "$parameters_str"
+        
+            # Process each parameter
+            for param in "${parameters[@]}"; do
+                IFS=':' read -r param_name param_type param_desc constraints <<< "$param" # Use different variable names for parameter attributes
+
+                # Check if parameter is required
+                if [[ $param_name == \** ]]; then
+                    param_name="${param_name:1}"  # Remove asterisk from the name to mark it as required
+                    json=$(echo $json | jq --arg n "$param_name" '.function.parameters.required += [$n]')
+                fi
+        
+                # Handle enum constraint
+                if [[ $constraints == [* ]]; then
+                    enum_values=$(echo "$constraints" | tr -d '[]' | jq -R 'split(",")')
+                    json=$(echo $json | jq --arg n "$param_name" --arg t "$param_type" --arg d "$param_desc" --argjson e "$enum_values" \
+                        '.function.parameters.properties += {($n): {type: $t, description: $d, enum: $e}}')
+                else
+                    json=$(echo $json | jq --arg n "$param_name" --arg t "$param_type" --arg d "$param_desc" \
+                        '.function.parameters.properties += {($n): {type: $t, description: $d}}')
+                fi
+            done
+        
+            tools=$(echo $json | jq -s '.')
+        else
+            tools="[]"
+        fi
+
+        payload=$(jq -n --arg name "$assistant_name" --arg instructions "$instructions" --arg model "$model" --argjson tools "$tools" '{
             instructions: $instructions,
             name: $name,
-            model: $model
+            model: $model,
+            tools: $tools
         }')
 
         curlRequest "https://api.openai.com/v1/assistants" "$payload" | jq -r '{assistant_id: .id}'
         ;;
+
 
     "threads.create")
         [ -z "$2" ] && echo "🌿 ./openai.sh threads.create [initial_message]" && exit 0 || initial_message="$2"
