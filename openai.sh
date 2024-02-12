@@ -14,7 +14,7 @@ function curlRequest() {
         response=$(curl "$url" --silent -H "Content-Type: application/json" -H "Authorization: Bearer $OPENAI_API_KEY" -d "$payload" -H "OpenAI-Beta: assistants=v1" | jq -r)
     fi
 
-    echo $response
+    echo "$response"
 }
 
 # Simple one-off chat
