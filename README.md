@@ -11,7 +11,7 @@ A dead simple bash script for basic OpenAI API calls, without bells and whistles
 > Future updates may introduce additional functionalities like function calling, file uploads, embeddings, etc. For now, this script only covers the essential chat functionality -- **which you can do a lot with**! 🚀
 
 ## ⭐️ Prerequisites
-Ensure you have set the `OPENAI_API_KEY` in your environment. This key is necessary for authenticating your requests to OpenAI. You can add it to your `.bashrc`, `.zshrc`, or equivalent:
+You'll need `curl` and `jq` installed on your system. For API authentication, eensure you have set the `OPENAI_API_KEY` in your environment. This key is necessary for authenticating your requests to OpenAI. You can add it to your `.bashrc`, `.zshrc`, or equivalent:
 
 ```bash
 export OPENAI_API_KEY='sk-xxxxxxxxxxxxxxxxxxxxxxxx'
