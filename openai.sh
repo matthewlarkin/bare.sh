@@ -1,5 +1,7 @@
 #!/bin/bash
 
+[ ! -x "$(command -v curl)" ] && echo "🚨 curl is not installed" && exit 1
+[ ! -x "$(command -v jq)" ] && echo "🚨 jq is not installed" && exit 1
 [ -z "$OPENAI_API_KEY" ] && echo "🚨 OPENAI_API_KEY environment variable is not set" && exit 1
 
 default_model="gpt-3.5-turbo-0125"
