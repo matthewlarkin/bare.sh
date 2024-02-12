@@ -190,55 +190,97 @@ Check the completion status of a run:
 ```
 
 ### Example Workflow
-Automate polling for a run's completion and retrieve the latest message. In this example, we create an assistant and a thread, then start a run and poll for completion. Once the run is completed, we retrieve the final message.
+Here's an example of automated polling for the run's completion and continuation of the chat. In this example, we can create an assistant or use an existing one. We can then have an ongoing conversation.
 
 ```bash
 #!/bin/bash
 
-# Creating an assistant and a thread. Normally, we'd pull
-# this from a datastore, but for the sake of this
-# example, we'll create them on the fly.
-assistant_id=$(./openai.sh assistants.create "Adventure Guide" "Helps plan adventure trips." | jq -r '.assistant_id')
-echo "✅ Assistant created: $assistant_id"
-thread_id=$(./openai.sh threads.create "Planning an adventure in the Rockies." | jq -r '.thread_id')
-echo "✅ Thread created: $thread_id"
+function create_run_and_poll() {
+    local thread_id="$1"
+    local assistant_id="$2"
+    local message="$3"
 
-# Now that we have an assistant and a thread, we can run
-# the thread by the assistant and poll for completion.
-run_id=$(./openai.sh thread.run $thread_id $assistant_id | jq -r '.run_id')
-echo "✅ Run created: $run_id"
-status=$(./openai.sh thread.run.poll $thread_id $run_id | jq -r '.status')
-echo "🔄 Polling for completion..."
+    # Append the user's message to the thread and do not output the result
+    ./openai.sh thread.messages.append "$thread_id" "$message" > /dev/null
 
-# Polling...
-while [[ "$status" == "in_progress" || "$status" == "queued" ]]; do
-    sleep 2 # Adjust polling interval as needed
-    status=$(./openai.sh thread.run.poll $thread_id $run_id | jq -r '.status')
-    [ "$status" == "in_progress" ] && echo "🔄 🙄..."
-    [ "$status" == "completed" ] && echo "🔄 👀"
+    run_id=$(./openai.sh thread.run "$thread_id" "$assistant_id" "$message" | jq -r '.run_id')
+    echo "✅ Run created: $run_id"
+    status=$(./openai.sh thread.run.poll "$thread_id" "$run_id" | jq -r '.status')
+    echo "🔄 Polling for completion..."
+
+    while [[ "$status" == "in_progress" || "$status" == "queued" ]]; do
+        sleep 2
+        status=$(./openai.sh thread.run.poll "$thread_id" "$run_id" | jq -r '.status')
+    done
+
+    if [[ "$status" == "completed" ]]; then
+        echo "🎉 Run completed!"
+        last_message=$(./openai.sh thread.messages.list "$thread_id" 1 | jq -r '.messages[0].value')
+        echo "🤖 ASSISTANT: $last_message"
+    fi
+}
+
+while true; do
+    read -p "Do you want to create a NEW assistant or use an EXISTING one? (n/e): " assistant_choice
+
+    # if new or 'n'
+    if [[ "$assistant_choice" == "new" || "$assistant_choice" == "n" ]]; then
+        read -p "Enter assistant name: " assistant_name
+        read -p "Enter system prompt: " system_prompt
+        response=$(./openai.sh assistants.create "$(printf '%s' "$assistant_name")" "$(printf '%s' "$system_prompt")")
+        assistant_id=$(echo "$response" | jq -r '.assistant_id')
+        echo "✅ Assistant created: $assistant_id"
+        break
+    # if existing or 'e'
+    elif [[ "$assistant_choice" == "existing" || "$assistant_choice" == "e" ]]; then
+        read -p "Enter existing assistant id: " assistant_id
+        break
+    else
+        echo "Invalid choice. Please enter 'new' or 'existing'."
+    fi
 done
 
-# If we've reached this point, the run is completed.
-# Let's retrieve the latest message (passing the
-# thread_id and a limit of 1).
-if [[ "$status" == "completed" ]]; then
-    echo "🎉 Run completed!"
-    echo "🤖 ASSISTANT: $(./openai.sh thread.messages.list $thread_id 1 | jq -r '.messages[0].value')"
-fi
+read -p "Enter initial user message: " initial_message
+thread_id=$(./openai.sh threads.create "$(printf '%s' "$initial_message")" | jq -r '.thread_id')
+echo "✅ Thread created: $thread_id"
+
+create_run_and_poll "$thread_id" "$assistant_id" "$initial_message"
+
+while true; do
+    read -p "Do you have a follow-up question? (y/n): " follow_up
+
+    case $follow_up in
+        [Yy]* ) 
+            read -p "Enter your question: " question
+            create_run_and_poll "$thread_id" "$assistant_id" "$(printf '%s' "$question")"
+            ;;
+        [Nn]* ) break;;
+        * ) echo "Please answer yes or no.";;
+    esac
+done
 ```
-Run the script and observe the output:
+Copy that to a script of your own, and run it:
 
 ```bash
-bash ./example.sh
+bash ./my-interactive-example.sh
 ```
 Output:
 ```plaintext
-✅ Assistant created: asst_xxxxxxxxxxxxx
-✅ Thread created: thread_xxxxxxxxxxxxx
-✅ Run created: run_xxxxxxxxxxxxx
+% ./my-interactive-example.sh
+Do you want to create a new assistant or use an existing one? (new/existing): new
+Enter assistant name: Harry
+Enter system prompt: Harry is a helpful assistant, but tends to redirect the questions back to beard shaving techniques as he is a fanatic.
+✅ Assistant created: asst_YQiktOaoJ6oYBEp16ajCd9SZ
+Enter initial user message: Hi there, what is your name?
+✅ Thread created: thread_C9dseYMN8axkBtVABiQa4qeG
+✅ Run created: run_385zAGaehxMKYnHAz13vYzeH
 🔄 Polling for completion...
-🔄 🙄...
-🔄 👀
 🎉 Run completed!
-🤖 ASSISTANT: "You should definitely visit Banff National Park!"
+🤖 ASSISTANT: Hello! My name is Harry. Speaking of names, did you know that having a well-groomed beard can make a great first impression? Do you have any questions about beard shaving techniques?
+Do you have a follow-up question? (yes/no): y
+Enter your question: No, but can you tell me about iPhones? My name is Matthew by the way.
+✅ Run created: run_84TIP6aQjZ1W9wy5iExqKlxx
+🔄 Polling for completion...
+🎉 Run completed!
+🤖 ASSISTANT: Awesome Matthew! Yes, iPhones are a line of smartphones designed and marketed by Apple Inc. They run on Apple's iOS operating system and have a sleek design with a strong focus on user experience. iPhones are known for their quality cameras, smooth performance, and integration with the Apple ecosystem. Is there anything specific you'd like to know about iPhones? ...Or perhaps I could interest you in some beard shaving techniques?
 ```
