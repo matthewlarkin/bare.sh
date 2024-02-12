@@ -1,6 +1,6 @@
 
 # openai.sh
-A dead simple bash script for basic OpenAI API calls, without bells and whistles, that helps you steamline your interactions with chat, threads, and assistants. This tool is designed to be straightforward, enabling quick and effective communication with OpenAI's powerful models without getting bogged down in complexity. Embrace the simplicity 🏖️.
+A minimalist bash script for straightforward OpenAI API engagements, without the extra baggage. Unreasonably easy; facilitating fast and efficient connections with OpenAI's less intuitive API calls (such as thread creation and polling). Written in bash, because not everything needs to run in a Node.js or Python runtime environment. 🏖️
 
 ## ⭐️ Features
 - Create one-off chat requests
@@ -10,7 +10,7 @@ A dead simple bash script for basic OpenAI API calls, without bells and whistles
 
 > Future updates may introduce additional functionalities like function calling, file uploads, embeddings, etc. For now, this script only covers the essential chat functionality -- **which you can do a lot with**! 🚀
 
-## ⭐️ Prerequisites
+## ⭐️ Bare Necessities
 You'll need `curl` and `jq` installed on your system. For API authentication, eensure you have set the `OPENAI_API_KEY` in your environment. This key is necessary for authenticating your requests to OpenAI. You can add it to your `.bashrc`, `.zshrc`, or equivalent:
 
 ```bash
