@@ -1,0 +1,7 @@
+#!/bin/bash
+
+[[ -z $1 ]] && bin/usage -t options -w 4 $0 \
+    -f "The path to the file to get the size of." && exit 0
+
+
+ls -lh "$1" | awk '{print $5}'
