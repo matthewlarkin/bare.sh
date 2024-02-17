@@ -1,0 +1,9 @@
+#!/bin/bash
+
+source lib/colors
+
+[[ -z "$1" ]] && bin/usage -w 4 $0 \
+    ':1' "* error_code" \
+    ':2' "  description" && exit 0
+
+printf "\n❌ ${red}$1${reset}: $2\n\n" && exit 1

@@ -1,0 +1,47 @@
+#!/bin/bash
+
+source lib/colors
+
+# Default values
+type="options"
+width=24
+
+# Parse command line options
+while getopts ":t:w:" opt; do
+    case ${opt} in
+        t)
+            type=$OPTARG
+            ;;
+        w)
+            width=$OPTARG
+            ;;
+        \?)
+            echo "Invalid option: -$OPTARG" 1>&2
+            exit 1
+            ;;
+        :)
+            echo "Option -$OPTARG requires an argument." 1>&2
+            exit 1
+            ;;
+    esac
+done
+shift $((OPTIND -1))
+
+script_name=$1
+shift
+
+if (( $# % 2 != 0 )); then
+        echo "Error: Please provide an even number of arguments."
+        exit 1
+fi
+
+printf "${muted}\n- - -\n\n📚 ${yellow}Usage: ${green}$script_name${muted} [$type]\n\n"
+
+while (( "$#" )); do
+        option=$1
+        description=$2
+        printf "  ${blue}%-${width}s${reset}\t${muted}${description}${reset}\n" "$option"
+        shift 2
+done
+
+printf "${muted}\n- - -\n\n${reset}" && exit 0

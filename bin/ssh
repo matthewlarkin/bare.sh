@@ -1,0 +1,24 @@
+#!/bin/bash
+
+source lib/colors
+
+./bin/usage $0 \
+    "-l" "List all public keys" \
+    "-n" "Create a new key pair" \
+    "-d" "Print the default public key" && exit 0
+
+while getopts "l:n:d:" opt; do
+    case $opt in
+        l)
+            for key in $(ls ~/.ssh/*.pub); do sudo basename "$key"; done 2>/dev/null
+            ;;
+        n)
+            ssh-keygen -t ecdsa -b 521 -f ~/.ssh/$OPTARG -C "${2:-}" && cat ~/.ssh/$OPTARG.pub
+            ;;
+        d)
+            [ ! -f ~/.ssh/id_ecdsa.pub ] && printf "\n${red}No default key found${reset}\n" || cat ~/.ssh/id_ecdsa.pub
+            ;;
+        \?)
+            printf "\n${red}Invalid option:${reset} -$OPTARG\n"
+    esac
+done

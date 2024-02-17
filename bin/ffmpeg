@@ -1,0 +1,201 @@
+#!/bin/bash
+
+[ ! -x $(command -v ffmpeg) ] && bin/error "ffmpeg not installed" "Please install ffmpeg to use this feature" && exit 1
+
+
+
+
+
+# Chunk video
+if [ -z "$1" ]; then
+    bin/usage -t commands -w 12 $0 \
+        video.chunk "Takes a file as input and separates it into equal chunks" \
+        video.merge "Merges given chunks into a single file" \
+        video.360 "Converts a video to 360p" \
+        video.720 "Converts a video to 720p"
+    exit 0
+fi
+
+
+
+
+
+command="$1"
+shift
+
+
+
+
+
+case $command in
+
+
+
+    # ========================================================================
+    video.chunk)
+
+        bin/usage -t options -w 4 $0 \
+            -v "* Input file" \
+            -o "  Output folder (default: ./tmp/xxxxxxxxxx)" \
+            -d "  Chunk duration in seconds (default: 60)"
+
+        duration=60
+        output="./tmp/$(openssl rand -hex 8)"
+
+        while getopts "v:o:d:" opt; do
+            case $opt in
+                v) video="$OPTARG" ;;
+                o) output="$OPTARG" ;;
+                d) duration="$OPTARG" ;;
+            esac
+        done
+        
+        # check if video file is provided
+        [ -z "$video" ] && bin/error "No video file provided" "Please provide a file to chunk" && exit 1
+
+        # check if chunk size is provided
+        [ -z "$duration" ] && bin/error "No chunk duration provided" "Please provide a chunk duration" && exit 1
+
+        # check if video file exists
+        [ ! -f "$video" ] && bin/error "video file not found" "Please provide a valid file" && exit 1
+
+        # check if chunk duration is a number
+        [[ ! "$duration" =~ ^[0-9]+$ ]] && bin/error "Invalid chunk duration" "Please provide a valid number" && exit 1
+
+        # get video file duration
+        total_duration=$(ffprobe -i "$video" -show_entries format=duration -v quiet -of csv="p=0")
+
+        # check if video duration is more than 60 minutes
+        if (( $(echo "$total_duration > 3600" | bc -l) )); then
+            bin/error "Video duration is too long" "Please provide a video of duration less than or equal to 60 minutes"
+            exit 1
+        fi
+
+        # create output folder
+        mkdir -p "$output"
+
+        # check if video file size is more than 2GB
+        file_size=$(stat -f%z "$video")
+        if ((file_size > 2000000000)); then
+            bin/error "Video file size is too large" "Please provide a video of size less than or equal to 2GB"
+            exit 1
+        fi
+
+        # calculate number of chunks
+        chunks=$(echo "($total_duration / $duration) + 1" | bc)
+        
+        # create chunks
+        for ((i=0; i<$chunks; i++)); do
+            start=$(echo "$i * $duration" | bc)
+            # video
+            ffmpeg -i "$video" -ss $start -t $duration -c copy "$output/chunk-$i.mp4" >> /dev/null 2>&1
+            # thumbnail
+            ffmpeg -i "$output/chunk-$i.mp4" -ss 00:00:01 -vframes 1 "$output/chunk-$i.jpg" >> /dev/null 2>&1
+            # audio
+            ffmpeg -i "$output/chunk-$i.mp4" -vn -acodec libmp3lame "$output/chunk-$i.mp3" >> /dev/null 2>&1
+        done
+
+
+
+        ;;
+
+
+
+    # ========================================================================
+    merge)
+        [ -z "$1" ] && bin/error "No input files provided" "Please provide files to merge" && exit 1
+        [ -z "$2" ] && bin/error "No output file provided" "Please provide a file to merge" && exit 1
+        ffmpeg -i "concat:$1" -c copy "$2"
+        ;;
+
+
+
+    # ========================================================================
+    video.240)
+
+        bin/usage -t options -w 4 $0 \
+            -v "* Input file" \
+            -o "  Output file (default: ./tmp/xxxxxxxxxx)"
+
+        output="./tmp/$(openssl rand -hex 8).mp4"
+
+        while getopts "v:o:" opt; do
+            case $opt in
+                v) video="$OPTARG" ;;
+                o) output="$OPTARG" ;;
+            esac
+        done
+
+        [ -z "$video" ] && bin/error "No input file provided" "Please provide a file to convert" && exit 1
+        [ -z "$output" ] && bin/error "No output file provided" "Please provide a file to convert" && exit 1
+
+        ffmpeg -i "$video" -vf "scale=426:240" -c:a copy "$output" >> /dev/null 2>&1
+
+        echo '{"240p_file": "'$output'"}'
+        ;;
+
+
+
+    # ========================================================================
+    video.360)
+
+        [ -z "$1" ] && bin/usage -t options -w 4 $0 \
+            -v "* Input file" \
+            -o "  Output file (default: ./tmp/xxxxxxxxxx)" && exit 0
+
+        output="./tmp/$(openssl rand -hex 8).mp4"
+
+        while getopts "v:o:" opt; do
+            case $opt in
+                v) video="$OPTARG" ;;
+                o) output="$OPTARG" ;;
+            esac
+        done
+
+        [ -z "$video" ] && bin/error "No input file provided" "Please provide a file to convert" && exit 1
+        [ -z "$output" ] && bin/error "No output file provided" "Please provide a file to convert" && exit 1
+
+        ffmpeg -i "$video" -vf "scale=640:360" -c:a copy "$output" >> /dev/null 2>&1
+
+        echo '{"360p_file": "'$output'"}'
+
+        ;;
+
+
+
+    # ========================================================================
+    video.720)
+
+        bin/usage -t options -w 4 $0 \
+            -v "* Input file" \
+            -o "  Output file (default: ./tmp/xxxxxxxxxx)"
+
+        output="./tmp/$(openssl rand -hex 8).mp4"
+
+        while getopts "v:o:" opt; do
+            case $opt in
+                v) video="$OPTARG" ;;
+                o) output="$OPTARG" ;;
+            esac
+        done
+
+        [ -z "$video" ] && bin/error "No input file provided" "Please provide a file to convert" && exit 1
+        [ -z "$output" ] && bin/error "No output file provided" "Please provide a file to convert" && exit 1
+
+        ffmpeg -i "$video" -vf "scale=1280:720" -c:a copy "$output" >> /dev/null 2>&1
+
+        echo '{"720p_file": "'$output'"}'
+
+        ;;
+
+
+
+    # ========================================================================
+    *)
+        bin/error "Invalid command" "Please provide a valid command" && exit 1
+        ;;
+
+
+
+esac
+
