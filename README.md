@@ -4,7 +4,15 @@
 
 Simplified API interfaces. Minimalist JSON responses. Few dependencies. Unreasonably easy.
 
-## 🤨 Why?
+**Jump to:**
+- [Why?](#-why)
+- [Dependencies](#dependencies)
+- [Overview](#overview)
+- [Quick Samples](#quick-samples)
+- [Documentation](#documentation)
+- [Installation](#installation)
+
+## Why?
 "Why do this?", you may ask. Why not just use the official libraries or other popular libraries? And why bash? Why not write this in python?
 
 1. **Simplicity**: Official libraries are often large and complex, with many features that you may never use. This system is designed to be simple and allow expressive chaining of commands that are functional in nature and easy to understand and change over time.
@@ -12,22 +20,60 @@ Simplified API interfaces. Minimalist JSON responses. Few dependencies. Unreason
 3. **Expressiveness**: `bare.sh` commands are designed to have a certain speakable quality to them. They are designed to be easy to remember and easy to use in a variety of contexts.
 
 ```bash
-# standard way to generate random strings and numbers
+# 😬 standard way to generate random strings and numbers
 openssl rand -base64 12
 echo $(( $RANDOM % 100 ))
 
-# using bare.sh
+# 🤩 using bare.sh
 bin/random string
 bin/random number
 ```
 
 ```bash
-# standard way to send a chat message to OpenAI
-curl https://api.openai.com/v1/chat/completions -H "Content-Type: application/json" -H "Authorization: Bearer $OPENAI_API_KEY" -d '{"model": "gpt-3.5-turbo","messages": [{"role": "system","content": "You are a chef"},{"role": "user","content": "Are you a chef?"}]}'
-# => response: {"id":"chatcmpl-8tdaX727aBJYijUi4Iemmxnw3vs59","object":"chat.completion","created":1708270909,"model":"gpt-3.5-turbo-0125","choices":[{"index":0,"message":{"role":"assistant","content":"Yes, I am a chef! How can I help you today?"},"logprobs":null,"finish_reason":"stop"}],"usage":{"prompt_tokens":21,"completion_tokens":14,"total_tokens":35},"system_fingerprint":"fp_69829325d0"}
+# 😬 standard way to send a chat message to OpenAI
+curl https://api.openai.com/v1/chat/completions \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer $OPENAI_API_KEY" \
+    -d '{
+        "model": "gpt-3.5-turbo",
+        "messages": [
+            {
+                "role": "system",
+                "content": "You are a chef"
+            },
+            {
+                "role": "user",
+                "content": "Are you a chef?"
+            }
+        ]
+    }'
+# => response: {
+#     "id": "chatcmpl-xxxxxxxxxxxxxxxxxxxxxxxx",
+#     "object": "chat.completion",
+#     "created": 1708270909,
+#     "model": "gpt-3.5-turbo-0125",
+#     "choices": [
+#         {
+#             "index": 0,
+#             "message": {
+#                 "role": "assistant",
+#                 "content": "Yes, I am a chef! How can I help you today?"
+#             },
+#             "logprobs": null,
+#             "finish_reason": "stop"
+#         }
+#     ],
+#     "usage": {
+#         "prompt_tokens": 21,
+#         "completion_tokens": 14,
+#         "total_tokens": 35
+#     },
+#     "system_fingerprint": "fp_xxxxxxxxxx"
+# }
 
-# using bare.sh
+# 🤩 using bare.sh
 bin/openai chat -a "You are a chef" -m "Are you a chef?"
+
 # => response: {"response":"Yes, I am a chef! How can I help you today?"}
 ```
 
@@ -45,7 +91,7 @@ At it's root, `bare.sh` is a collection of unix-like directories (`/bin`, `/lib`
 
 Most of these scripts are small in scope, take simple input, and provide simple JSON output. This allows us to chain commands together and use them in a variety of inanticipatable ways, especially when combined with other tools like `jq`.
 
-## 🐎 Quick Samples
+## Quick Samples
 Let's get something going. To give you an idea of how you can use the system, here are a few quick examples.
 ```bash
 # OpenAI
@@ -70,7 +116,7 @@ bin/ffmpeg video.360 -f my_video.mp4 -o my_video.360.mp4
 # => { "360p_file" : "my_video.360.mp4" }
 ```
 
-## 📚 Documentation
+## Documentation
 The system is self-documenting. Learn more about a commands usage by running any command without arguments -- even `bin/usage`! (which is itself used to print usage information for the other commands 😄)
 ```bash
 bin/openai
