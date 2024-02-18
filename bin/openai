@@ -93,6 +93,7 @@ case $command in
 
         [[ -z "$2" ]] && bin/usage -w 4 "$0 chat" \
             -m "* The message to send" \
+            -a "~ The system prompt (assistant prompt)" \
             -o "  The model to use" \
             -j "  Return the response as a JSON object" \
             -v "  Return the response in verbose mode" && exit 0
@@ -100,20 +101,21 @@ case $command in
         format="text"
         raw_json=false
 
-        while getopts ":m:o:jv" opt; do
+        while getopts ":m:a:o:jv" opt; do
             case ${opt} in
                 m ) message="$OPTARG" ;;
                 o ) model="$OPTARG" ;;
+                a ) assistant_prompt="${OPTARG:-You are a helpful AI assistant.}" ;;
                 j ) format="json_object" ;;
                 v ) verbose=true ;;
                 \? ) bin/error invalid_option "-$OPTARG" && exit 1 ;;
             esac
         done
 
-        message_payload=$(jq -n --arg model "${model:-$default_model}" --arg content "$message" --arg format "${format:-text}" '{
+        message_payload=$(jq -n --arg assistant_prompt "${assistant_prompt}" --arg model "${model:-$default_model}" --arg content "$message" --arg format "${format:-text}" '{
             model: $model,
             response_format: { "type": $format },
-            messages: [ { role: "user", content: $content } ]
+            messages: [ { role: "system", content: $assistant_prompt }, { role: "user", content: $content } ]
         }')
 
         response=$(curlRequest -u "$api_url/chat/completions" -d "$message_payload" -j)
