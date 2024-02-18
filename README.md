@@ -12,6 +12,8 @@ Simplified API interfaces. Minimalist JSON responses. Few dependencies. Unreason
 - [Documentation](#documentation)
 - [Installation](#installation)
 
+---
+
 ## Why?
 "Why do this?", you may ask. Why not just use the official libraries or other popular libraries? And why bash? Why not write this in python?
 
@@ -81,15 +83,21 @@ bin/openai chat -a "You are a chef" -m "Are you a chef?"
 
 > **Note**: This is a work in progress. Some features may not be fully implemented or may change dramatically in these early days. If you have any questions or suggestions, feel free to open an issue or pull request!
 
+---
+
 ## Dependencies
 This system is intended to be used on a unix-like OS (Linux, MacOS, WSL, etc). It is written in bash and uses a few common utilities such as `curl`, `jq`, `ffmpeg`. You'll want to have those installed, but the scripts will let you know if you don't.
 
 These are all available in most package managers.
 
+---
+
 ## Overview
 At it's root, `bare.sh` is a collection of unix-like directories (`/bin`, `/lib`, `/sh`, and `/tmp`) each containing bash scripts and programs for a specific task.
 
 Most of these scripts are small in scope, take simple input, and provide simple JSON output. This allows us to chain commands together and use them in a variety of inanticipatable ways, especially when combined with other tools like `jq`.
+
+---
 
 ## Quick Samples
 Let's get something going. To give you an idea of how you can use the system, here are a few quick examples.
@@ -115,6 +123,8 @@ bin/ffmpeg video.360 -f my_video.mp4 -o my_video.360.mp4
 
 # => { "360p_file" : "my_video.360.mp4" }
 ```
+
+---
 
 ## Documentation
 The system is self-documenting. Learn more about a commands usage by running any command without arguments -- even `bin/usage`! (which is itself used to print usage information for the other commands 😄)
@@ -158,6 +168,8 @@ For subcommands, options are denoted:
 - `*` -- *required*
 - `~` -- *encouraged*
 - `=` -- *conditionally required*
+
+---
 
 ## Installation
 To install, simply clone the repo and run commands from the root of repo.
