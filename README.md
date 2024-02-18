@@ -5,7 +5,7 @@
 Simplified API interfaces. Minimalist JSON responses. Few dependencies. Unreasonably easy.
 
 **Jump to:**
-- [Why?](#-why)
+- [Why?](#why)
 - [Dependencies](#dependencies)
 - [Overview](#overview)
 - [Quick Samples](#quick-samples)
