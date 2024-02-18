@@ -1,0 +1,52 @@
+#!/bin/bash
+
+# If no command is provided, display usage information and exit
+[ -z "$1" ] && bin/usage -t commands -w 4 $0 \
+    string "generates a random string" \
+    number "generates a random number" && exit 0
+
+# Get the command and shift the arguments
+command=$1
+shift
+
+case $command in
+
+    string )
+
+        byte_length=8
+
+        while getopts "l:h" opt; do
+            case $opt in
+                l ) byte_length=$OPTARG ;;
+                h ) bin/usage -t options -w 4 $0 \
+                    -l "sets byte length of random string" && exit 0 ;;
+                \? ) echo "Invalid option: -$OPTARG" ;;
+            esac
+        done
+
+        # Generate random string
+        echo $(openssl rand -hex "$byte_length")
+        ;;
+
+    number )
+
+        byte_length=8
+
+        while getopts "l:h" opt; do
+            case $opt in
+                l ) byte_length=$OPTARG ;;
+                h ) bin/usage -t options -w 4 $0 \
+                    -l "sets byte length of random number" && exit 0 ;;
+                \? ) echo "Invalid option: -$OPTARG" ;;
+            esac
+        done
+
+        # Generate random number
+        echo $(openssl rand -hex "$byte_length" | tr -dc '0-9' | fold -w "$byte_length" | head -n 1)
+        ;;
+
+    * )
+        echo "Invalid command: $command"
+        ;;
+
+esac

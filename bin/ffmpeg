@@ -20,6 +20,24 @@ fi
 
 
 
+# Check if a file exists and is not empty
+check_file() {
+    [ -z "$1" ] && bin/error "No input file provided" "Please provide a file to convert" && exit 1
+    [ ! -f "$1" ] && bin/error "File not found" "Please provide a valid file" && exit 1
+}
+
+# Run ffmpeg command
+run_ffmpeg() {
+    if [ -n "$suppress_process" ]; then
+        ffmpeg -i "$1" -vf "$2" -c:a copy "$3" >> /dev/null 2>&1
+    else
+        ffmpeg -i "$1" -vf "$2" -c:a copy "$3"
+    fi
+}
+
+
+
+
 command="$1"
 shift
 
@@ -28,6 +46,40 @@ shift
 
 
 case $command in
+
+
+
+    # Convert video to mp3
+    # ========================================================================
+    video-to-mp3)
+
+        [ -z "$1" ] && bin/usage -t options -w 4 $0 \
+            -v "* Input file" \
+            -o "  Output file (default: ./tmp/xxxxxxxxxx)" \
+            -s "  Suppress process" \
+            -S "  Suppress output" && exit 0
+
+        output="./tmp/$(openssl rand -hex 8).mp3"
+
+        while getopts "v:o:sS" opt; do
+            case $opt in
+                v) video="$OPTARG" ;;
+                o) output="$OPTARG" ;;
+                s) suppress_process=true ;;
+                S) suppress_output=true ;;
+            esac
+        done
+
+        check_file "$video"
+        if [ -n "$suppress_process" ]; then
+            ffmpeg -i "$video" -vn -acodec libmp3lame "$output" >> /dev/null 2>&1
+        else
+            ffmpeg -i "$video" -vn -acodec libmp3lame "$output"
+        fi
+
+        [ ! -n "$suppress_output" ] && echo '{"mp3_file": "'$output'"}' | jq -r && exit 0 || exit 0
+
+        ;;
 
 
 
@@ -113,9 +165,11 @@ case $command in
     # ========================================================================
     video.240)
 
-        bin/usage -t options -w 4 $0 \
+        [ -z "$1" ] && bin/usage -t options -w 4 $0 \
             -v "* Input file" \
-            -o "  Output file (default: ./tmp/xxxxxxxxxx)"
+            -o "  Output file (default: ./tmp/xxxxxxxxxx)" \
+            -s "  Suppress process" \
+            -S "  Suppress output" && exit 0
 
         output="./tmp/$(openssl rand -hex 8).mp4"
 
@@ -123,15 +177,15 @@ case $command in
             case $opt in
                 v) video="$OPTARG" ;;
                 o) output="$OPTARG" ;;
+                s) suppress_process=true ;;
+                S) suppress_output=true ;;
             esac
         done
 
-        [ -z "$video" ] && bin/error "No input file provided" "Please provide a file to convert" && exit 1
-        [ -z "$output" ] && bin/error "No output file provided" "Please provide a file to convert" && exit 1
+        check_file "$video"
+        run_ffmpeg "$video" "scale=426:240" "$output"
 
-        ffmpeg -i "$video" -vf "scale=426:240" -c:a copy "$output" >> /dev/null 2>&1
-
-        echo '{"240p_file": "'$output'"}'
+        [ ! -n "$suppress_output" ] && echo '{"240p_file": "'$output'"}' && exit 0 || exit 0
         ;;
 
 
@@ -141,7 +195,9 @@ case $command in
 
         [ -z "$1" ] && bin/usage -t options -w 4 $0 \
             -v "* Input file" \
-            -o "  Output file (default: ./tmp/xxxxxxxxxx)" && exit 0
+            -o "  Output file (default: ./tmp/xxxxxxxxxx)" \
+            -s "  Suppress process" \
+            -S "  Suppress output" && exit 0
 
         output="./tmp/$(openssl rand -hex 8).mp4"
 
@@ -149,15 +205,15 @@ case $command in
             case $opt in
                 v) video="$OPTARG" ;;
                 o) output="$OPTARG" ;;
+                s) suppress_process=true ;;
+                S) suppress_output=true ;;
             esac
         done
 
-        [ -z "$video" ] && bin/error "No input file provided" "Please provide a file to convert" && exit 1
-        [ -z "$output" ] && bin/error "No output file provided" "Please provide a file to convert" && exit 1
+        check_file "$video"
+        run_ffmpeg "$video" "scale=640:360" "$output"
 
-        ffmpeg -i "$video" -vf "scale=640:360" -c:a copy "$output" >> /dev/null 2>&1
-
-        echo '{"360p_file": "'$output'"}'
+        [ ! -n "$suppress_output" ] && echo '{"360p_file": "'$output'"}' && exit 0 || exit 0
 
         ;;
 
@@ -166,9 +222,11 @@ case $command in
     # ========================================================================
     video.720)
 
-        bin/usage -t options -w 4 $0 \
+        [ -z "$1" ] && bin/usage -t options -w 4 $0 \
             -v "* Input file" \
-            -o "  Output file (default: ./tmp/xxxxxxxxxx)"
+            -o "  Output file (default: ./tmp/xxxxxxxxxx)" \
+            -s "  Suppress process" \
+            -S "  Suppress output" && exit 0
 
         output="./tmp/$(openssl rand -hex 8).mp4"
 
@@ -176,15 +234,15 @@ case $command in
             case $opt in
                 v) video="$OPTARG" ;;
                 o) output="$OPTARG" ;;
+                s) suppress_process=true ;;
+                S) suppress_output=true ;;
             esac
         done
 
-        [ -z "$video" ] && bin/error "No input file provided" "Please provide a file to convert" && exit 1
-        [ -z "$output" ] && bin/error "No output file provided" "Please provide a file to convert" && exit 1
+        check_file "$video"
+        run_ffmpeg "$video" "scale=1280:720" "$output"
 
-        ffmpeg -i "$video" -vf "scale=1280:720" -c:a copy "$output" >> /dev/null 2>&1
-
-        echo '{"720p_file": "'$output'"}'
+        [ ! -n "$suppress_output" ] && echo '{"720p_file": "'$output'"}' && exit 0 || exit 0
 
         ;;
 
