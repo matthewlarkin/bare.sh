@@ -2,7 +2,7 @@
 
 source lib/colors
 
-[[ -z "$1" ]] && bin/usage -w 4 $0 \
+[[ -z "$1" ]] && b/usage -w 4 $0 \
     ':1' "* error_code" \
     ':2' "  description" && exit 0
 

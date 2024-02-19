@@ -1,6 +1,6 @@
 source lib/colors
 
-[ -f ./bin/openai ] || {
+[ -f ./b/openai ] || {
     echo "🚨 Could not find openai"
     exit 1
 }

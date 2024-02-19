@@ -7,9 +7,9 @@ source lib/colors
 
 
 # Use color variables in output
-[ ! -x "$(command -v curl)" ] && bin/error "curl is not installed" && exit 1
-[ ! -x "$(command -v jq)" ] && bin/error "jq is not installed" && exit 1
-[ -z "$OPENAI_API_KEY" ] && bin/error "OPENAI_API_KEY environment variable is not set" && exit 1
+[ ! -x "$(command -v curl)" ] && b/error "curl is not installed" && exit 1
+[ ! -x "$(command -v jq)" ] && b/error "jq is not installed" && exit 1
+[ -z "$OPENAI_API_KEY" ] && b/error "OPENAI_API_KEY environment variable is not set" && exit 1
 
 
 
@@ -17,7 +17,7 @@ source lib/colors
 
 # Display usage if no arguments are provided
 if [ -z "$1" ]; then
-    bin/usage -t commands -w 24 $0 \
+    b/usage -t commands -w 24 $0 \
         chat "Send a message to an AI model" \
         assistants.create "Create a new assistant" \
         threads.create "Create a new thread" \
@@ -91,7 +91,7 @@ case $command in
     # ========================================================
     chat )
 
-        [[ -z "$2" ]] && bin/usage -w 4 "$0 chat" \
+        [[ -z "$2" ]] && b/usage -w 4 "$0 chat" \
             -m "* The message to send" \
             -a "~ The system prompt (assistant prompt)" \
             -o "  The model to use" \
@@ -108,7 +108,7 @@ case $command in
                 a ) assistant_prompt="${OPTARG:-You are a helpful AI assistant.}" ;;
                 j ) format="json_object" ;;
                 v ) verbose=true ;;
-                \? ) bin/error invalid_option "-$OPTARG" && exit 1 ;;
+                \? ) b/error invalid_option "-$OPTARG" && exit 1 ;;
             esac
         done
 
@@ -134,7 +134,7 @@ case $command in
     # ========================================================
     assistants.create )
         
-        [[ -z "$2" ]] && bin/usage -w 4 "$0 assistants.create" \
+        [[ -z "$2" ]] && b/usage -w 4 "$0 assistants.create" \
             -n "* The name of the assistant" \
             -i "* Instructions for the assistant" \
             -o "  The model to use" \
@@ -176,7 +176,7 @@ case $command in
     # ========================================================
     threads.create )
 
-        [[ -z "$2" ]] && bin/usage -w 4 "$0 threads.create" \
+        [[ -z "$2" ]] && b/usage -w 4 "$0 threads.create" \
             -m "* The initial message to send" \
             -f "  The file IDs to attach (array)" \
             -v "  Return the response in verbose mode" && exit 0
@@ -188,7 +188,7 @@ case $command in
                 m ) initial_message="$OPTARG" ;;
                 f ) file_ids="$OPTARG" ;;
                 v ) verbose=true ;;
-                \? ) bin/error invalid_option "$OPTARG" && exit 1 ;;
+                \? ) b/error invalid_option "$OPTARG" && exit 1 ;;
             esac
         done
 
@@ -206,7 +206,7 @@ case $command in
     # ========================================================
     thread.messages.append)
 
-        [[ -z "$2" ]] && bin/usage -w 4 "$0 thread.messages.append" \
+        [[ -z "$2" ]] && b/usage -w 4 "$0 thread.messages.append" \
             -t "* The thread ID" \
             -m "* The message to send" \
             -f "  The file IDs to attach (array)" \
@@ -220,7 +220,7 @@ case $command in
                 m ) message="$OPTARG" ;;
                 f ) file_ids="$OPTARG" ;;
                 v ) verbose=true ;;
-                \? ) bin/error invalid_option "$OPTARG" && exit 1 ;;
+                \? ) b/error invalid_option "$OPTARG" && exit 1 ;;
             esac
         done
 
@@ -240,7 +240,7 @@ case $command in
     # ========================================================
     thread.messages.list )
 
-        [[ -z "$2" ]] && bin/usage -w 4 "$0 thread.messages.list" \
+        [[ -z "$2" ]] && b/usage -w 4 "$0 thread.messages.list" \
             -t "* The thread ID" \
             -l "  The number of messages to return" \
             -v "  Return the response in verbose mode" && exit 0
@@ -252,7 +252,7 @@ case $command in
                 t ) thread_id="$OPTARG" ;;
                 l ) limit="${OPTARG:-5}" ;;
                 v ) verbose=true ;;
-                \? ) bin/error invalid_option "$OPTARG" && exit 1 ;;
+                \? ) b/error invalid_option "$OPTARG" && exit 1 ;;
             esac
         done
 
@@ -268,7 +268,7 @@ case $command in
     # ========================================================
     thread.run)
 
-        [[ -z "$2" ]] && bin/usage -w 4 "$0 thread.run" \
+        [[ -z "$2" ]] && b/usage -w 4 "$0 thread.run" \
             -t "* The thread ID" \
             -a "* The assistant ID" \
             -v "  Return the response in verbose mode" && exit 0
@@ -278,7 +278,7 @@ case $command in
                 t ) thread_id="$OPTARG" ;;
                 a ) assistant_id="$OPTARG" ;;
                 v ) verbose=true ;;
-                \? ) bin/error invalid_option "$OPTARG" && exit 1 ;;
+                \? ) b/error invalid_option "$OPTARG" && exit 1 ;;
             esac
         done
 
@@ -296,7 +296,7 @@ case $command in
     # ========================================================
     thread.run.poll )
 
-        [[ -z "$2" ]] && bin/usage -w 4 "$0 thread.run.poll" \
+        [[ -z "$2" ]] && b/usage -w 4 "$0 thread.run.poll" \
             -t "* The thread ID" \
             -r "* The run ID" \
             -v "  Return the response in verbose mode" && exit 0
@@ -306,7 +306,7 @@ case $command in
                 t ) thread_id="$OPTARG" ;;
                 r ) run_id="$OPTARG" ;;
                 v ) verbose=true ;;
-                \? ) bin/error invalid_option "$OPTARG" && exit 1 ;;
+                \? ) b/error invalid_option "$OPTARG" && exit 1 ;;
             esac
         done
 
@@ -320,7 +320,7 @@ case $command in
     # ========================================================
     files.upload )
 
-        [[ -z "$2" ]] && bin/usage -w 4 "$0 files.upload" \
+        [[ -z "$2" ]] && b/usage -w 4 "$0 files.upload" \
             -f "* The file to upload" \
             -p "* The purpose of the file" \
             -v "  Return the response in verbose mode" && exit 0
@@ -330,7 +330,7 @@ case $command in
                 f ) file="$OPTARG" ;;
                 p ) purpose="$OPTARG" ;;
                 v ) verbose=true ;;
-                \? ) bin/error invalid_option "$OPTARG" && exit 1 ;;
+                \? ) b/error invalid_option "$OPTARG" && exit 1 ;;
             esac
         done
 
@@ -343,7 +343,7 @@ case $command in
     # ========================================================
     files.list )
 
-        [[ "$1" == "--help" ]] && bin/usage -w 4 "$0 files.list" \
+        [[ "$1" == "--help" ]] && b/usage -w 4 "$0 files.list" \
             -p "  Filters the files by given purpose" \
             -v "  Return the response in verbose mode" && exit 0
 
@@ -353,7 +353,7 @@ case $command in
             case ${opt} in
                 p ) purpose="$OPTARG" ;;
                 v ) verbose=true ;;
-                \? ) bin/error invalid_option "$OPTARG" && exit 1 ;;
+                \? ) b/error invalid_option "$OPTARG" && exit 1 ;;
             esac
         done
 
@@ -377,7 +377,7 @@ case $command in
     # ========================================================
     file.delete )
     
-            [[ -z "$2" ]] && bin/usage -w 4 "$0 file.delete" \
+            [[ -z "$2" ]] && b/usage -w 4 "$0 file.delete" \
                 -f "* The file ID to delete" \
                 -v "  Return the response in verbose mode" && exit 0
     
@@ -385,7 +385,7 @@ case $command in
                 case ${opt} in
                     f ) file_id="$OPTARG" ;;
                     v ) verbose=true ;;
-                    \? ) bin/error invalid_option "$OPTARG" && exit 1 ;;
+                    \? ) b/error invalid_option "$OPTARG" && exit 1 ;;
                 esac
             done
     
@@ -398,7 +398,7 @@ case $command in
     # ========================================================
     images.create )
     
-            [[ -z "$2" ]] && bin/usage -w 4 "$0 images.create" \
+            [[ -z "$2" ]] && b/usage -w 4 "$0 images.create" \
                 -p "* The prompt for the image" \
                 -m "  The model to use" \
                 -n "  The number of images to generate" \
@@ -427,7 +427,7 @@ case $command in
                     t ) style="$OPTARG" ;;
                     u ) user="$OPTARG" ;;
                     v ) verbose=true ;;
-                    \? ) bin/error invalid_option "$OPTARG" && exit 1 ;;
+                    \? ) b/error invalid_option "$OPTARG" && exit 1 ;;
                 esac
             done
     
@@ -451,7 +451,7 @@ case $command in
     # ========================================================
     audio.create )
     
-            [[ -z "$2" ]] && bin/usage -w 4 "$0 audio.create" \
+            [[ -z "$2" ]] && b/usage -w 4 "$0 audio.create" \
                 -i "* The input text" \
                 -m "  The model to use" \
                 -v "  The voice to use" \
@@ -474,7 +474,7 @@ case $command in
                     s ) speed="$OPTARG" ;;
                     u ) user="$OPTARG" ;;
                     v ) verbose=true ;;
-                    \? ) bin/error invalid_option "$OPTARG" && exit 1 ;;
+                    \? ) b/error invalid_option "$OPTARG" && exit 1 ;;
                 esac
             done
     
@@ -503,7 +503,7 @@ case $command in
     # ========================================================
     audio.transcribe )
 
-        [[ -z "$2" ]] && bin/usage -w 4 "$0 audio.transcribe" \
+        [[ -z "$2" ]] && b/usage -w 4 "$0 audio.transcribe" \
             -f "* The audio file to transcribe" \
             -o "~ The output file name (ie, output.txt) -- helpful for longer transcriptions" \
             -m "  The model to use" \
@@ -532,7 +532,7 @@ case $command in
                 t ) temperature="$OPTARG" ;;
                 g ) timestamp_granularities="$OPTARG" ;;
                 v ) verbose=true ;;
-                \? ) bin/error invalid_option "$OPTARG" && exit 1 ;;
+                \? ) b/error invalid_option "$OPTARG" && exit 1 ;;
             esac
         done
 
@@ -546,7 +546,7 @@ case $command in
         if (( file_size > MAX_SIZE )); then
 
             # First, check if ffmpeg is installed (we need it to split the file)
-            [ ! -x "$(command -v ffmpeg)" ] && bin/error "ffmpeg is not installed" "Please install ffmpeg to use this feature" && exit 1
+            [ ! -x "$(command -v ffmpeg)" ] && b/error "ffmpeg is not installed" "Please install ffmpeg to use this feature" && exit 1
 
             # Second, we don't weant to clog up the console with a huge response, so we need to specify an output file
             if [[ -z "$output_file" ]]; then

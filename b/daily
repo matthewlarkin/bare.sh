@@ -1,6 +1,6 @@
 #!/bin/bash
 
-[ -z "$DAILY_API_KEY" ] && bin/error missing_key "Daily.co API key not set (DAILY_API_KEY)" && exit 1
+[ -z "$DAILY_API_KEY" ] && b/error missing_key "Daily.co API key not set (DAILY_API_KEY)" && exit 1
 
 command=$1
 shift
@@ -12,7 +12,7 @@ case $command in
 
         while getopts "hn:p:w:x:l:s:k:e:r:t" opt; do
             case $opt in
-                h ) bin/usage -t options -w 4 $0 \
+                h ) b/usage -t options -w 4 $0 \
                     -n "sets the name of the room" \
                     -p "sets the privacy of the room" \
                     -w "sets the not before date" \
@@ -23,7 +23,7 @@ case $command in
                     -e "sets the eject at expiration" \
                     -r "allow recording" \
                     -t "allows transcription" && exit 0 ;;
-                n ) name=${OPTARG:-$(bin/random string)} ;;
+                n ) name=${OPTARG:-$(b/random string)} ;;
                 p ) privacy=${OPTARG:-'private'} ;;
                 w ) not_before=$OPTARG ;;
                 x ) expires=$OPTARG ;;
@@ -81,7 +81,7 @@ case $command in
         response=$(curl https://api.daily.co/v1/rooms -s \
             -H "Content-Type: application/json" \
             -H "Authorization: Bearer $DAILY_API_KEY" \
-            -d "$json_payload") || { bin/error api_error "Failed to create room"; exit 1; }
+            -d "$json_payload") || { b/error api_error "Failed to create room"; exit 1; }
 
         echo $response | jq
 
@@ -94,7 +94,7 @@ case $command in
 
         response=$(curl https://api.daily.co/v1/transcript -s \
             -H "Content-Type: application/json" \
-            -H "Authorization: Bearer $DAILY_API_KEY") || { bin/error api_error "Failed to list transcriptions"; exit 1; }
+            -H "Authorization: Bearer $DAILY_API_KEY") || { b/error api_error "Failed to list transcriptions"; exit 1; }
 
         echo $response | jq
 
@@ -102,7 +102,7 @@ case $command in
         
 
     * )
-        bin/error invalid_command "Invalid command: $command"
+        b/error invalid_command "Invalid command: $command"
         exit 1
         ;;
 

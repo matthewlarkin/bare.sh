@@ -27,8 +27,8 @@ openssl rand -base64 12
 echo $(( $RANDOM % 100 ))
 
 # 🤩 using bare.sh
-bin/random string
-bin/random number
+b/random string
+b/random number
 ```
 
 ```bash
@@ -74,7 +74,7 @@ curl https://api.openai.com/v1/chat/completions \
 # }
 
 # 🤩 using bare.sh
-bin/openai chat -a "You are a chef" -m "Are you a chef?"
+b/openai chat -a "You are a chef" -m "Are you a chef?"
 
 # => response: {"response":"Yes, I am a chef! How can I help you today?"}
 ```
@@ -93,7 +93,7 @@ These are all available in most package managers.
 ---
 
 ## Overview
-At it's root, `bare.sh` is a collection of unix-like directories (`/bin`, `/lib`, `/sh`, and `/tmp`) each containing bash scripts and programs for a specific task.
+At it's root, `bare.sh` is a collection of unix-like directories (`/b`, `/lib`, `/sh`, and `/tmp`) each containing bash scripts and programs for a specific task.
 
 Most of these scripts are small in scope, take simple input, and provide simple JSON output. This allows us to chain commands together and use them in a variety of inanticipatable ways, especially when combined with other tools like `jq`.
 
@@ -103,11 +103,11 @@ Most of these scripts are small in scope, take simple input, and provide simple 
 Let's get something going. To give you an idea of how you can use the system, here are a few quick examples.
 ```bash
 # OpenAI
-bin/openai chat -m "Hello there!"
+b/openai chat -m "Hello there!"
 
 # => { "response" : "General Kenobi! You are a bold one." }
 
-bin/openai assistants.create \
+b/openai assistants.create \
     -n "Suspicous Susan" \
     -i "You take the given input and question it. \
     You pick it apart and look for the pessimistic \
@@ -119,7 +119,7 @@ bin/openai assistants.create \
 # =============
 
 # Video
-bin/ffmpeg video.360 -f my_video.mp4 -o my_video.360.mp4
+b/ffmpeg video.360 -f my_video.mp4 -o my_video.360.mp4
 
 # => { "360p_file" : "my_video.360.mp4" }
 ```
@@ -127,13 +127,13 @@ bin/ffmpeg video.360 -f my_video.mp4 -o my_video.360.mp4
 ---
 
 ## Documentation
-The system is self-documenting. Learn more about a commands usage by running any command without arguments -- even `bin/usage`! (which is itself used to print usage information for the other commands 😄)
+The system is self-documenting. Learn more about a commands usage by running any command without arguments -- even `b/usage`! (which is itself used to print usage information for the other commands 😄)
 ```bash
-bin/openai
+b/openai
 
 # - - -
 #
-# 📚 Usage: bin/openai [commands]
+# 📚 Usage: b/openai [commands]
 #
 #   chat                          Send a message to an AI model
 #   assistants.create             Create a new assistant
@@ -151,11 +151,11 @@ bin/openai
 #
 # - - -
 
-bin/openai chat
+b/openai chat
 
 # - - -
 #
-# 📚 Usage: bin/openai chat [options]
+# 📚 Usage: b/openai chat [options]
 #
 #   -m    * The message to send
 #   -o      The model to use
@@ -180,7 +180,7 @@ git clone https://github.com/matthewlarkin/bare.sh && cd bare.sh
 # Set necessary keys as environment variables *
 export OPENAI_API_KEY="sk-xxxxxxxxxxxxxxxx"
 
-bin/openai chat -m "Tell me if this worked."
+b/openai chat -m "Tell me if this worked."
 ```
 *Security note*: Exporting keys as environment variables directly in the shell is not recommended for production use as they can be surfaced from your shell history. Instead, it may be better to set this in your shell configuration file (`.bashrc`, `.zshrc`, etc)
 
