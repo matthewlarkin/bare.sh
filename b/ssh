@@ -2,7 +2,7 @@
 
 source lib/colors
 
-./bin/usage $0 \
+./b/usage $0 \
     "-l" "List all public keys" \
     "-n" "Create a new key pair" \
     "-d" "Print the default public key" && exit 0

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # If no command is provided, display usage information and exit
-[ -z "$1" ] && bin/usage -t commands -w 4 $0 \
+[ -z "$1" ] && b/usage -t commands -w 4 $0 \
     string "generates a random string" \
     number "generates a random number" && exit 0
 
@@ -18,7 +18,7 @@ case $command in
         while getopts "l:h" opt; do
             case $opt in
                 l ) byte_length=$OPTARG ;;
-                h ) bin/usage -t options -w 4 $0 \
+                h ) b/usage -t options -w 4 $0 \
                     -l "sets byte length of random string" && exit 0 ;;
                 \? ) echo "Invalid option: -$OPTARG" ;;
             esac
@@ -35,7 +35,7 @@ case $command in
         while getopts "l:h" opt; do
             case $opt in
                 l ) byte_length=$OPTARG ;;
-                h ) bin/usage -t options -w 4 $0 \
+                h ) b/usage -t options -w 4 $0 \
                     -l "sets byte length of random number" && exit 0 ;;
                 \? ) echo "Invalid option: -$OPTARG" ;;
             esac

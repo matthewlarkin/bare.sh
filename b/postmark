@@ -4,7 +4,7 @@
 [ ! -x "$(command -v jq)" ] && echo "🚨 jq is not installed" && exit 1
 [ -z "$POSTMARK_SERVER_TOKEN" ] && echo "🚨 POSTMARK_SERVER_TOKEN environment variable is not set" && exit 1
 
-[[ -z "$1" ]] && bin/usage -w 4 $0 \
+[[ -z "$1" ]] && b/usage -w 4 $0 \
     "-t" "Recipient email address" \
     "-s" "Email subject" \
     "-b" "HTML body" \
@@ -39,7 +39,7 @@ case $command in
     # ========================================================
     send )
 
-        [[ -z "$1" ]] && bin/usage -w 4 "$0 send" \
+        [[ -z "$1" ]] && b/usage -w 4 "$0 send" \
             -t "* Recipient email address" \
             -s "* Email subject" \
             -b "* HTML body" \
