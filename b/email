@@ -55,7 +55,7 @@ case "$command" in
                 b ) bcc="$OPTARG" ;;
                 s ) subject="$OPTARG" ;;
                 h ) html_body="$OPTARG" ;;
-                a ) attachment="$OPTARG" ;;
+                a ) IFS=',' read -r -a attachments <<< "$OPTARG" ;;
                 p ) password="$OPTARG" ;;
                 H ) server="$OPTARG" ;;
                 P ) port="$OPTARG" ;;
@@ -90,34 +90,35 @@ Content-Transfer-Encoding: quoted-printable
 $html_body
 EOF
 
-        # If the -a option is given, check if the attachment file exists and is readable
-        if [ -n "$attachment" ] && [ -r "$attachment" ]; then
-            echo "--$boundary" >> "$tmp_file"
-            echo "Content-Type: application/octet-stream; name=\"$(basename "$attachment")\"" >> "$tmp_file"
-            echo "Content-Transfer-Encoding: base64" >> "$tmp_file"
-            echo "Content-Disposition: attachment; filename=\"$(basename "$attachment")\"" >> "$tmp_file"
-            echo "" >> "$tmp_file"
+        # Loop through each attachment and add it to the email
+        for attachment in "${attachments[@]}"; do
+            if [ -n "$attachment" ] && [ -r "$attachment" ]; then
+                echo "--$boundary" >> "$tmp_file"
+                echo "Content-Type: application/octet-stream; name=\"$(basename "$attachment")\"" >> "$tmp_file"
+                echo "Content-Transfer-Encoding: base64" >> "$tmp_file"
+                echo "Content-Disposition: attachment; filename=\"$(basename "$attachment")\"" >> "$tmp_file"
+                echo "" >> "$tmp_file"
 
-            # Determine whether to use gbase64 (macOS with coreutils) or base64 (other systems)
-            base64_cmd="base64"
-            if [[ "$OSTYPE" == "darwin"* ]] && command -v gbase64 >/dev/null 2>&1; then
-                base64_cmd="gbase64"
+                # Determine whether to use gbase64 (macOS with coreutils) or base64 (other systems)
+                base64_cmd="base64"
+                if [[ "$OSTYPE" == "darwin"* ]] && command -v gbase64 >/dev/null 2>&1; then
+                    base64_cmd="gbase64"
+                fi
+
+                # Use the determined base64 command to encode the attachment
+                if ! $base64_cmd -w 0 "$attachment" >> "$tmp_file"; then
+                    echo "Error: Failed to encode attachment" >&2
+                    exit 1
+                fi
+                echo "" >> "$tmp_file"
+                # Do not close the boundary here
+            else
+                echo "Warning: Attachment file '$attachment' does not exist or is not readable" >&2
             fi
+        done
 
-            # Use the determined base64 command to encode the attachment
-            if ! $base64_cmd -w 0 "$attachment" >> "$tmp_file"; then
-                echo "Error: Failed to encode attachment" >&2
-                exit 1
-            fi
-            echo "" >> "$tmp_file"
-            echo "--$boundary--" >> "$tmp_file"
-        else
-            echo "--$boundary--" >> "$tmp_file"
-        fi
-
-        if [ -n "$attachment" ] && ! [ -r "$attachment" ]; then
-            echo "Warning: Attachment file '$attachment' does not exist or is not readable" >&2
-        fi
+        # Close the MIME multipart message after all attachments have been added
+        echo "--$boundary--" >> "$tmp_file"
 
         curl -s -n --ssl-reqd --url "smtps://$server:$port" --mail-from "$from" --mail-rcpt "$to" --user "$from:$password" --upload-file "$tmp_file"
 
