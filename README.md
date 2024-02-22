@@ -18,8 +18,8 @@ Simplified API interfaces. Minimalist JSON responses. Few dependencies. Unreason
 "Why do this?", you may ask. Why not just use the official libraries or other popular libraries? And why bash? Why not write this in python?
 
 1. **Simplicity**: Official libraries are often large and complex, with many features that you may never use. This system is designed to be simple and allow expressive chaining of commands that are functional in nature and easy to understand and change over time.
-2. **Speed + Ubiquity**: Bash can be very fast, and it's already installed on most systems and is great for quick scripts and one-liners. This system is designed to be fast and easy to use anywhere there is a shell (a lot of places).
-3. **Expressiveness**: `bare.sh` commands are designed to have a certain speakable quality to them. They are designed to be easy to remember and easy to use in a variety of contexts.
+2. **Speed + Ubiquity**: Bash can be very fast, and it's already installed on most systems. This system is designed to be fast and easy to use anywhere there is a shell (a lot of places).
+3. **Expressiveness**: `bare.sh` commands are designed to have a *speakable* nature to them. They are designed to be easy to remember and easy to use in a variety of contexts.
 
 ```bash
 # 😬 standard way to generate random strings and numbers
@@ -29,53 +29,9 @@ echo $(( $RANDOM % 100 ))
 # 🤩 using bare.sh
 b/random string
 b/random number
-```
 
-```bash
-# 😬 standard way to send a chat message to OpenAI
-curl https://api.openai.com/v1/chat/completions \
-    -H "Content-Type: application/json" \
-    -H "Authorization: Bearer $OPENAI_API_KEY" \
-    -d '{
-        "model": "gpt-3.5-turbo",
-        "messages": [
-            {
-                "role": "system",
-                "content": "You are a chef"
-            },
-            {
-                "role": "user",
-                "content": "Are you a chef?"
-            }
-        ]
-    }'
-# => response: {
-#     "id": "chatcmpl-xxxxxxxxxxxxxxxxxxxxxxxx",
-#     "object": "chat.completion",
-#     "created": 1708270909,
-#     "model": "gpt-3.5-turbo-0125",
-#     "choices": [
-#         {
-#             "index": 0,
-#             "message": {
-#                 "role": "assistant",
-#                 "content": "Yes, I am a chef! How can I help you today?"
-#             },
-#             "logprobs": null,
-#             "finish_reason": "stop"
-#         }
-#     ],
-#     "usage": {
-#         "prompt_tokens": 21,
-#         "completion_tokens": 14,
-#         "total_tokens": 35
-#     },
-#     "system_fingerprint": "fp_xxxxxxxxxx"
-# }
-
-# 🤩 using bare.sh
+# 🤩 so simple
 b/openai chat -a "You are a chef" -m "Are you a chef?"
-
 # => response: {"response":"Yes, I am a chef! How can I help you today?"}
 ```
 
