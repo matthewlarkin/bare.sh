@@ -1,0 +1,136 @@
+#!/bin/bash
+
+# simple sending and checking of email via curl
+
+[[ -z "$1" ]] && b/usage -w 8 "$0" \
+    send "Send email" \
+    check "Check email" && exit 0;
+
+command="$1"
+shift
+
+# if not send or check, print usage
+[[ "$command" != "send" && "$command" != "check" ]] && b/usage -w 8 "$0" \
+    send "Send email" \
+    check "Check email" && exit 0;
+
+
+case "$command" in
+
+
+    # ========================================
+    send ) # send email
+
+        [[ -z "$1" ]] && b/usage -w 8 "$0" \
+            -f "* From" \
+            -t "* To" \
+            -c "  Cc" \
+            -b "  Bcc" \
+            -s "* Subject" \
+            -h "* HTML Body" \
+            -a "  Attachment" \
+            -H "* Server" \
+            -P "  Port" \
+            -p "= Password" && exit 0;
+
+        to=""
+        from=""
+        cc=""
+        bcc=""
+        subject=""
+        html_body=""
+        attachment=""
+
+        server=""
+        port="465"
+
+        password=""
+
+        # getopts
+        while getopts "t:f:c:b:s:h:a:p:H:P:" opt; do
+            case $opt in
+                t ) to="$OPTARG" ;;
+                f ) from="$OPTARG" ;;
+                c ) cc="$OPTARG" ;;
+                b ) bcc="$OPTARG" ;;
+                s ) subject="$OPTARG" ;;
+                h ) html_body="$OPTARG" ;;
+                a ) attachment="$OPTARG" ;;
+                p ) password="$OPTARG" ;;
+                H ) server="$OPTARG" ;;
+                P ) port="$OPTARG" ;;
+                \? ) echo "Invalid option -$OPTARG" >&2; exit 1 ;;
+            esac
+        done
+
+        # if p not provided, read -s
+        if [ -z "$password" ]; then
+          read -s -p "Password: " password
+        fi
+
+        tmp_file="./tmp/$(openssl rand -hex 12).txt"
+
+        cat <<-EOF > $tmp_file
+            From: $from
+            To: $to
+            Cc: $cc
+            Bcc: $bcc
+            Subject: $subject
+            MIME-Version: 1.0
+            Content-Type: text/html
+            Content-Transfer-Encoding: 7bit
+
+            $html_body
+EOF
+
+        # create the email
+        curl -s -n --ssl-reqd --url "smtps://$server:$port" --mail-from "$from" --mail-rcpt "$to" --user "$from:$password" --upload-file $tmp_file
+
+        # remove the tmp file
+        rm $tmp_file
+        
+        ;;
+
+    # ========================================
+    check ) # check email
+
+        [[ -z "$1" ]] && b/usage -w 8 "$0" \
+            -H "* Host server" \
+            -P "  Port" \
+            -u "* Username" \
+            -p "= Password" \
+            -l "= List" \
+            -m "= Message" && exit 0;
+
+        server=""
+        port="995"
+        username=""
+        password=""
+
+        # getopts
+        while getopts "lm:H:P:u:p:" opt; do
+            case $opt in
+                l ) list="$OPTARG" ;;
+                m ) message="$OPTARG" ;;
+                H ) server="$OPTARG" ;;
+                P ) port="$OPTARG" ;;
+                u ) username="$OPTARG" ;;
+                p ) password="$OPTARG" ;;
+                \? ) echo "Invalid option -$OPTARG" >&2; exit 1 ;;
+            esac
+        done
+
+        # if p not provided, read -s
+        if [ -z "$password" ]; then
+          read -s -p "Password: " password
+        fi
+
+        # check pop3 with curl
+        if [[ -n "$list" ]]; then
+            curl -s -n --ssl-reqd "pop3s://$server:$port" --user "$username:$password"
+        else
+            curl -s -n --ssl-reqd "pop3s://$server:$port/$message" --user "$username:$password"
+        fi
+
+        ;;
+esac
