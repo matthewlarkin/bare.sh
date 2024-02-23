@@ -1,3 +1,78 @@
 #!/bin/bash
 
-# Coming soon
+[[ -z "$bare_stripe_api_key" ]] && echo "bare_stripe_api_key environment variable not set" && exit 1
+
+[[ -z "$1" ]] && b/usage -t "commands" -w 12 $0 \
+    checkouts.create "Creates a new checkout session" \
+    checkout.get "Retrieves a checkout session" \
+    customers.list "Lists customers" \
+    customers.create "Creates a new customer" \
+    customer.edit "Edits a customer" \
+    customer.get "Retrieves a customer" \
+    invoices.create "Creates a new invoice" \
+    invoice.get_url "Retrieves an invoice" \
+    line_items.create "Creates a new line item" \
+    line_item.edit "Edits a line item" && exit 0;
+
+command="$1"
+shift
+
+case $command in
+    checkouts.create)
+        amount=""
+        currency=""
+        customer=""
+        success_url=""
+        cancel_url=""
+        line_items=()
+        while getopts "a:c:u:s:l:" opt; do
+            case $opt in
+                a) amount="$OPTARG";;
+                c) currency="$OPTARG";;
+                u) customer="$OPTARG";;
+                s) success_url="$OPTARG";;
+                l) line_items+=("$OPTARG");;
+                \?) echo "Invalid option: -$OPTARG" && exit 1;;
+            esac
+        done
+
+        # ... (rest of the script)
+
+        for line_item in "${line_items[@]}"; do
+            IFS='|' read -r -a parts <<< "$line_item"
+            amount="${parts[0]}"
+            currency="${parts[1]}"
+            description="${parts[2]}"
+
+            curl -s -X POST https://api.stripe.com/v1/checkout/sessions \
+                -u $bare_stripe_api_key: \
+                -d "payment_method_types[]=card" \
+                -d "line_items[][amount]=$amount" \
+                -d "line_items[][currency]=$currency" \
+                -d "line_items[][quantity]=1" \
+                -d "line_items[][description]=$description" \
+                -d "success_url=$success_url" \
+                -d "cancel_url=$cancel_url" \
+                -d "customer=$customer" | jq
+        done
+        ;;
+    checkout.get)
+        id=""
+        while getopts "i:" opt; do
+            case $opt in
+                i) id="$OPTARG";;
+                \?) echo "Invalid option: -$OPTARG" && exit 1;;
+            esac
+        done
+        [[ -z "$id" ]] && echo "No ID specified" && exit 1
+        curl -s -X GET https://api.stripe.com/v1/checkout/sessions/$id \
+            -u $bare_stripe_api_key: | jq
+        ;;
+    customers.list)
+        curl -s -X GET https://api.stripe.com/v1/customers \
+            -u $bare_stripe_api_key: | jq
+        ;;
+    customers.create)
+        email=""
+        while getopts "e:" opt; do
+            case $
