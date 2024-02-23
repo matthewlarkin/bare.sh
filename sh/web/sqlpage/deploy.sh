@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source colors.sh
+source lib/colors
 
 printf "\n\n- - - - - - - - - - - - - - - - - - -\n"
 printf "\n- - 🌳 SQLPage Deploy 🌳 - - - - - - -\n"

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source colors.sh
+source lib/colors
 
 # Security Tools Installation and Configuration on Ubuntu 22.04 VPS
 # This is the second part of the VPS hardening process (after initial-setup.sh)

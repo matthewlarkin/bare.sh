@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source colors.sh
+source lib/colors
 
 # User Creation and SSH Configuration on Ubuntu 22.04 VPS
 # This is the first part of the VPS hardening process (before security-setup.sh)
