@@ -7,8 +7,8 @@ printf "\n- - 🌳 SQLPage Deploy 🌳 - - - - - - -\n"
 printf "\n- - - - - - - - - - - - - - - - - - -\n\n"
 
 # Installs NGINX and SQLPage
-bash web/nginx/install.sh
-bash web/sqlpage/install.sh
+bash sh/web/nginx/install.sh
+bash sh/web/sqlpage/install.sh
 
 # Collect details about the project from the user
 printf "\n- - - 🌿 Project Details 🌿 - - -\n"
@@ -28,8 +28,8 @@ repo_name=$(echo $repo | cut -d'/' -f2)
 
 # Check if the domain is pointing to the
 # server's IP address and sets up /var/www/
-bash web/dns-check.sh "$domain"
-bash web/www.sh
+bash sh/web/dns-check.sh "$domain"
+bash sh/web/www.sh
 
 
 
@@ -41,24 +41,24 @@ bash web/www.sh
 
 # list available SSH keys
 printf "\n- - - 🌿 SSH Keys 🌿 - - -\n"
-available_ssh_keys=$(bash security/ssh -l)
+available_ssh_keys=$(bash b/ssh -l)
 
 # if there are no SSH keys, create a new one
 if [ -z "$available_ssh_keys" ]; then
     printf "\n⚠️ ${yellow}No SSH keys found.${reset}\n"
     printf "\n🚜 Creating a new SSH key...\n"
-    bash security/ssh -n
+    bash b/ssh -n
     printf "\n✅ ${green}SSH key created!${reset}\n"
 else
     printf "\n🚜 Use an existing SSH key? (y/n): " && read use_existing_ssh_key
     if [ "$use_existing_ssh_key" = "n" ]; then
         printf "\n🚜 Creating a new SSH key...\n"
-        bash security/ssh -n
+        bash b/ssh -n
         printf "\n✅ ${green}SSH key created!${reset}\n"
     else
         # print the existing public key
         printf "\nYour existing public key is:\n"
-        bash security/ssh -e
+        bash b/ssh -e
     fi
 fi
 
