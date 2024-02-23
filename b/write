@@ -1,0 +1,30 @@
+#!/bin/bash
+
+[[ -z $1 ]] && b/usage -t "options" -w 12 $0 \
+    -c "* Content to write out" \
+    -f "file to write to (defaults to stdout)" && exit 0;
+
+content=""
+file="/dev/stdout"
+
+while getopts ":c:f:" opt; do
+    case ${opt} in
+        c)
+            content=$OPTARG
+            ;;
+        f)
+            file=$OPTARG
+            ;;
+        \?)
+            echo "Invalid option: -$OPTARG" 1>&2
+            exit 1
+            ;;
+    esac
+done
+
+if [[ -z $content ]]; then
+    echo "Error: Please provide content to write out."
+    exit 1
+fi
+
+echo -e "$content" > "$file"

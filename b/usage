@@ -2,6 +2,12 @@
 
 source lib/colors
 
+[[ -z $1 ]] && b/usage -t "options" -w 12 $0 \
+    -t "type [commands | options]" \
+    -w "width of the type column (int)" \
+    ":1" "Name of the script or command" \
+    ":key :value" "Names of the options and their descriptions" && exit 0;
+
 # Default values
 type="options"
 width=24
