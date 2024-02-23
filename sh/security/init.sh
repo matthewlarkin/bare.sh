@@ -21,9 +21,9 @@ chmod 700 /home/$my_new_user/.ssh
 chmod 600 /home/$my_new_user/.ssh/authorized_keys
 
 # Create the server-admin directory in the new user's home
-sudo mkdir -p /home/$my_new_user/server-admin
-sudo chown -R $my_new_user:$my_new_user /home/$my_new_user/server-admin
-sudo cp -r /root/server-admin/* /home/$my_new_user/server-admin/
+sudo mkdir -p /home/$my_new_user/bare.sh
+sudo chown -R $my_new_user:$my_new_user /home/$my_new_user/bare.sh
+sudo cp -r /root/bare.sh/* /home/$my_new_user/bare.sh/
 
 
 # Secure SSH Configuration
