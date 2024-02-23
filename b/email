@@ -29,7 +29,7 @@ case "$command" in
             -s "* Subject" \
             -h "* HTML Body" \
             -a "  Attachment" \
-            -H "* Server" \
+            -H "* Host SMTP Server" \
             -P "  Port" \
             -p "= Password" && exit 0;
 
@@ -132,7 +132,7 @@ EOF
     check ) # check email
 
         [[ -z "$1" ]] && b/usage -w 8 "$0" \
-            -H "* Host server" \
+            -H "* Host POP3 server" \
             -P "  Port" \
             -u "* Username" \
             -p "= Password" \
