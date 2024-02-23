@@ -28,8 +28,8 @@ repo_name=$(echo $repo | cut -d'/' -f2)
 
 # Check if the domain is pointing to the
 # server's IP address and sets up /var/www/
-bash sh/web/dns-check.sh "$domain"
-bash sh/web/www.sh
+bash b/dns-check "$domain"
+bash b/www-setup
 
 
 
