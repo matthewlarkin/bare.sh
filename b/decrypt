@@ -1,6 +1,6 @@
 #!/bin/bash
 
-[[ -z "$bare_encryption_key" ]] && echo "bare_encryption_key environment variable not set" && exit 1
+[[ -z "$BARE_ENCRYPTION_KEY" ]] && echo "bare_encryption_key environment variable not set" && exit 1
 
 [[ -z "$1" ]] && b/usage -t "options" -w 2 $0 \
     -s "= string to decrypt" \
