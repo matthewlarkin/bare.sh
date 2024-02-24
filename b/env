@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# sets or removes the environment variables in ~/.bashrc or ~/.zshrc
+
+[[ -z "$1" ]] && b/usage -w 8 -t "commands" $0 \
+    "set" "set the environment variable (put in single quotes to use double quotes)" \
+    "remove" "remove the environment variables" && exit 0;
+
+command="$1"
+shift
+
+# Detect the shell configuration file
+if [[ "$SHELL" == *"bash"* ]]; then
+    config_file=~/.bashrc
+elif [[ "$SHELL" == *"zsh"* ]]; then
+    config_file=~/.zshrc
+else
+    echo "Unsupported shell: $SHELL" && exit 1
+fi
+
+case "$command" in
+    set)
+        [[ -z "$@" ]] && b/usage -w 2 -t "options" "$0 set" \
+            ":?" "VAR2=value2 VAR3=value3 ..." && exit 0;
+        for var in "$@"; do
+            echo "export $var" >> $config_file
+            echo -e "\nDone!\nYou should source the config file to apply the changes:\n => source $config_file\n"
+        done
+        ;;
+    remove)
+        for var in "$@"; do
+            if [[ "$OSTYPE" == "darwin"* ]]; then
+                # Mac OS uses BSD sed, which requires an extension with -i
+                sed -i "" "/export $var/d" $config_file
+            else
+                # GNU sed doesn't require an extension with -i
+                sed -i "/export $var/d" $config_file
+            fi
+        done
+        echo -e "\nDone!\nYou should unset the environment variables to apply the changes to this session:\n => unset $@\n"
+        ;;
+    *) echo "Invalid command: $command" && exit 1 ;;
+esac
