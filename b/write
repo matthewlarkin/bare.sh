@@ -1,5 +1,5 @@
 #!/bin/bash
-cd "$(dirname "${BASH_SOURCE[0]}")" && cd ../.. && source lib/init
+cd "$(dirname "${BASH_SOURCE[0]}")" && cd ../ && source lib/init
 
 [[ -z $1 ]] && b/usage -t "options" -w 12 $0 \
     -c "* Content to write out" \
