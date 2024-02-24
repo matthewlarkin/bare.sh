@@ -1,5 +1,5 @@
 #!/bin/bash
-cd "$(dirname "${BASH_SOURCE[0]}")/../" && { [ -f lib/init ] && source lib/init || echo "Cannot find lib/init" && exit 1; }
+cd "$(dirname "${BASH_SOURCE[0]}")/../" && { [ -f lib/init ] && source lib/init; } || { echo "Cannot find lib/init"; exit 1; }
 
 [ ! -x "$(command -v curl)" ] && echo "🚨 curl is not installed" && exit 1
 [ ! -x "$(command -v jq)" ] && echo "🚨 jq is not installed" && exit 1
