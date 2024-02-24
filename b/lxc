@@ -3,41 +3,63 @@
 bash sh/security/lxd-verify.sh
 
 # Check if a container name is provided
-if [ "$#" -ne 1 ]; then echo "Usage: $0 <container-name>"; exit 1; fi
+[[ -z "$1" ]] && b/usage -w 8 -t "commands" $0 \
+    create "Create a new container" && exit 0;
 
-container_name=$1
+command="$1"
 shift
 
-# Default to minimal resource limits and disk space
-cpu_limit="1"
-memory_limit="200MiB"
-disk_space="3GiB"
+case "$command" in
+    "create")
 
-# Get opts for resource limits and disk space
-while getopts "c:m:d:" opt; do
-    case $opt in
-        c) cpu_limit="$OPTARG";;
-        m) memory_limit="$OPTARG";;
-        d) disk_space="$OPTARG";;
-        \?) echo "Invalid option: -$OPTARG" && exit 1;;
-    esac
-done
+        # Check if a container name is provided
+        [[ -z "$1" ]] && b/usage -w 2 -t "options" "$0 create" \
+            -c "CPU limit (default: 1)" \
+            -m "Memory limit (default: 200MiB)" \
+            -d "Disk space (default: 3GiB)" \
+            -D "Distro (default: ubuntu:22.04)" && exit 0;
 
-# Step 1: Create the container (without starting it)
-lxc init ubuntu:22.04 "$container_name" --ephemeral
+        container_name=$1
+        shift
 
-# Step 2: Security configurations
-lxc config set "$container_name" security.idmap.isolated true
-lxc config set "$container_name" security.syscalls.blacklist "net_raw"
+        # Default to minimal resource limits and disk space
+        cpu_limit="1"
+        memory_limit="200MiB"
+        disk_space="3GiB"
+        distro="ubuntu:22.04"
 
-# Step 3: Resource limits
-lxc config set "$container_name" limits.cpu "$cpu_limit"
-lxc config set "$container_name" limits.memory "$memory_limit"
-lxc config set "$container_name" limits.memory.swap false
+        # Get opts for resource limits and disk space
+        while getopts "c:m:d:D:" opt; do
+            case $opt in
+                c) cpu_limit="$OPTARG";;
+                m) memory_limit="$OPTARG";;
+                d) disk_space="$OPTARG";;
+                D) distro="$OPTARG";;
+                \?) echo "Invalid option: -$OPTARG" && exit 1;;
+            esac
+        done
 
-# Step 4: Disk space
-lxc storage volume create default "$container_name"
-lxc storage volume set default "$container_name" size "$disk_space"
+        # Step 1: Create the container (without starting it)
+        lxc init "$distro" "$container_name" --ephemeral
 
-# Step 5: Start the container
-lxc start "$container_name"
+        # Step 2: Security configurations
+        lxc config set "$container_name" security.idmap.isolated true
+        lxc config set "$container_name" security.syscalls.blacklist "net_raw"
+
+        # Step 3: Resource limits
+        lxc config set "$container_name" limits.cpu "$cpu_limit"
+        lxc config set "$container_name" limits.memory "$memory_limit"
+        lxc config set "$container_name" limits.memory.swap false
+
+        # Step 4: Disk space
+        lxc storage volume create default "$container_name"
+        lxc storage volume set default "$container_name" size "$disk_space"
+
+        # Step 5: Start the container
+        lxc start "$container_name"
+        ;;
+    *)
+        echo "Unknown command: $command"
+        exit 1
+        ;;
+esac
