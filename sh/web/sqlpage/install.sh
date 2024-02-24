@@ -1,6 +1,7 @@
 #!/bin/bash
+cd "$(dirname "${BASH_SOURCE[0]}")/../../../" && { [ -f lib/init ] && source lib/init || echo "Cannot find lib/init" && exit 1; }
 
-bash web/nginx/install.sh
+bash sh/web/nginx/install.sh
 
 sqlpage_bin="https://github.com/lovasoa/SQLpage/releases/download/v0.18.3/sqlpage-linux.tgz"
 

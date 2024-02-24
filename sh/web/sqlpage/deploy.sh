@@ -1,4 +1,5 @@
 #!/bin/bash
+cd "$(dirname "${BASH_SOURCE[0]}")/../../../" && { [ -f lib/init ] && source lib/init || echo "Cannot find lib/init" && exit 1; }
 
 printf "\n\n- - - - - - - - - - - - - - - - - - -\n"
 printf "\n- - 🌳 SQLPage Deploy 🌳 - - - - - - -\n"

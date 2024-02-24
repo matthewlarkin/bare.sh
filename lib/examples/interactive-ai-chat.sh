@@ -1,4 +1,5 @@
 #!/bin/bash
+cd "$(dirname "${BASH_SOURCE[0]}")/../.." && { [ -f lib/init ] && source lib/init; } || { echo "Cannot find lib/init"; exit 1; }
 
 [ -f ./b/openai ] || {
     echo "🚨 Could not find openai"
