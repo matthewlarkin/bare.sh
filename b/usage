@@ -1,6 +1,5 @@
 #!/bin/bash
-
-source lib/colors
+source lib/init
 
 [[ -z $1 ]] && b/usage -t "options" -w 12 $0 \
     -t "type [commands | options]" \

@@ -1,4 +1,5 @@
 #!/bin/bash
+source lib/init
 
 # Check if the required arguments are provided
 [[ -z "$2" ]] && b/usage -t "options" -w 2 $0 \

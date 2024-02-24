@@ -1,4 +1,5 @@
 #!/bin/bash
+source lib/init
 
 [[ -z $1 ]] && b/usage -t "options" -w 12 $0 \
     -c "* Content to write out" \

@@ -1,4 +1,5 @@
 #!/bin/bash
+source lib/init
 
 # simple sending and checking of email via curl
 

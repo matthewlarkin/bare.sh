@@ -1,4 +1,6 @@
 #!/bin/bash
+source lib/init
+
 
 [[ -z "$bare_stripe_api_key" ]] && echo "bare_stripe_api_key environment variable not set" && exit 1
 

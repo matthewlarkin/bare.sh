@@ -1,4 +1,5 @@
 #!/bin/bash
+source lib/init
 
 bash sh/security/lxd-verify.sh
 

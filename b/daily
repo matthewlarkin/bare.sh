@@ -1,4 +1,5 @@
 #!/bin/bash
+source lib/init
 
 [ -z "$DAILY_API_KEY" ] && b/error missing_key "Daily.co API key not set (DAILY_API_KEY)" && exit 1
 
@@ -6,7 +7,6 @@ command=$1
 shift
 
 case $command in
-
 
     rooms.create )
 

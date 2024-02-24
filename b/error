@@ -1,6 +1,5 @@
 #!/bin/bash
-
-source lib/colors
+source lib/init
 
 [[ -z "$1" ]] && b/usage -w 4 $0 \
     ':1' "* error_code" \

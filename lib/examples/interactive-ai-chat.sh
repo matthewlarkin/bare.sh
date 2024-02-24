@@ -1,4 +1,4 @@
-source lib/colors
+#!/bin/bash
 
 [ -f ./b/openai ] || {
     echo "🚨 Could not find openai"

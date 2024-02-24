@@ -1,6 +1,5 @@
 #!/bin/bash
-
-source lib/colors
+source lib/init
 
 public_ip=$(curl -s ifconfig.me)
 

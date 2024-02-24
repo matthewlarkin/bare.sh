@@ -1,4 +1,5 @@
 #!/bin/bash
+source lib/init
 
 # sets or removes the environment variables in ~/.bashrc or ~/.zshrc
 

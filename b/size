@@ -1,4 +1,5 @@
 #!/bin/bash
+source lib/init
 
 [[ -z $1 ]] && b/usage -t options -w 4 $0 \
     -f "The path to the file to get the size of." && exit 0

@@ -1,7 +1,5 @@
 #!/bin/bash
 
-source lib/colors
-
 printf "\n\n- - - - - - - - - - - - - - - - - - -\n"
 printf "\n- - 🌳 SQLPage Deploy 🌳 - - - - - - -\n"
 printf "\n- - - - - - - - - - - - - - - - - - -\n\n"

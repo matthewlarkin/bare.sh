@@ -1,0 +1,4 @@
+#!/bin/bash
+
+[[ -f lib/.secrets ]] && source lib/.secrets
+[[ -f lib/colors ]] && source lib/colors

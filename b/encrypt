@@ -1,4 +1,5 @@
 #!/bin/bash
+source lib/init
 
 # checks for bare_encryption_key environment variable
 [[ -z "$BARE_ENCRYPTION_KEY" ]] && echo "bare_encryption_key environment variable not set" && exit 1

@@ -1,4 +1,5 @@
 #!/bin/bash
+source lib/init
 
 [ ! -x $(command -v ffmpeg) ] && b/error "ffmpeg not installed" "Please install ffmpeg to use this feature" && exit 1
 
