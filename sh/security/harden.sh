@@ -16,12 +16,24 @@ sudo apt install fail2ban -y
 sudo cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
 sudo systemctl restart fail2ban
 
-# Firewall Setup with UFW
-sudo apt install ufw -y
+# Firewall Setup with UFW, install with snap to play nice with lxc
+
+# check if snap is installed
+if ! [ -x "$(command -v snap)" ]; then
+  sudo apt update
+  sudo apt install snapd -y
+fi
+
+# install ufw with snap
+sudo snap install ufw -y
 sudo ufw default deny incoming
 sudo ufw allow ssh
 sudo ufw allow http
 sudo ufw allow https
+# lxbr0 is the default bridge for lxd, so we need to allow traffic on it
+sudo ufw allow in on lxdbr0
+sudo ufw route allow in on lxdbr0
+sudo ufw route allow out on lxdbr0
 sudo ufw enable
 sudo ufw status
 
