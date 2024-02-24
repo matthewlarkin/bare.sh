@@ -1,52 +1,28 @@
 #!/bin/bash
 
-# If no command is provided, display usage information and exit
-[ -z "$1" ] && b/usage -t commands -w 4 $0 \
-    string "generates a random string" \
-    number "generates a random number" && exit 0
+# Check if the required arguments are provided
+[[ -z "$2" ]] && b/usage -t "options" -w 2 $0 \
+    ":1" "= command (string or number)" \
+    ":2" "= length of the string or number" && exit 0;
 
-# Get the command and shift the arguments
+# Get the command and length
 command=$1
-shift
+length=$2
+
+[[ ! $length =~ ^[0-9]+$ ]] && echo "Invalid length: $length. Must be a positive integer." && exit 1;
 
 case $command in
 
     string )
-
-        byte_length=8
-
-        while getopts "l:h" opt; do
-            case $opt in
-                l ) byte_length=$OPTARG ;;
-                h ) b/usage -t options -w 4 $0 \
-                    -l "sets byte length of random string" && exit 0 ;;
-                \? ) echo "Invalid option: -$OPTARG" ;;
-            esac
-        done
-
-        # Generate random string
-        echo $(openssl rand -hex "$byte_length")
+        # Generate a random alphanumeric string of the given length
+        echo $(LC_ALL=C tr -dc 'a-zA-Z0-9' < /dev/urandom | head -c $length)
         ;;
-
     number )
-
-        byte_length=8
-
-        while getopts "l:h" opt; do
-            case $opt in
-                l ) byte_length=$OPTARG ;;
-                h ) b/usage -t options -w 4 $0 \
-                    -l "sets byte length of random number" && exit 0 ;;
-                \? ) echo "Invalid option: -$OPTARG" ;;
-            esac
-        done
-
-        # Generate random number
-        echo $(openssl rand -hex "$byte_length" | tr -dc '0-9' | fold -w "$byte_length" | head -n 1)
+        # Generate a random numeric string of the given length
+        echo $(LC_ALL=C tr -dc '0-9' < /dev/urandom | head -c $length)
         ;;
-
     * )
-        echo "Invalid command: $command"
+        echo "Invalid command: $command. Must be 'string' or 'number'."
+        exit 1
         ;;
-
 esac
