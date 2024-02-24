@@ -1,5 +1,5 @@
 #!/bin/bash
-source lib/init
+cd "$(dirname "${BASH_SOURCE[0]}")" && cd ../.. && source lib/init
 
 [ ! -x "$(command -v curl)" ] && echo "🚨 curl is not installed" && exit 1
 [ ! -x "$(command -v jq)" ] && echo "🚨 jq is not installed" && exit 1

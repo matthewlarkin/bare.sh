@@ -1,5 +1,5 @@
 #!/bin/bash
-source lib/init
+cd "$(dirname "${BASH_SOURCE[0]}")" && cd ../.. && source lib/init
 
 # check that /var/www/ exists
 if [ ! -d "/var/www" ]; then
