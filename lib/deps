@@ -53,9 +53,7 @@ if ! [ -x "$(command -v git)" ]; then
 fi
 
 # check if Nginx is installed (and install it if it's not)
-if [ -x "$(command -v nginx)" ]; then
-    printf "\n✅ Nginx is already installed\n"
-else
+if ! [ -x "$(command -v nginx)" ]; then
     if [ "$OS" = "Linux" ]; then
         sudo apt install -y nginx
         sudo systemctl enable nginx
@@ -67,7 +65,7 @@ else
 fi
 
 # check if SQLPage is installed (and install it if it's not)
-if [ ! -f "/usr/bin/sqlpage" ]; then
+if ! [ -x "$(command -v sqlpage)" ]; then
     if [ "$OS" = "Linux" ]; then
         sudo curl -s -L -O https://github.com/lovasoa/SQLpage/releases/download/v0.18.3/sqlpage-linux.tgz
         sudo tar -xzf sqlpage-linux.tgz && sudo rm sqlpage-linux.tgz

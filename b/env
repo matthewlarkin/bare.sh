@@ -1,5 +1,5 @@
 #!/bin/bash
-cd "$(dirname "${BASH_SOURCE[0]}")/../" && { [ -f lib/init ] && source lib/init; } || { echo "Cannot find lib/init"; exit 1; }
+source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
 # sets or removes the environment variables in ~/.bashrc or ~/.zshrc
 

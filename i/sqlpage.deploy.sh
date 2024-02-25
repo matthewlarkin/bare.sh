@@ -1,5 +1,11 @@
 #!/bin/bash
-cd "$(dirname "${BASH_SOURCE[0]}")/../" && source lib/init
+source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
+
+# if mac, don't run
+if [ "$BARE_OS" == "Darwin" ]; then
+    printf "\n⚠️  ${yellow}This script is intended to be run on a Linux server.${reset}\n\n"
+    exit 1
+fi
 
 printf "\n\n- - - - - - - - - - - - - - - - - - -\n"
 printf "\n- - 🌳 SQLPage Deploy 🌳 - - - - - - -\n"

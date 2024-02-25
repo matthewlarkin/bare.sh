@@ -1,5 +1,5 @@
 #!/bin/bash
-cd "$(dirname "${BASH_SOURCE[0]}")/../" && source lib/init
+source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
 # Security Tools Installation and Configuration on Ubuntu 22.04 VPS
 # This is the second part of the VPS hardening process (after initial-setup.sh)

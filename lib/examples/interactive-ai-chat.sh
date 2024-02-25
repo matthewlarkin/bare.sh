@@ -1,44 +1,33 @@
 #!/bin/bash
-cd "$(dirname "${BASH_SOURCE[0]}")/../.." && { [ -f lib/init ] && source lib/init; } || { echo "Cannot find lib/init"; exit 1; }
-
-[ -f ./b/openai ] || {
-    echo "🚨 Could not find openai"
-    exit 1
-}
+cd "$(dirname "${BASH_SOURCE[0]}")/../.." && source lib/init
 
 function create_run_and_poll() {
-
     local thread_id="$1"
     local assistant_id="$2"
     local message="$3"
 
     b/openai thread.messages.append -t "$thread_id" -m "$message" > /dev/null
 
-    run_id=$(b/openai thread.run -t "$thread_id" -a "$assistant_id")
-    run_id=$(echo "$run_id" | jq -r '.run_id')
+    local run_id=$(b/openai thread.run -t "$thread_id" -a "$assistant_id" | jq -r '.run_id')
 
-    status=$(b/openai thread.run.poll -t "$thread_id" -r "$run_id")
-    status=$(echo "$status" | jq -r '.status')
     echo -e "${muted}\n   Polling for AI response...${reset}"
 
-    while [[ "$status" == "in_progress" || "$status" == "queued" ]]; do
+    while true; do
+        local status=$(b/openai thread.run.poll -t "$thread_id" -r "$run_id" | jq -r '.status')
+        [[ "$status" != "in_progress" && "$status" != "queued" ]] && break
         sleep 2
-        status=$(b/openai thread.run.poll -t "$thread_id" -r "$run_id" | jq -r '.status')
     done
 
-    if [[ "$status" == "completed" ]]; then
-        last_message=$(b/openai thread.messages.list -t "$thread_id" | jq -r '.messages[0].value')
-        echo -e "\n🤖 ${green}ASSISTANT${reset}: $last_message"
-    fi
-
+    local last_message=$(b/openai thread.messages.list -t "$thread_id" | jq -r '.messages[0].value')
+    echo -e "\n🤖 ${green}ASSISTANT${reset}: $last_message"
 }
 
 while true; do
     printf "\n✨ Do you want to create a NEW assistant or use an EXISTING one? (n/e): " && read assistant_choice
 
     if [[ "$assistant_choice" == "new" || "$assistant_choice" == "n" ]]; then
-        printf "\n✨ Enter assistant name: " && read -r assistant_name
-        printf "\n✨ Enter system prompt: " && read -r system_prompt
+        printf "\n✨ Enter assistant name (for internal use): " && read -r assistant_name
+        printf "\n✨ Enter system prompt (tell the assistant who they are and what to do): " && read -r system_prompt
         response=$(b/openai assistants.create -n "$assistant_name" -i "$system_prompt" -t "code_interpreter|retrieval")
         assistant_id=$(echo "$response" | jq -r '.assistant_id')
         echo -e "${muted}\nAssistant created with id: $assistant_id${reset}"

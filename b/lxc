@@ -1,5 +1,11 @@
 #!/bin/bash
-cd "$(dirname "${BASH_SOURCE[0]}")/../" && source lib/init
+source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
+
+# if on mac, recommend installing lxc via brew with remote lxd
+if [[ "${BARE_OS,,}" == "darwin"* ]]; then
+    echo "🌿 It looks like you're on a Mac, which cannot run lxc"
+    exit 0
+fi
 
 # Check if a container name is provided
 [[ -z "$1" ]] && b/usage -w 8 -t "commands" $0 \
