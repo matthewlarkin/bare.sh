@@ -1,20 +1,16 @@
 #!/bin/bash
-cd "$(dirname "${BASH_SOURCE[0]}")/../../../" && { [ -f lib/init ] && source lib/init || echo "Cannot find lib/init" && exit 1; }
+cd "$(dirname "${BASH_SOURCE[0]}")/../" && source lib/init
 
 printf "\n\n- - - - - - - - - - - - - - - - - - -\n"
 printf "\n- - 🌳 SQLPage Deploy 🌳 - - - - - - -\n"
 printf "\n- - - - - - - - - - - - - - - - - - -\n\n"
 
-# Installs NGINX and SQLPage
-bash sh/web/nginx/install.sh
-bash sh/web/sqlpage/install.sh
-
 # Collect details about the project from the user
 printf "\n- - - 🌿 Project Details 🌿 - - -\n"
-printf "GitHub repo <user/repo>: " && read repo
-printf "Domain name: " && read domain
-printf "Include www (y/n): " && read www_included
-printf "SQLPage port: " && read port
+printf "- GitHub repo <user/repo>: " && read repo
+printf "- Domain name: " && read domain
+printf "- Include www (y/n): " && read www_included
+printf "- SQLPage port: " && read port
 
 # Validates the given port
 while [ -n "$(sudo lsof -i :$port)" ]; do
@@ -27,8 +23,23 @@ repo_name=$(echo $repo | cut -d'/' -f2)
 
 # Check if the domain is pointing to the
 # server's IP address and sets up /var/www/
-bash b/dns-check "$domain"
-bash b/www-setup
+public_ip=$(curl -s ifconfig.me)
+
+while true; do
+    given_domain_ip=$(dig +short "$domain")
+
+    if [ "$public_ip" != "$given_domain_ip" ]; then
+        printf "\n⚠️  ${yellow}$1 is not pointing to this server's IP address (${public_ip}).${reset}\n\nGo make sure the DNS is set up correctly and then come back here, and press 'y' to continue (may take a few minutes to propogate): "
+        read dns_setup
+    else
+        break
+    fi
+done
+
+# check that /var/www/ exists
+if [ ! -d "/var/www" ]; then
+    sudo mkdir -p /var/www
+fi
 
 
 
@@ -40,24 +51,22 @@ bash b/www-setup
 
 # list available SSH keys
 printf "\n- - - 🌿 SSH Keys 🌿 - - -\n"
-available_ssh_keys=$(bash b/ssh -l)
+available_ssh_keys=$(b/ssh -l)
 
 # if there are no SSH keys, create a new one
 if [ -z "$available_ssh_keys" ]; then
     printf "\n⚠️ ${yellow}No SSH keys found.${reset}\n"
-    printf "\n🚜 Creating a new SSH key...\n"
-    bash b/ssh -n
+    b/ssh -n
     printf "\n✅ ${green}SSH key created!${reset}\n"
 else
     printf "\n🚜 Use an existing SSH key? (y/n): " && read use_existing_ssh_key
     if [ "$use_existing_ssh_key" = "n" ]; then
-        printf "\n🚜 Creating a new SSH key...\n"
-        bash b/ssh -n
+        b/ssh -n
         printf "\n✅ ${green}SSH key created!${reset}\n"
     else
         # print the existing public key
         printf "\nYour existing public key is:\n"
-        bash b/ssh -e
+        b/ssh -e
     fi
 fi
 
@@ -85,15 +94,11 @@ git clone "git@github.com:$repo.git" && sudo mv $repo_name /var/www/
 # - - SQLPage config
 # - - - - - - -
 
-printf "\n🚜 Setting up the SQLPage configuration file\n"
-
 # Use jq to edit the existing sqlpage.json file. We
 # need to make the property "port" equal to the
 # port we want to run the service on
 # check if jq is installed
 if ! [ -x "$(command -v jq)" ]; then
-    printf "\n⚠️ ${yellow}jq is not installed.${reset}\n"
-    printf "\n🚜 Installing jq...\n"
     sudo apt install -y jq
 fi
 
@@ -111,12 +116,7 @@ else
     echo "{\"port\": \"$port\", \"environment\": \"production\"}" | sudo tee "$sqlpage_config_file" > /dev/null
 fi
 
-# Important: the sqlpage.json file must be owned by www-data
-# so that the SQLPage service can read it and set environment variables
-sudo chown www-data:www-data /var/www/$repo_name/sqlpage/sqlpage.json
-
 # setup the sqlpage service for this repo
-printf "\n🚜 Setting up SQLPage service (for autostart on server boot)... 🚜\n"
 sudo touch /etc/systemd/system/sqlpage-$repo_name.service
 sudo tee /etc/systemd/system/sqlpage-$repo_name.service > /dev/null <<EOT
 [Unit]
@@ -125,7 +125,7 @@ After=network.target
 
 [Service]
 Type=simple
-User=www-data
+User=$USER
 WorkingDirectory=/var/www/$repo_name
 ExecStart=/usr/bin/sqlpage
 Restart=on-failure
@@ -135,17 +135,14 @@ WantedBy=multi-user.target
 EOT
 
 # Start the SQLPage service and enable it to start on server boot
-printf "\n🚜 Setting up systemd for SQLPage...\n"
 sudo systemctl daemon-reload
 sudo systemctl start sqlpage-$repo_name
 sudo systemctl enable sqlpage-$repo_name
 
 # Create the nginx config file
-printf "\n🚜 Creating the nginx config file...\n"
 sudo touch /etc/nginx/sites-available/$repo_name
 
 # write the nginx config file that will reverse proxy to the sqlpage service and redirect traffic to https
-printf "\n🚜 Writing your project's nginx config file...\n"
 sudo tee /etc/nginx/sites-available/$repo_name > /dev/null <<EOT
 server {
     listen 80;
@@ -169,16 +166,12 @@ sudo ln -s /etc/nginx/sites-available/$repo_name /etc/nginx/sites-enabled/$repo_
 # - - - - - - -
 
 # setup certbot for the domain
-printf "\n🚜 Setting up Certbot for SSL\n"
 if ! [ -x "$(command -v certbot)" ]; then
-    printf "\n⚠️ ${yellow}Certbot is not installed.${reset}\n"
-    printf "\n🚜 Installing Certbot...\n"
     sudo apt install -y certbot python3-certbot-nginx
 fi
 sudo certbot --nginx -d $domain
 
 # restart nginx and the sqlpage service
-printf "\n🚜 Restarting nginx...\n"
 sudo systemctl restart nginx
 sudo systemctl restart sqlpage-$repo_name
 

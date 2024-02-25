@@ -1,5 +1,5 @@
 #!/bin/bash
-cd "$(dirname "${BASH_SOURCE[0]}")/../../" && { [ -f lib/init ] && source lib/init || echo "Cannot find lib/init" && exit 1; }
+cd "$(dirname "${BASH_SOURCE[0]}")/../" && source lib/init
 
 # User Creation and SSH Configuration on Ubuntu 22.04 VPS
 # This is the first part of the VPS hardening process (before security-setup.sh)

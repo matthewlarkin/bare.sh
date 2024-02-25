@@ -1,5 +1,5 @@
 #!/bin/bash
-cd "$(dirname "${BASH_SOURCE[0]}")/../../" && { [ -f lib/init ] && source lib/init || echo "Cannot find lib/init" && exit 1; }
+cd "$(dirname "${BASH_SOURCE[0]}")/../" && source lib/init
 
 # Security Tools Installation and Configuration on Ubuntu 22.04 VPS
 # This is the second part of the VPS hardening process (after initial-setup.sh)
@@ -15,16 +15,10 @@ sudo apt install fail2ban -y
 sudo cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
 sudo systemctl restart fail2ban
 
-# Firewall Setup with UFW, install with snap to play nice with lxc
-
-# check if snap is installed
-if ! [ -x "$(command -v snap)" ]; then
-  sudo apt update
-  sudo apt install snapd -y
-fi
-
-# install ufw with snap
+# ⚠️ install ufw with snap (will have DNS issues, otherwise)
 sudo snap install ufw -y
+
+# Firewall Setup with UFW
 sudo ufw default deny incoming
 sudo ufw allow ssh
 sudo ufw allow http

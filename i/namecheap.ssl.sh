@@ -7,12 +7,11 @@ if [ ! -f ~/.acme.sh/acme.sh ]; then
     source ~/.bashrc
 fi
 
-# Ask for details
-read -p "Your email: " email # Email to use for Let's Encrypt account
-read -p "Your domains (space separated): " domains # example.com www.example.com
-IFS=' ' read -r -a domain_array <<< "$domains" # Convert the space-separated domains into an array
-d_args="" # Initialize an empty string to hold the -d arguments
-for domain in "${domain_array[@]}"; do # Loop over the array and append -d domain for each one
+# Ask for Let's Encrpt details
+read -p "Your email: " email
+read -p "Your domains (space separated): " domains
+IFS=' ' read -r -a domain_array <<< "$domains"
+for domain in "${domain_array[@]}"; do
     d_args+=" -d $domain"
 done
 

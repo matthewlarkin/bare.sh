@@ -1,4 +1,6 @@
 #!/bin/bash
 
-[[ -f lib/.secrets ]] && source lib/.secrets
-[[ -f lib/colors ]] && source lib/colors
+source lib/colors
+source lib/deps
+
+[[ ! -f lib/.env ]] && cp lib/samples/.env lib/.env; source lib/.env

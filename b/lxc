@@ -1,7 +1,5 @@
 #!/bin/bash
-cd "$(dirname "${BASH_SOURCE[0]}")/../" && { [ -f lib/init ] && source lib/init; } || { echo "Cannot find lib/init"; exit 1; }
-
-bash sh/security/lxd-verify.sh
+cd "$(dirname "${BASH_SOURCE[0]}")/../" && source lib/init
 
 # Check if a container name is provided
 [[ -z "$1" ]] && b/usage -w 8 -t "commands" $0 \

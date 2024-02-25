@@ -1,0 +1,79 @@
+#!/bin/bash
+
+OS=$(uname)
+
+# check that curl is installed
+if ! [ -x "$(command -v curl)" ]; then
+    if [ "$OS" = "Linux" ]; then
+        sudo apt update
+        sudo apt install -y curl
+    elif [ "$OS" = "Darwin" ]; then
+        brew install curl
+    fi
+fi
+
+# check that snap is installed
+if ! [ -x "$(command -v snap)" ]; then
+    if [ "$OS" = "Linux" ]; then
+        sudo apt update
+        sudo apt install snapd -y
+    fi
+fi
+
+# check that nb is installed
+if ! [ -x "$(command -v nb)" ]; then
+    sudo curl -L https://raw.github.com/xwmx/nb/master/nb -o /usr/local/bin/nb && sudo chmod +x /usr/local/bin/nb
+fi
+
+# check that jq is installed
+if ! [ -x "$(command -v jq)" ]; then
+    if [ "$OS" = "Linux" ]; then
+        sudo apt install -y jq
+    elif [ "$OS" = "Darwin" ]; then
+        brew install jq
+    fi
+fi
+
+# check that lxc is installed
+if ! [ -x "$(command -v lxc)" ]; then
+    if [ "$OS" = "Linux" ]; then
+        sudo apt update
+        sudo apt install -y lxd
+    fi
+fi
+
+# check that git is installed
+if ! [ -x "$(command -v git)" ]; then
+    if [ "$OS" = "Linux" ]; then
+        sudo apt update
+        sudo apt install -y git
+    elif [ "$OS" = "Darwin" ]; then
+        brew install git
+    fi
+fi
+
+# check if Nginx is installed (and install it if it's not)
+if [ -x "$(command -v nginx)" ]; then
+    printf "\n✅ Nginx is already installed\n"
+else
+    if [ "$OS" = "Linux" ]; then
+        sudo apt install -y nginx
+        sudo systemctl enable nginx
+        sudo systemctl start nginx
+    elif [ "$OS" = "Darwin" ]; then
+        brew install nginx
+        sudo brew services start nginx
+    fi
+fi
+
+# check if SQLPage is installed (and install it if it's not)
+if [ ! -f "/usr/bin/sqlpage" ]; then
+    if [ "$OS" = "Linux" ]; then
+        sudo curl -s -L -O https://github.com/lovasoa/SQLpage/releases/download/v0.18.3/sqlpage-linux.tgz
+        sudo tar -xzf sqlpage-linux.tgz && sudo rm sqlpage-linux.tgz
+        sudo mv sqlpage.bin /usr/bin/sqlpage
+        sudo chmod 750 /usr/bin/sqlpage
+    elif [ "$OS" = "Darwin" ]; then
+        brew install sqlpage
+    fi
+fi
