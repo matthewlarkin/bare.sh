@@ -1,14 +1,14 @@
 #!/bin/bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-# Check if the required arguments are provided
-[[ -z "$2" ]] && b/usage -t "options" -w 2 $0 \
-    ":1" "= command (string or number)" \
-    ":2" "= length of the string or number" && exit 0;
-
 # Get the command and length
 command=$1
-length=$2
+length=${2:-16}
+
+# Check if the required arguments are provided
+[[ -z "$1" ]] && b/usage -t "options" -w 2 $0 \
+    ":1" "= command (string or number)" \
+    ":2" "= length of the string or number (default: 16)" && exit 0;
 
 [[ ! $length =~ ^[0-9]+$ ]] && echo "Invalid length: $length. Must be a positive integer." && exit 1;
 
