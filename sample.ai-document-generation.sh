@@ -1,5 +1,5 @@
 #!/bin/bash
-source lib/init
+source "$(dirname "${BASH_SOURCE[0]}")/lib/init"
 
 cli_print() {
     local text=$1
