@@ -2,7 +2,8 @@
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
 
-[[ -z "$bare_stripe_api_key" ]] && echo "bare_stripe_api_key environment variable not set" && exit 1
+[[ -z "$STRIPE_SECRET_KEY" ]] && b/error "env_error" "Please set the STRIPE_SECRET_KEY variable in your .env file"
+
 
 [[ -z "$1" ]] && b/usage -t "commands" -w 12 $0 \
     checkouts.create "Creates a new checkout session" \
