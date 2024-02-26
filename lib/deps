@@ -88,3 +88,12 @@ if ! [ -x "$(command -v sqlpage)" ]; then
         brew install sqlpage
     fi
 fi
+
+# check that ffmpeg is installed
+if ! [ -x "$(command -v ffmpeg)" ]; then
+    if [ "$OS" = "Linux" ]; then
+        sudo apt install -y ffmpeg
+    elif [ "$OS" = "Darwin" ]; then
+        brew install ffmpeg
+    fi
+fi
