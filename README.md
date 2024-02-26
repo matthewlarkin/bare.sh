@@ -16,6 +16,7 @@ Simplified API interfaces. Minimalist JSON responses. Few dependencies. Unreason
 - [Quick Samples](#quick-samples)
 - [Documentation](#documentation)
 - [Installation](#installation)
+- [Interactive Samples](#interactive-samples)
 
 ---
 
@@ -154,4 +155,14 @@ git clone https://github.com/matthewlarkin/bare.sh && cd bare.sh
 
 # Setup your environment variables in the lib/.env file
 vim lib/.env
+```
+
+---
+
+## Interactive Samples
+To get a feel for the system, you can run the interactive samples provided at the root of this repo. We encourage you to study them as a starting point for your own scripts.
+
+```bash
+cd bare.sh
+bash sample.ai-chat.sh
 ```
