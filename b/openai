@@ -320,9 +320,10 @@ case $command in
 
         [[ -z "$2" ]] && b/usage -w 4 "$0 files.upload" \
             -f "* The file to upload" \
-            -p "* The purpose of the file" \
+            -p "  The purpose of the file [fine-tune|assistants] defaults to assistants" \
             -v "  Return the response in verbose mode" && exit 0
 
+        purpose="assistants"
         while getopts ":f:p:v" opt; do
             case ${opt} in
                 f ) file="$OPTARG" ;;
