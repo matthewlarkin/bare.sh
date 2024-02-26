@@ -5,6 +5,19 @@ timestamp=$(date +%s)
 wav_file="$BARE_DIR/var/recorded_$timestamp.wav"
 mp3_file="$BARE_DIR/tmp/recorded_$timestamp.mp3"
 
+# Check if a microphone is available
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    # Linux
+    arecord -l >/dev/null 2>&1 || { echo "No microphone found."; exit 1; }
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+    # Mac OSX
+    sox -n -t coreaudio /dev/null >/dev/null 2>&1 || { echo "No microphone found."; exit 1; }
+else
+    # Unknown.
+    echo "Unknown OS"
+    exit 1
+fi
+
 echo "Starting audio recording. Press Ctrl+C to stop."
 
 # Start the recording in the background
@@ -16,10 +29,6 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
     # Mac OSX
     which sox &> /dev/null || brew install sox
     ( trap 'exit' INT; sox -d -t wav "$wav_file" > /dev/null 2>&1 & wait )
-else
-    # Unknown.
-    echo "Unknown OS"
-    exit 1
 fi
 
 # Wait for the user to press Ctrl+C, then kill the recording process
