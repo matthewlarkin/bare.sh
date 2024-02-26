@@ -52,6 +52,19 @@ if ! [ -x "$(command -v git)" ]; then
     fi
 fi
 
+# check if global git user and email is set
+if [ -z "$(git config --global user.name)" ]; then
+    printf "\n- - - 🌿 Git Configuration 🌿 - - -\n"
+    printf "\nPlease enter your name for Git: " && read git_name
+    git config --global user.name "$git_name"
+    printf "\nPlease enter your email for Git: " && read git_email
+    git config --global user.email "$git_email"
+    # update the global git user and email in lib/.env
+    sed -i "s/GIT_USER=.*/GIT_USER=$git_name/g" lib/.env
+    sed -i "s/GIT_EMAIL=.*/GIT_EMAIL=$git_email/g" lib/.env
+    source lib/.env
+fi
+
 # check if Nginx is installed (and install it if it's not)
 if ! [ -x "$(command -v nginx)" ]; then
     if [ "$OS" = "Linux" ]; then

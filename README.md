@@ -1,6 +1,13 @@
 # bare.sh
 
-`bare.sh` is a collection of bare bones shell scripts for simplifying various tasks such as API calls (*OpenAI, Stripe, Postmark, etc*), video and audio processing, and much more. The goal is to provide a simple and easy to use interface for developers to quickly get started with the 80% of use case they'll actually use and avoid the bloat of larger libraries.
+`bare.sh` is a collection of bare bones bash scripts for streamlining commans tasks such as:
+
+- API calls (*OpenAI, Stripe, Postmark, etc*)
+- video and audio processing (via ffmpeg)
+- document management (via nb)
+- and much more!
+
+The goal is to provide a simple and easy to use interface for developers to quickly get started with the 80% of use case they'll actually use and avoid the bloat of larger libraries.
 
 Simplified API interfaces. Minimalist JSON responses. Few dependencies. Unreasonably easy.
 
@@ -35,14 +42,14 @@ b/openai chat -a "You are a chef" -m "Are you a chef?"
 # => response: {"response":"Yes, I am a chef! How can I help you today?"}
 ```
 
-**You don't have to know bash to use the system!** Just like any other library, you just invoke the commands and pass in the necessary arguments. The system is designed to be easy to use and easy to understand.
+**Notice**: *You don't have to know bash to use bare.sh*. Just like any other library, you just invoke the commands and pass in the necessary arguments. The system is designed to be easy to use and easy to understand.
 
-> **Note**: This is a work in progress. Some features may not be fully implemented or may change dramatically in these early days. If you have any questions or suggestions, feel free to open an issue or pull request!
+> **Note**: This is a work in progress. Some features may not be fully implemented or may change **dramatically** in these early days. If you have any questions or suggestions, feel free to open an issue or pull request!
 
 ---
 
 ## Dependencies
-This system is intended to be used on a unix-like OS (Linux, MacOS, WSL, etc). It is written in bash and uses a few common utilities such as `curl`, `jq`, `ffmpeg`. You'll want to have those installed, but the scripts will let you know if you don't.
+This system is intended to be used on a unix-like OS (Linux, MacOS, WSL, etc). It is written in bash and uses a few common utilities such as `curl`, `jq`, `ffmpeg`, and some nice-to-haves like `nb`. You'll want to have those installed, but the scripts will let you know if you don't.
 
 These are all available in most package managers.
 

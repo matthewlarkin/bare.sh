@@ -1,5 +1,5 @@
 #!/bin/bash
-cd "$(dirname "${BASH_SOURCE[0]}")/../.." && source lib/init
+source lib/init
 
 function create_run_and_poll() {
     local thread_id="$1"

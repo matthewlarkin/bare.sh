@@ -1,3 +1,113 @@
 #!/bin/bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
+[[ -z $1 ]] && b/usage -t "commands" -w 12 $0 \
+    add "Add a new note" \
+    edit "Edit an existing note" && exit 0;
+
+command="$1"
+shift
+
+# make sure we've initialized the notes
+[[ ! -d $BARE_NOTES_PATH ]] && nb init > /dev/null 2>&1
+
+case $command in
+
+    list )
+
+        limit=10
+
+        while getopts "l:H" opt; do
+            case $opt in
+                l )
+                    limit=$OPTARG ;;
+                -H )
+                    b/usage -t "options" -w 2 "$0 list" \
+                        -l "  limit (default: 10)" && exit 0
+                    ;;
+                \? )
+                    echo "Invalid option: -$OPTARG" 1>&2
+                    exit 1
+                    ;;
+            esac
+        done
+
+        nb list --limit "$limit"
+        ;;
+
+    show )
+
+        file="$1"
+        nb show "$file" --print
+        ;;
+
+    add )
+
+        [[ -z $1 ]] && b/usage -t "options" -w 2 "$0 add" \
+            -T "  Title of the note" \
+            -C "* Content of the note" \
+            -t "  Comma-separated tags for the note (my-tag,tag2,another-tag)" \
+            -E "  Encrypt the note" \
+            -P "= Password for the note" \
+            -N "  Notebook to save the note in (defaults to 'home')" \
+            -F "  Folder to save the note in" \
+            -f "  Filename for the note" && exit 0;
+
+        notebook="home"
+        content=""
+        while getopts "T:C:t:EP:N:F:f:" opt; do
+            case $opt in
+                T ) title=$OPTARG ;;
+                C ) content=$OPTARG ;;
+                t ) tags=$OPTARG ;;
+                E ) encrypt=$OPTARG ;;
+                P ) password=$OPTARG ;;
+                N ) notebook=$OPTARG ;;
+                F ) folder=$OPTARG ;;
+                f ) filename=$OPTARG ;;
+                \? )
+                    echo "Invalid option: -$OPTARG" 1>&2
+                    exit 1
+                    ;;
+                : )
+                    echo "Option -$OPTARG requires an argument." 1>&2
+                    exit 1
+                    ;;
+            esac
+        done
+
+        # make sure content is set
+        [ -z "$content" ] && echo "Error: Content is required" && exit 1
+
+        # if -E is set, -P must also be set
+        [ -n "$encrypt" ] && [ -z "$password" ] && echo "Error: Encryption flag (-E) requires a password (-P)" && exit 1
+
+        command=("nb" "$notebook:add")
+
+        [ -n "$title" ] && command+=("--title" "$title")
+        [ -n "$content" ] && command+=("--content" "$content")
+        [ -n "$tags" ] && command+=("--tags" "$tags")
+        [ -n "$password" ] && command+=("-e" "--password" "$password")
+        [ -n "$folder" ] && command+=("--folder" "$folder")
+        [ -n "$filename" ] && command+=("--filename" "$filename")
+
+        "${command[@]}"
+        ;;
+    edit)
+        note_path="$BARE_NOTES_PATH/$(date +%Y-%m-%d).md"
+        if [ -f $note_path ]; then
+            $EDITOR $note_path
+        else
+            echo "No note found for today. Creating a new note."
+            b/notes add
+        fi
+        ;;
+
+    delete )
+        file="$1"
+        nb delete "$file" --force
+        ;;
+    *)
+        echo "Invalid command: $command"
+        ;;
+esac

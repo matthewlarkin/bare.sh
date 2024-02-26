@@ -176,10 +176,10 @@ case $command in
 
         [[ -z "$2" ]] && b/usage -w 4 "$0 threads.create" \
             -m "* The initial message to send" \
-            -f "  The file IDs to attach (array)" \
+            -f "  The file IDs to attach (comma-separated list)" \
             -v "  Return the response in verbose mode" && exit 0
 
-        file_ids="[]"
+        file_ids=""
 
         while getopts ":m:f:v" opt; do
             case ${opt} in
@@ -190,7 +190,10 @@ case $command in
             esac
         done
 
-        payload=$(jq -n --arg initial_message "$initial_message" --argjson file_ids "$file_ids" '{
+        # Convert the comma-separated list of file IDs into a JSON array
+        file_ids_json=$(jq -nR '[inputs | split(",") | .[]]' <<< "$file_ids")
+
+        payload=$(jq -n --arg initial_message "$initial_message" --argjson file_ids "$file_ids_json" '{
             messages: [ { role: "user", content: $initial_message, file_ids: $file_ids } ]
         }')
 
@@ -371,6 +374,27 @@ case $command in
             fi
         fi
         ;;
+
+
+    # ========================================================
+    file.show )
+            
+            [[ -z "$2" ]] && b/usage -w 4 "$0 file.show" \
+                -f "* The file ID to show" \
+                -v "  Return the response in verbose mode" && exit 0
+    
+            while getopts ":f:v" opt; do
+                case ${opt} in
+                    f ) file_id="$OPTARG" ;;
+                    v ) verbose=true ;;
+                    \? ) b/error invalid_option "$OPTARG" && exit 1 ;;
+                esac
+            done
+    
+            response=$(curlRequest -u "$api_url/files/$file_id")
+    
+            [[ "$verbose" == true ]] && echo "$response" | jq -r || echo "$response" | jq -r '{file_id: .id, status: .status, created_at: .created_at}'
+            ;;
 
 
     # ========================================================
