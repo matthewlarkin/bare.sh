@@ -1,13 +1,11 @@
 # bare.sh
 
-`bare.sh` is a collection of bare bones bash scripts for streamlining commans tasks such as:
+`bare.sh` is a collection of bare bones bash scripts for streamlining common tasks such as:
 
 - API calls (*OpenAI, Stripe, Postmark, etc*)
-- video and audio processing (via ffmpeg)
-- document management (via nb)
-- and much more!
-
-The goal is to provide a simple and easy to use interface for developers to quickly get started with the 80% of use case they'll actually use and avoid the bloat of larger libraries.
+- video and audio processing (`ffmpeg`)
+- document management (`nb`)
+- *and much more!*
 
 Simplified API interfaces. Minimalist JSON responses. Few dependencies. Unreasonably easy.
 
@@ -22,29 +20,43 @@ Simplified API interfaces. Minimalist JSON responses. Few dependencies. Unreason
 ---
 
 ## Why?
-"Why do this?", you may ask. Why not just use the official libraries or other popular libraries? And why bash? Why not write this in python?
+"Why do this?", you may ask. Why not just use the official libraries? And why bash? Why not python?
 
-1. **Simplicity**: Official libraries are often large and complex, with many features that you may never use. This system is designed to be simple and allow expressive chaining of commands that are functional in nature and easy to understand and change over time.
-2. **Speed + Ubiquity**: Bash can be very fast, and it's already installed on most systems. This system is designed to be fast and easy to use anywhere there is a shell (a lot of places).
-3. **Expressiveness**: `bare.sh` commands are designed to have a *speakable* nature to them. They are designed to be easy to remember and easy to use in a variety of contexts.
+1. **Simplicity**: This system is straightforward, focusing on easy-to-understand, functional commands.
+2. **Ubiquity**: Bash is fast and widely available, making this system portable and the commands composable.
+3. **Expressivity**: `bare.sh` commands are more memorable, designed to be *spoken*, to accomplish the 80% of your actual needs.
 
 ```bash
-# 😬 standard way to generate random strings and numbers
-openssl rand -base64 12
-echo $(( $RANDOM % 100 ))
+# 😬 Standard methods can be difficult to call, and their requests can be complex to parse.
+
+echo $(LC_ALL=C tr -dc 'a-zA-Z0-9' < /dev/urandom | head -c 16)
+# >> Qq3Sv8yW5yMCAlq9
+
+echo $(LC_ALL=C tr -dc '0-9' < /dev/urandom | head -c 10)
+# >> 6306425682
+
+curl -X POST -H "Authorization: Bearer $OPENAI_API_KEY" -H "Content-Type: application/json" -d '{"model": "gpt-3.5-turbo", "messages": [{"role": "system", "content": "You are a chef"}, {"role": "user", "content": "Are you a chef?"}]}' https://api.openai.com/v1/chat/completions | jq
+# >> {"id":"chatcmpl-8wYMvPDyn3O3VBvt0GDuP7mgMhq8W","object":"chat.completion","created":1708965829,"model":"gpt-3.5-turbo-0125","choices":[{"index":0,"message":{"role":"assistant","content":"Yes, I am a virtual chef ready to help you with any cooking-related questions or recipe ideas!"},"logprobs":null,"finish_reason":"stop"}],"usage":{"prompt_tokens":20,"completion_tokens":20,"total_tokens":40},"system_fingerprint":"fp_86156a94a0"}
+
+
+# - - - 🌿 - - - 🌿 - - - 🌿 - - -
+
 
 # 🤩 using bare.sh
-b/random string
-b/random number
 
-# 🤩 so simple
+b/random string
+# >> CYtxhPr55ILYwQ9c
+
+b/random number 10
+# >> 2348063108
+
 b/openai chat -a "You are a chef" -m "Are you a chef?"
-# => response: {"response":"Yes, I am a chef! How can I help you today?"}
+# >> response: {"response":"Yes, I am a chef! How can I help you today?"}
 ```
 
-**Notice**: *You don't have to know bash to use bare.sh*. Just like any other library, you just invoke the commands and pass in the necessary arguments. The system is designed to be easy to use and easy to understand.
+**Notice**: *You don't have to know bash to use bare.sh*. Just like any other library, you just invoke the commands and pass in the necessary arguments.
 
-> **Note**: This is a work in progress. Some features may not be fully implemented or may change **dramatically** in these early days. If you have any questions or suggestions, feel free to open an issue or pull request!
+> **Note/warning**: This is a work in progress. Some features may not be fully implemented or may change **dramatically** in these early days. If you have any questions or suggestions, feel free to open an issue or pull request!
 
 ---
 
@@ -56,9 +68,9 @@ These are all available in most package managers.
 ---
 
 ## Overview
-At it's root, `bare.sh` is a collection of unix-like directories (`/b`, `/lib`, `/sh`, and `/tmp`) each containing bash scripts and programs for a specific task.
+At it's root, `bare.sh` is a collection of unix-like directories (`/b`, `/i`, `/lib`, `/tmp`, and `/var`) each containing bash scripts and programs for specific tasks.
 
-Most of these scripts are small in scope, take simple input, and provide simple JSON output. This allows us to chain commands together and use them in a variety of inanticipatable ways, especially when combined with other tools like `jq`.
+Most of these scripts are small in scope, take simple input, and provide simple plaintext or JSON output. This allows us to chain commands together to accomplish more complex tasks.
 
 ---
 
@@ -90,7 +102,7 @@ b/ffmpeg video.360 -f my_video.mp4 -o my_video.360.mp4
 ---
 
 ## Documentation
-The system is self-documenting. Learn more about a commands usage by running any command without arguments -- even `b/usage`! (which is itself used to print usage information for the other commands 😄)
+The system is self-documenting. Learn more about programs or their commands by witholding arguments:
 ```bash
 b/openai
 
@@ -140,10 +152,6 @@ To install, simply clone the repo and run commands from the root of repo.
 # Clone the repo and navigate to into it
 git clone https://github.com/matthewlarkin/bare.sh && cd bare.sh
 
-# Set necessary keys as environment variables *
-export OPENAI_API_KEY="sk-xxxxxxxxxxxxxxxx"
-
-b/openai chat -m "Tell me if this worked."
+# Setup your environment variables in the lib/.env file
+vim lib/.env
 ```
-*Security note*: Exporting keys as environment variables directly in the shell is not recommended for production use as they can be surfaced from your shell history. Instead, it may be better to set this in your shell configuration file (`.bashrc`, `.zshrc`, etc)
-
