@@ -5,17 +5,29 @@ timestamp=$(date +%s)
 wav_file="$BARE_DIR/var/recorded_$timestamp.wav"
 mp3_file="$BARE_DIR/tmp/recorded_$timestamp.mp3"
 
-# Check if a microphone is available
+# Check if a microphone is available and list them
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
     # Linux
-    arecord -l >/dev/null 2>&1 || { echo "No microphone found."; exit 1; }
+    arecord -l || { echo "No microphone found."; exit 1; }
+    read -p "Enter the card number of the microphone to use: " card
+    read -p "Enter the device number of the microphone to use: " device
+    mic="hw:$card,$device"
 elif [[ "$OSTYPE" == "darwin"* ]]; then
     # Mac OSX
-    sox -n -t coreaudio /dev/null >/dev/null 2>&1 || { echo "No microphone found."; exit 1; }
-else
-    # Unknown.
-    echo "Unknown OS"
-    exit 1
+    mic_list=$(sox -q -d . 2>&1 | grep -o "[^']*'[^']*'" | tr -d "'")
+    if [ -z "$mic_list" ]; then
+        echo "No microphone found."
+        exit 1
+    fi
+    echo "Available microphones:"
+    select mic in $mic_list; do
+        if [ -n "$mic" ]; then
+            echo "You selected: $mic"
+            break
+        else
+            echo "Invalid selection."
+        fi
+    done
 fi
 
 echo "Starting audio recording. Press Ctrl+C to stop."
@@ -23,7 +35,7 @@ echo "Starting audio recording. Press Ctrl+C to stop."
 # Start the recording in the background
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
     # Linux
-    arecord -f cd -t wav "$wav_file" > /dev/null 2>&1 &
+    arecord -f cd -t wav -D "$mic" "$wav_file" > /dev/null 2>&1 &
     rec_pid=$!
 elif [[ "$OSTYPE" == "darwin"* ]]; then
     # Mac OSX
