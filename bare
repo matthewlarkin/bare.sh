@@ -1,0 +1,44 @@
+#!/bin/bash
+
+# the first argument passed is the name of the executable script under the b/ directory.
+# for instance, calling this script with argument "stripe" will execute the b/stripe script.
+# we need to pass any subsequent arguments to the subsequent script as well.
+
+# we need to source the init script to set up the environment variables.
+source "$(dirname "${BASH_SOURCE[0]}")/lib/init"
+
+# check if 'init' is the first argument. If so, find out the user's profile and alias this script as 'bash <this script path>'.
+
+# check if init is the first argument.
+if [[ "$1" == "init" ]]; then
+
+    profile=""
+    case $SHELL in
+        */bash)
+            profile="$HOME/.bashrc"
+            ;;
+        */zsh)
+            profile="$HOME/.zshrc"
+            ;;
+        *)
+            echo "Unsupported shell. Please add the following line to your shell's profile file:"
+            echo "alias b='bash <this script path>'"
+            exit 1
+            ;;
+    esac
+
+    # check if the alias is already set in the user's profile.
+    if ! grep -q "alias bare='bash $BARE_DIR/bare'" "$profile"; then
+        [[ $OS == "Linux" ]] && echo "alias bare='/bin/bash $0'" >> "$profile"
+        [[ $OS == "Darwin" ]] && echo "alias bare='/bin/zsh $0'" >> "$profile"
+        source "$profile"
+        echo "The alias has been set. You can now use 'bare' to run Bare."
+    fi
+    exit 0
+fi
+
+command="$1"
+shift
+
+# pass the arguments to the subsequent script.
+"b/$command" "$@"

@@ -78,4 +78,15 @@ case $command in
     customers.create)
         email=""
         while getopts "e:" opt; do
-            case $
+            case $opt in
+                e) email="$OPTARG";;
+                \?) echo "Invalid option: -$OPTARG" && exit 1;;
+            esac
+        done
+        [[ -z "$email" ]] && echo "No email specified" && exit 1
+        curl -s -X POST https://api.stripe.com/v1/customers \
+            -u $bare_stripe_api_key: \
+            -d "email=$email" | jq
+        ;;
+    
+esac
