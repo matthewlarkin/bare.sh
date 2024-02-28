@@ -105,7 +105,7 @@ case $command in
                 a ) assistant_prompt="${OPTARG:-You are a helpful AI assistant.}" ;;
                 j ) format="json_object" ;;
                 v ) verbose=true ;;
-                \? ) b/error invalid_option "-$OPTARG" && exit 1 ;;
+                \? ) b/error invalid_option "-$OPTARG" ;;
             esac
         done
 
