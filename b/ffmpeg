@@ -23,8 +23,9 @@ fi
 
 # Check if a file exists and is not empty
 check_file() {
-    [ -z "$1" ] && b/error "No input file provided" "Please provide a file to convert" && exit 1
-    [ ! -f "$1" ] && b/error "File not found" "Please provide a valid file" && exit 1
+    [[ -z "$1" ]] && b/error "No input file provided" "Please provide a file to convert"
+    [[ ! -f "$1" ]] && b/error "File not found" "Please provide a valid file"
+    return 0
 }
 
 # Run ffmpeg command
@@ -73,7 +74,7 @@ case $command in
 
         check_file "$video"
         if [ -n "$suppress_process" ]; then
-            ffmpeg -i "$video" -vn -acodec libmp3lame "$output" >> /dev/null 2>&1
+            ffmpeg -i "$video" -vn -acodec libmp3lame "$output"
         else
             ffmpeg -i "$video" -vn -acodec libmp3lame "$output"
         fi
@@ -174,7 +175,7 @@ case $command in
 
         output="./tmp/$(openssl rand -hex 8).mp4"
 
-        while getopts "v:o:" opt; do
+        while getopts "v:o:sS" opt; do
             case $opt in
                 v) video="$OPTARG" ;;
                 o) output="$OPTARG" ;;
@@ -202,7 +203,7 @@ case $command in
 
         output="./tmp/$(openssl rand -hex 8).mp4"
 
-        while getopts "v:o:" opt; do
+        while getopts "v:o:sS" opt; do
             case $opt in
                 v) video="$OPTARG" ;;
                 o) output="$OPTARG" ;;
