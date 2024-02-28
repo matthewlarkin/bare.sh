@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # An attempt to interpret 'bare script' 👀
 
@@ -16,48 +16,13 @@ while IFS= read -r line; do
     sentences+=("$trimmed_line")
 done < <(echo "$input" | awk -F'.' '{for(i=1;i<=NF;i++) if ($i != "") print $i}')
 
-# Now, we need to interpret each sentence and parse it into relevant bash commands
-# To do this, we need to define a set of usecases a user might want to do
-# and then parse the sentence into a command that can be executed to achieve that usecase
+declare -A variables
 
-# watch for keywords: create, consider, delete, edit.
-
-# for each sentence,
 for sentence in "${sentences[@]}"; do
-    # capture the first word and convert it to lowercase
-    first_word=$(echo "$sentence" | awk '{print tolower($1)}')
-
-    # if the first word does not equal 'create', 'consider', 'delete', or 'edit', then skip
-    [[ "$first_word" != "create" && "$first_word" != "consider" && "$first_word" != "delete" && "$first_word" != "edit" ]] && continue
-
-    case "$first_word" in
-        "consider")
-            # the second word is a variable, into which we'll store the results of the following
-
-            # capture the second word
-            second_word=$(echo "$sentence" | awk '{print $2}')
-
-            # look for keyword 'as' next. If it's provided, then we need to consider the result value of the following words
-            
-            ;;
-        "create")
-            # capture the second word and convert it to lowercase
-            second_word=$(echo "$sentence" | awk '{print tolower($2)}')
-            # if the second word is 'file', then create a file
-            case "$second_word" in
-                "file")
-                    # capture the third word
-                    third_word=$(echo "$sentence" | awk '{print $3}')
-                    # remove the quotes from the filename
-                    filename=$(echo "$third_word" | tr -d "'")
-                    # create a file with the filename
-                    touch "$filename"
-                    ;;
-                *)
-                    echo "I don't know how to create a $second_word"
-                    ;;
-            esac
-            ;;
-    esac
-
+    words=($sentence)
+    if [[ "${words[0]}" == "consider" && "${words[2]}" == "as" ]]; then
+        variables["${words[1]}"]="${words[3]//\'/}"
+    elif [[ "${words[0]}" == "express" ]]; then
+        echo "${variables[${words[1]}]}"
+    fi
 done
