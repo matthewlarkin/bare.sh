@@ -21,6 +21,7 @@ command="$1"
 shift
 
 case $command in
+
     checkouts.create)
         amount=""
         currency=""
