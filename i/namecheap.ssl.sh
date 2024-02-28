@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Check if we have acme.sh installed
 if [ ! -f ~/.acme.sh/acme.sh ]; then

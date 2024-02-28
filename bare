@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # the first argument passed is the name of the executable script under the b/ directory.
 # for instance, calling this script with argument "stripe" will execute the b/stripe script.

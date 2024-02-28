@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/lib/init"
 
 function create_run_and_poll() {

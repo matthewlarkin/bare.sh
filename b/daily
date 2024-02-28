@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
 [ -z "$DAILY_API_KEY" ] && b/error missing_key "Daily.co API key not set (DAILY_API_KEY)" && exit 1
