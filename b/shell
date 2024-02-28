@@ -1,28 +1,6 @@
 #!/usr/bin/env bash
+source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-# An attempt to interpret 'bare script' 👀
+# considering a simple bare scripting language for easier composition
 
-if [[ -z "$1" ]]; then
-    echo "Enter a bare script"
-    read -r input
-else
-    input="$1"
-fi
-
-# split sentences by period punctuation with awk
-sentences=()
-while IFS= read -r line; do
-    trimmed_line=$(echo "$line" | sed 's/^ *//;s/ *$//')
-    sentences+=("$trimmed_line")
-done < <(echo "$input" | awk -F'.' '{for(i=1;i<=NF;i++) if ($i != "") print $i}')
-
-declare -A variables
-
-for sentence in "${sentences[@]}"; do
-    words=($sentence)
-    if [[ "${words[0]}" == "consider" && "${words[2]}" == "as" ]]; then
-        variables["${words[1]}"]="${words[3]//\'/}"
-    elif [[ "${words[0]}" == "express" ]]; then
-        echo "${variables[${words[1]}]}"
-    fi
-done
+# todo: look into lexers, parsers, and interpreters written in bash
