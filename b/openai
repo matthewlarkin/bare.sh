@@ -92,20 +92,23 @@ case $command in
             -m "* The message to send" \
             -a "~ The system prompt (assistant prompt)" \
             -o "  The model to use" \
-            -j "  Return the response as a JSON object" \
-            -v "  Return the response in verbose mode" && exit 0
+            -j "  Requests OpenAI's response as JSON" \
+            -J "  Return as verbose JSON object" \
+            -V "  Return the vendor response, verbosely" && exit 0
         
         format="text"
         raw_json=false
 
-        while getopts ":m:a:o:jv" opt; do
+        while getopts ":m:a:o:jJv" opt; do
             case ${opt} in
                 m ) message="$OPTARG" ;;
                 o ) model="$OPTARG" ;;
                 a ) assistant_prompt="${OPTARG:-You are a helpful AI assistant.}" ;;
                 j ) format="json_object" ;;
+                J ) respond="as_json" ;;
                 v ) verbose=true ;;
                 \? ) b/error invalid_option "-$OPTARG" ;;
+                : ) IFS= read -d '' -n 1 message <&0 ;;
             esac
         done
 
@@ -121,8 +124,10 @@ case $command in
             echo "$response" | jq -r
         elif [[ "$format" == "json_object" ]]; then
             echo "$response" | jq -r '.choices[0].message.content' | jq
-        else
+        elif [[ "$respond" == "as_json" ]]; then
             echo "$response" | jq -r '{response: .choices[0].message.content}'
+        else
+            echo "$response" | jq -r '.choices[0].message.content'
         fi
         ;;
 
@@ -136,18 +141,20 @@ case $command in
             -i "* Instructions for the assistant" \
             -o "  The model to use" \
             -t "  The tools to enable (pipe separated)" \
-            -v "  Return the response in verbose mode" && exit 0
+            -J "  Return the response as JSON" \
+            -V "  Return the vendor response in verbose mode" && exit 0
 
         tools=()
         model=$default_model
 
-        while getopts "n:i:t:ov" opt; do
+        while getopts "n:i:t:oJV" opt; do
             case ${opt} in
                 n ) assistant_name="$OPTARG" ;;
                 i ) instructions="$OPTARG" ;;
                 t ) IFS='|' read -ra tools <<< "$OPTARG" ;;
                 o ) model="$OPTARG" ;;
-                v ) verbose=true ;;
+                J ) respond="as_json" ;;
+                V ) verbose=true ;;
                 \? ) echo "Invalid option: -$OPTARG" >&2; return 1 ;;
             esac
         done
@@ -165,7 +172,13 @@ case $command in
 
         response=$(curlRequest -u "$api_url/assistants" -d "$payload" -j)
 
-        [[ "$verbose" == true ]] && echo "$response" | jq -r || echo "$response" | jq -r '{assistant_id: .id, tools: [.tools[] | .type]}'
+        if [[ "$verbose" == true ]]; then
+            echo "$response" | jq -r
+        elif [[ "$respond" == "as_json" ]]; then
+            echo "$response" | jq -r '{assistant_id: .id, tools: [.tools[] | .type]}'
+        else
+            echo "$response" | jq -r .id
+        fi
         ;;
 
 
@@ -176,15 +189,17 @@ case $command in
         [[ -z "$2" ]] && b/usage -w 4 "$0 threads.create" \
             -m "* The initial message to send" \
             -f "  The file IDs to attach (comma-separated list)" \
-            -v "  Return the response in verbose mode" && exit 0
+            -J "  Return the response as JSON" \
+            -V "  Return the response in verbose mode" && exit 0
 
         file_ids=""
 
-        while getopts ":m:f:v" opt; do
+        while getopts ":m:f:JV" opt; do
             case ${opt} in
                 m ) initial_message="$OPTARG" ;;
                 f ) file_ids="$OPTARG" ;;
-                v ) verbose=true ;;
+                J ) respond="as_json" ;;
+                V ) verbose=true ;;
                 \? ) b/error invalid_option "$OPTARG" && exit 1 ;;
             esac
         done
@@ -198,7 +213,13 @@ case $command in
 
         response=$(curlRequest -u "$api_url/threads" -d "$payload" -j)
 
-        [[ "$verbose" == true ]] && echo "$response" | jq -r || echo "$response" | jq -r '{thread_id: .id}'
+        if [[ "$verbose" == true ]]; then
+            echo "$response" | jq -r
+        elif [[ "$respond" == "as_json" ]]; then
+            echo "$response" | jq -r '{thread_id: .id}'
+        else
+            echo "$response" | jq -r .id
+        fi
         ;;
 
 
@@ -210,7 +231,8 @@ case $command in
             -t "* The thread ID" \
             -m "* The message to send" \
             -f "  The file IDs to attach (array)" \
-            -v "  Return the response in verbose mode" && exit 0
+            -J "  Return the response as JSON" \
+            -V "  Return the vendor response in verbose mode" && exit 0
 
         file_ids="[]"
 
@@ -219,7 +241,8 @@ case $command in
                 t ) thread_id="$OPTARG" ;;
                 m ) message="$OPTARG" ;;
                 f ) file_ids="$OPTARG" ;;
-                v ) verbose=true ;;
+                J ) respond="as_json" ;;
+                V ) verbose=true ;;
                 \? ) b/error invalid_option "$OPTARG" && exit 1 ;;
             esac
         done
@@ -232,7 +255,13 @@ case $command in
 
         response=$(curlRequest -u "$api_url/threads/$thread_id/messages" -d "$payload" -j)
 
-        [[ "$verbose" == true ]] && echo "$response" | jq -r || echo "$response" | jq -r '{thread_id: .thread_id, message_id: .id}'
+        if [[ "$verbose" == true ]]; then
+            echo "$response" | jq -r
+        elif [[ "$respond" == "as_json" ]]; then
+            echo "$response" | jq -r '{thread_id: .thread_id, message_id: .id}'
+        else
+            exit 0
+        fi
         ;;
 
 
@@ -243,16 +272,18 @@ case $command in
         [[ -z "$2" ]] && b/usage -w 4 "$0 thread.messages.list" \
             -t "* The thread ID" \
             -l "  The number of messages to return" \
-            -v "  Return the response in verbose mode" && exit 0
+            -J "  Return the response as JSON" \
+            -V "  Return the vendor response in verbose mode" && exit 0
 
         limit=5
         
-        while getopts ":t:l:v" opt; do
+        while getopts ":t:l:JV" opt; do
             case ${opt} in
                 t ) thread_id="$OPTARG" ;;
                 l ) limit="${OPTARG:-5}" ;;
-                v ) verbose=true ;;
-                \? ) b/error invalid_option "$OPTARG" && exit 1 ;;
+                J ) respond="as_json" ;;
+                V ) verbose=true ;;
+                \? ) b/error invalid_option "$OPTARG" ;;
             esac
         done
 
@@ -260,7 +291,14 @@ case $command in
 
         response=$(curlRequest -u "$api_url/threads/$thread_id/messages?limit=$limit")
 
-        [[ "$verbose" == true ]] && echo "$response" | jq -r || echo "$response" | jq -r '{thread_id: .data[0].thread_id, messages: [.data[] | {role: .role, value: .content[0].text.value, created_at: .created_at}]}'
+        # [[ "$verbose" == true ]] && echo "$response" | jq -r || echo "$response" | jq -r '{thread_id: .data[0].thread_id, messages: [.data[] | {role: .role, value: .content[0].text.value, created_at: .created_at}]}'
+        if [[ "$verbose" == true ]]; then
+            echo "$response" | jq -r
+        elif [[ "$respond" == "as_json" ]]; then
+            echo "$response" | jq -r '{thread_id: .data[0].thread_id, messages: [.data[] | {role: .role, value: .content[0].text.value, created_at: .created_at}]}'
+        else
+            echo "$response" | jq -r '.data[] | "\(.role): \(.content[0].text.value) | "' | sed 's/ | $//'
+        fi
         ;;
 
 
@@ -271,13 +309,15 @@ case $command in
         [[ -z "$2" ]] && b/usage -w 4 "$0 thread.run" \
             -t "* The thread ID" \
             -a "* The assistant ID" \
-            -v "  Return the response in verbose mode" && exit 0
+            -J "  Return the response as JSON" \
+            -V "  Return the vendor response in verbose mode" && exit 0
 
-        while getopts ":t:a:v" opt; do
+        while getopts ":t:a:JV" opt; do
             case ${opt} in
                 t ) thread_id="$OPTARG" ;;
                 a ) assistant_id="$OPTARG" ;;
-                v ) verbose=true ;;
+                J ) respond="as_json" ;;
+                V ) verbose=true ;;
                 \? ) b/error invalid_option "$OPTARG" && exit 1 ;;
             esac
         done
@@ -288,7 +328,14 @@ case $command in
 
         response=$(curlRequest -u "$api_url/threads/$thread_id/runs" -d "$payload" -j)
 
-        [[ "$verbose" == true ]] && echo "$response" | jq -r || echo "$response" | jq -r '{thread_id: .thread_id, run_id: .id, status: .status}'
+        # [[ "$verbose" == true ]] && echo "$response" | jq -r || echo "$response" | jq -r '{thread_id: .thread_id, run_id: .id, status: .status}'
+        if [[ "$verbose" == true ]]; then
+            echo "$response" | jq -r
+        elif [[ "$respond" == "as_json" ]]; then
+            echo "$response" | jq -r '{thread_id: .thread_id, run_id: .id, status: .status}'
+        else
+            echo "$response" | jq -r '.id'
+        fi
         ;;
 
 
@@ -299,20 +346,29 @@ case $command in
         [[ -z "$2" ]] && b/usage -w 4 "$0 thread.run.poll" \
             -t "* The thread ID" \
             -r "* The run ID" \
-            -v "  Return the response in verbose mode" && exit 0
+            -J "  Return the response as JSON" \
+            -V "  Return the vendor response in verbose mode" && exit 0
 
-        while getopts ":t:r:v" opt; do
+        while getopts ":t:r:JV" opt; do
             case ${opt} in
                 t ) thread_id="$OPTARG" ;;
                 r ) run_id="$OPTARG" ;;
-                v ) verbose=true ;;
+                J ) respond="as_json" ;;
+                V ) verbose=true ;;
                 \? ) b/error invalid_option "$OPTARG" && exit 1 ;;
             esac
         done
 
         response=$(curlRequest -u "$api_url/threads/$thread_id/runs/$run_id")
 
-        [[ "$verbose" == true ]] && echo "$response" | jq -r || echo "$response" | jq -r '{thread_id: .thread_id, run_id: .id, status: .status}'
+        # [[ "$verbose" == true ]] && echo "$response" | jq -r || echo "$response" | jq -r '{thread_id: .thread_id, run_id: .id, status: .status}'
+        if [[ "$verbose" == true ]]; then
+            echo "$response" | jq -r
+        elif [[ "$respond" == "as_json" ]]; then
+            echo "$response" | jq -r '{thread_id: .thread_id, run_id: .id, status: .status}'
+        else
+            echo "$response" | jq -r '.status'
+        fi
         ;;
 
 
@@ -323,21 +379,29 @@ case $command in
         [[ -z "$2" ]] && b/usage -w 4 "$0 files.upload" \
             -f "* The file to upload" \
             -p "  The purpose of the file [fine-tune|assistants] defaults to assistants" \
-            -v "  Return the response in verbose mode" && exit 0
+            -J "  Return the response as JSON" \
+            -V "  Return the vendor response in verbose mode" && exit 0
 
         purpose="assistants"
-        while getopts ":f:p:v" opt; do
+        while getopts ":f:p:JV" opt; do
             case ${opt} in
                 f ) file="$OPTARG" ;;
                 p ) purpose="$OPTARG" ;;
-                v ) verbose=true ;;
+                J ) respond="as_json" ;;
+                V ) verbose=true ;;
                 \? ) b/error invalid_option "$OPTARG" && exit 1 ;;
             esac
         done
 
         response=$(curlRequest -u "$api_url/files" -f "$file" -p "$purpose")
 
-        [[ "$verbose" == true ]] && echo "$response" | jq -r || echo "$response" | jq -r '{file_id: .id}'
+        if [[ "$verbose" == true ]]; then
+            echo "$response" | jq -r
+        elif [[ "$respond" == "as_json" ]]; then
+            echo "$response" | jq -r '{file_id: .id}'
+        else
+            echo "$response" | jq -r .id
+        fi
         ;;
 
 
@@ -346,14 +410,16 @@ case $command in
 
         [[ "$1" == "--help" ]] && b/usage -w 4 "$0 files.list" \
             -p "  Filters the files by given purpose" \
-            -v "  Return the response in verbose mode" && exit 0
+            -J "  Return the response as JSON" \
+            -V "  Return the vendor response in verbose mode" && exit 0
 
         purpose="assistants"
 
-        while getopts ":p:v" opt; do
+        while getopts ":p:JV" opt; do
             case ${opt} in
                 p ) purpose="$OPTARG" ;;
-                v ) verbose=true ;;
+                J ) respond="as_json" ;;
+                V ) verbose=true ;;
                 \? ) b/error invalid_option "$OPTARG" && exit 1 ;;
             esac
         done
@@ -364,13 +430,10 @@ case $command in
 
         if [[ "$verbose" == true ]]; then
             echo "$response" | jq -r
+        elif [[ "$respond" == "as_json" ]]; then
+            echo "$response" | jq -r '[.data[] | {id: .id, purpose: .purpose, created_at: .created_at}]'
         else
-            data=$(echo "$response" | jq -r '.data // empty')
-            if [[ -n "$data" ]]; then
-                echo "$response" | jq -r '[.data[] | {id: .id, purpose: .purpose, created_at: .created_at}]'
-            else
-                echo "[]" | jq -r
-            fi
+            echo "$response" | jq -r '.data[] | .id'
         fi
         ;;
 
@@ -380,19 +443,28 @@ case $command in
             
             [[ -z "$2" ]] && b/usage -w 4 "$0 file.show" \
                 -f "* The file ID to show" \
-                -v "  Return the response in verbose mode" && exit 0
+                -J "  Return the response as JSON" \
+                -V "  Return the response in verbose mode" && exit 0
     
-            while getopts ":f:v" opt; do
+            while getopts ":f:JV" opt; do
                 case ${opt} in
                     f ) file_id="$OPTARG" ;;
-                    v ) verbose=true ;;
+                    J ) respond="as_json" ;;
+                    V ) verbose=true ;;
                     \? ) b/error invalid_option "$OPTARG" && exit 1 ;;
                 esac
             done
     
             response=$(curlRequest -u "$api_url/files/$file_id")
     
-            [[ "$verbose" == true ]] && echo "$response" | jq -r || echo "$response" | jq -r '{file_id: .id, status: .status, created_at: .created_at}'
+            # [[ "$verbose" == true ]] && echo "$response" | jq -r || echo "$response" | jq -r '{file_id: .id, status: .status, created_at: .created_at}'
+            if [[ "$verbose" == true ]]; then
+                echo "$response" | jq -r
+            elif [[ "$respond" == "as_json" ]]; then
+                echo "$response" | jq -r '{file_id: .id, status: .status, created_at: .created_at}'
+            else
+                echo "$response" | jq -r '.status'
+            fi
             ;;
 
 
@@ -401,19 +473,27 @@ case $command in
     
             [[ -z "$2" ]] && b/usage -w 4 "$0 file.delete" \
                 -f "* The file ID to delete" \
-                -v "  Return the response in verbose mode" && exit 0
+                -J "  Return the response as JSON" \
+                -V "  Return the vendor response in verbose mode" && exit 0
     
-            while getopts ":f:v" opt; do
+            while getopts ":f:JV" opt; do
                 case ${opt} in
                     f ) file_id="$OPTARG" ;;
-                    v ) verbose=true ;;
+                    J ) respond="as_json" ;;
+                    V ) verbose=true ;;
                     \? ) b/error invalid_option "$OPTARG" && exit 1 ;;
                 esac
             done
     
             response=$(curl -X DELETE -H "Authorization: Bearer $OPENAI_API_KEY" --silent "$api_url/files/$file_id")
-    
-            [[ "$verbose" == true ]] && echo "$response" | jq -r || echo "$response" | jq -r '{file_id: .id, deleted: .deleted}'
+
+            if [[ "$verbose" == true ]]; then
+                echo "$response" | jq -r
+            elif [[ "$respond" == "as_json" ]]; then
+                echo "$response" | jq -r '{file_id: .id, deleted: .deleted}'
+            else
+                exit 0
+            fi
             ;;
 
 
@@ -438,7 +518,7 @@ case $command in
             size="1024x1024"
             style="vivid"
     
-            while getopts ":p:m:n:q:r:s:t:u:v" opt; do
+            while getopts ":p:m:n:q:r:s:t:u:JV" opt; do
                 case ${opt} in
                     p ) prompt="$OPTARG" ;;
                     m ) model="$OPTARG" ;;
@@ -448,7 +528,8 @@ case $command in
                     s ) size="$OPTARG" ;;
                     t ) style="$OPTARG" ;;
                     u ) user="$OPTARG" ;;
-                    v ) verbose=true ;;
+                    J ) respond="as_json" ;;
+                    V ) verbose=true ;;
                     \? ) b/error invalid_option "$OPTARG" && exit 1 ;;
                 esac
             done
@@ -466,7 +547,15 @@ case $command in
     
             response=$(curlRequest -u "$api_url/images/generations" -d "$payload" -j)
     
-            [[ "$verbose" == true ]] && echo "$response" | jq -r || echo "$response" | jq -r '{images: [.data[].url]}'
+            # [[ "$verbose" == true ]] && echo "$response" | jq -r || echo "$response" | jq -r '{images: [.data[].url]}'
+
+            if [[ "$verbose" == true ]]; then
+                echo "$response" | jq -r
+            elif [[ "$respond" == "as_json" ]]; then
+                echo "$response" | jq -r '{images: [.data[].url]}'
+            else
+                echo "$response" | jq -r '.data[].url'
+            fi
             ;;
 
         
@@ -480,14 +569,15 @@ case $command in
                 -r "  The response format" \
                 -s "  The speed of the audio" \
                 -u "  A unique identifier representing your end-user" \
-                -v "  Return the response in verbose mode" && exit 0
+                -J "  Return the response as JSON" \
+                -V "  Return the vendor response in verbose mode" && exit 0
     
             model="tts-1"
             voice="alloy"
             response_format="mp3"
             speed=1.0
     
-            while getopts ":i:m:v:r:s:u:v" opt; do
+            while getopts ":i:m:v:r:s:u:JV" opt; do
                 case ${opt} in
                     i ) input="$OPTARG" ;;
                     m ) model="$OPTARG" ;;
@@ -495,7 +585,8 @@ case $command in
                     r ) response_format="$OPTARG" ;;
                     s ) speed="$OPTARG" ;;
                     u ) user="$OPTARG" ;;
-                    v ) verbose=true ;;
+                    J ) respond="as_json" ;;
+                    V ) verbose=true ;;
                     \? ) b/error invalid_option "$OPTARG" && exit 1 ;;
                 esac
             done
@@ -516,9 +607,15 @@ case $command in
                 -H "Content-Type: application/json" \
                 -d "$payload" \
                 --silent \
-                --output ./$random_file_name.mp3
+                --output ./tmp/$random_file_name.mp3
     
-            [[ "$verbose" == true ]] && echo "$response" | jq -r || echo "{ \"file_path\": \"./$random_file_name.mp3\" }"
+            if [[ "$verbose" == true ]]; then
+                echo "{ \"file_path\": \"./$random_file_name.mp3\" }"
+            elif [[ "$respond" == "as_json" ]]; then
+                echo "{ \"file_path\": \"./$random_file_name.mp3\" }"
+            else
+                echo "./tmp/$random_file_name.mp3"
+            fi
             ;;
 
 
@@ -534,18 +631,19 @@ case $command in
             -r "  The response format" \
             -t "  The sampling temperature" \
             -g "  The timestamp granularities to populate for this transcription" \
-            -v "  Return the response in verbose mode" && exit 0
+            -J "  Return the response as JSON" \
+            -V "  Return the vendor response in verbose mode" && exit 0
 
         language="en"
-        output_file=""
+        output_file="$BARE_DIR/tmp/transcription-$(date +%Y%m%d-%H%M%S).txt"
         response_format="json"
         temperature=0
         timestamp_granularities="segment"
         model="whisper-1"
 
-        while getopts ":f:o:m:l:p:r:t:g:v" opt; do
+        while getopts ":f:o:m:l:p:r:t:g:JV" opt; do
             case ${opt} in
-                f ) file="$OPTARG" ;;
+                f ) file="$BARE_DIR/$OPTARG" ;;
                 o ) output_file="$OPTARG" ;;
                 m ) model="$OPTARG" ;;
                 l ) language="$OPTARG" ;;
@@ -553,7 +651,8 @@ case $command in
                 r ) response_format="$OPTARG" ;;
                 t ) temperature="$OPTARG" ;;
                 g ) timestamp_granularities="$OPTARG" ;;
-                v ) verbose=true ;;
+                J ) respond="as_json" ;;
+                V ) verbose=true ;;
                 \? ) b/error invalid_option "$OPTARG" && exit 1 ;;
             esac
         done
@@ -624,18 +723,14 @@ case $command in
             fi
         else
             # Send the request to the API
-            response=$(curl -X POST -H "Authorization: Bearer $OPENAI_API_KEY" -H "Content-Type: multipart/form-data" -F "file=@$file" -F "model=$model" -F "language=$language" -F "prompt=$prompt" -F "response_format=$response_format" -F "temperature=$temperature" -F "timestamp_granularities[]=$timestamp_granularities" -F "model=$model" --silent --max-time 60 https://api.openai.com/v1/audio/transcriptions)
+            # Send the request to the API
+            response=$(curl -X POST -H "Authorization: Bearer $OPENAI_API_KEY" -H "Content-Type: multipart/form-data" -F "file=@$file" -F "model=$model" -F "language=$language" -F "prompt=$prompt" -F "response_format=$response_format" -F "temperature=$temperature" -F "timestamp_granularities[]=$timestamp_granularities" --silent --max-time 60 https://api.openai.com/v1/audio/transcriptions)
 
             # Check if the response is valid JSON and contains 'text' field
             if echo "$response" | jq -e . >/dev/null 2>&1 && echo "$response" | jq 'has("text")' | grep -q true; then
                 # If verbose mode, store entire response, else extract text
                 if [[ "$verbose" = true ]]; then
-                    # Check if 'segments' property is not null
-                    if echo "$response" | jq 'has("segments")' | grep -q true; then
-                        # Limit the length of the 'segments.text' property to 140 characters
-                        response=$(echo "$response" | jq '.segments[].text = (.segments[].text | .[0:140] + "...")')
-                        response_array+="$response,"
-                    fi
+                    echo $(echo "$response" | jq -r) >> "$output_file"
                 else
                     echo "$(echo "$response" | jq -r '.text')" >> "$output_file"
                 fi
@@ -647,8 +742,15 @@ case $command in
         fi
 
         # Get the relative path of the output file
-        [[ "$verbose" == true ]] && echo "$response" | jq -r || echo "{ \"file\": \"$(basename "$output_file")\" }"
+        # [[ "$verbose" == true ]] && echo "$response" | jq -r || echo "{ \"file\": \"$(basename "$output_file")\" }"
         
+        if [[ "$verbose" == true ]]; then
+            echo "$response" | jq -r
+        elif [[ "$respond" == "as_json" ]]; then
+            echo "$(jq -n --arg file "$output_file" '{file: $file}')"
+        else
+            echo "$(jq -rn --arg file "$output_file" '$file')"
+        fi
 
 
 
