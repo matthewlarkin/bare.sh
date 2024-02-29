@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
+
+file="$1"
+command="$2"
+shift 2  # Shift off the first two arguments
+
+case $command in
+
+    limit )
+
+        limit=${1:-10} && shift
+        print=false
+        while getopts "P" opt; do
+            case $opt in
+                P ) print=true ;;
+                \? ) echo "Invalid option: -$OPTARG" >&2 ;;
+            esac
+        done
+
+        if [[ $print = true ]]; then
+            head -n $(($limit + 1)) $file | csvlook
+        else
+            head -n $(($limit + 1)) $file
+        fi
+        ;; 
+
+    dedupe )
+        # getopts for -d (dynamic deduplication)
+        while getopts "f:d:" opt; do
+            case $opt in
+                o ) output=$OPTARG ;; #output deduped
+                d ) columns=$OPTARG ;; #columns given as comma separated list
+                \? ) echo "Invalid option: -$OPTARG" >&2 ;;
+            esac
+        done
+
+        [[ -z $output ]] && output="./var/deduped.$(date +%s).csv"
+
+        if [[ -n $columns ]]; then
+            tmp_csv="./tmp/$(b/random string 30).csv"
+            csvsort -c "$columns" $file > $tmp_csv
+            head -1 $file > $output
+            tail -n +2 $tmp_csv | awk -v cols="$columns" -F, '!seen[$cols]++' >> $output
+            rm $tmp_csv
+        else
+            csvsort "$file" | uniq
+        fi
+        ;;
+
+    filter )
+        # getopts for -c (columns to filter on)
+        case_insentivie=false
+        while getopts "c:m:C" opt; do
+            case $opt in
+                c ) columns=$OPTARG ;; #columns given as comma separated list
+                m ) match=$OPTARG ;; #match string
+                b ) begins_with=$OPTARG ;; #match string
+                C ) case_insensitive=true ;; #case insensitive match
+                \? ) echo "Invalid option: -$OPTARG" >&2 ;;
+            esac
+        done
+
+        [[ -z $columns ]] && echo "No columns specified to filter on" && exit 1
+
+        if [[ -n $begins_with ]]; then
+            csvgrep -c "$columns" -r "^$match" $file
+        elif [[ $case_insensitive = true ]]; then
+            csvgrep -c "$columns" -r "(?i)$match" $file
+        else
+            csvgrep -c "$columns" -m "$match" $file
+        fi
+        ;;
+
+    * ) echo "Invalid command" && exit 1 ;;
+
+esac
