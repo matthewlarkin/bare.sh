@@ -97,3 +97,12 @@ if ! [ -x "$(command -v ffmpeg)" ]; then
         brew install ffmpeg
     fi
 fi
+
+# check for csvkit
+if ! [ -x "$(command -v csvlook)" ]; then
+    if [ "$OS" = "Linux" ]; then
+        sudo apt install -y csvkit
+    elif [ "$OS" = "Darwin" ]; then
+        brew install csvkit
+    fi
+fi
