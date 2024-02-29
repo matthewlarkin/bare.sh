@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
+[[ -z "$1" ]] && b/usage -w 8 -t "commands" $0 \
+    "<csv_file>" "* The csv file to operate on" \
+    limit "  Print the first n lines of a csv file" \
+    dedupe "  Deduplicate a csv file" \
+    filter "  Filter a csv file based on a given column and match string"
+
 file="$1"
 command="$2"
 shift 2  # Shift off the first two arguments
@@ -9,21 +15,36 @@ case $command in
 
     limit )
 
-        limit=${1:-10} && shift
+        [[ -z $1 ]] && b/usage -w 8 -t "options" $0 \
+            "<limit>" "* The number of rows to print" \
+            "-o" "  The output file to write to" \
+            "-P" "  Print the output in a pretty table format"
+
+        limit="$1" && shift
         print=false
-        while getopts "P" opt; do
+        while getopts ":o:PJ" opt; do
             case $opt in
+                o ) output_file=$OPTARG ;; #output file
                 P ) print=true ;;
+                J ) return_json=true ;;
                 \? ) echo "Invalid option: -$OPTARG" >&2 ;;
             esac
         done
 
-        if [[ $print = true ]]; then
-            head -n $(($limit + 1)) $file | csvlook
+        if [[ -n $return_json ]]; then
+            output=$(head -n $(($limit + 1)) $file | csvjson)
+        elif [[ $print = true ]]; then
+            output=$(head -n $(($limit + 1)) $file | csvlook)
         else
-            head -n $(($limit + 1)) $file
+            output=$(head -n $(($limit + 1)) $file)
         fi
-        ;; 
+
+        if [[ -z $output_file ]]; then
+            echo "$output"
+        else
+            echo "$output" > "$output_file"
+        fi
+        ;;
 
     dedupe )
         # getopts for -d (dynamic deduplication)
