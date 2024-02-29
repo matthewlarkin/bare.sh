@@ -32,7 +32,7 @@ case $command in
             esac
         done
 
-        nb list --limit "$limit"
+        nb list --limit "$limit" --no-color
         ;;
 
     show )
