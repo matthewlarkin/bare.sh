@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
+# Print usage information for a script or command
+
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
 [[ -z $1 ]] && b/usage -t "options" -w 12 $0 \
-    -t "type [commands | options]" \
-    -w "width of the type column (int)" \
-    ":1" "Name of the script or command" \
-    ":key :value" "Names of the options and their descriptions" && exit 0;
+    -t					"type [commands | options]" \
+    -w					"width of the type column (int)" \
+    "<script>"			"Name of the script or command" \
+    "<key> <value>"		"Names of the options and their descriptions" && exit 0;
 
 # Default values
 type="options"
@@ -14,39 +16,25 @@ width=24
 # Parse command line options
 while getopts ":t:w:" opt; do
     case ${opt} in
-        t)
-            type=$OPTARG
-            ;;
-        w)
-            width=$OPTARG
-            ;;
-        \?)
-            echo "Invalid option: -$OPTARG" 1>&2
-            exit 1
-            ;;
-        :)
-            echo "Option -$OPTARG requires an argument." 1>&2
-            exit 1
-            ;;
+        t ) type=$OPTARG ;;
+        w ) width=$OPTARG ;;
+        \? ) echo "Invalid option: -$OPTARG" && exit 1 ;;
+        : ) echo "Option -$OPTARG requires an argument." && exit 1 ;;
     esac
 done
 shift $((OPTIND -1))
 
-script_name=$1
-shift
+script_name=$1 && shift
 
-if (( $# % 2 != 0 )); then
-        echo "Error: Please provide an even number of arguments."
-        exit 1
-fi
+(( $# % 2 != 0 )) && b/error arg_error "Please provide an even number of arguments."
 
 printf "${muted}\n\n📚 ${yellow}Usage: ${green}$script_name${muted} <${blue}$type${muted}>\n\n"
 
 while (( "$#" )); do
-        option=$1
-        description=$2
-        printf "  ${blue}%-${width}s${reset}\t${muted}${description}${reset}\n" "$option"
-        shift 2
+	option=$1
+	description=$2
+	printf "  ${blue}%-${width}s${reset}\t${muted}${description}${reset}\n" "$option"
+	shift 2
 done
 
 printf "${muted}\n\n${reset}" && exit 0
