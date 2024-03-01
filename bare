@@ -17,7 +17,7 @@ done
 	for scope in $(echo "${!scopes[@]}" | tr ' ' '\n' | sort); do
 		args+="$scope \"${scopes[$scope]}\" "
 	done
-	eval "b/usage -w 8 -t \"scope\" $0 $args"
+	eval "b/usage -w 8 -t \"scope\" "bare" $args"
 	exit 0
 }
 
