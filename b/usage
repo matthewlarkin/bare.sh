@@ -40,7 +40,7 @@ if (( $# % 2 != 0 )); then
         exit 1
 fi
 
-printf "${muted}\n- - -\n\n📚 ${yellow}Usage: ${green}$script_name${muted} [$type]\n\n"
+printf "${muted}\n\n📚 ${yellow}Usage: ${green}$script_name${muted} <${blue}$type${muted}>\n\n"
 
 while (( "$#" )); do
         option=$1
@@ -49,4 +49,4 @@ while (( "$#" )); do
         shift 2
 done
 
-printf "${muted}\n- - -\n\n${reset}" && exit 0
+printf "${muted}\n\n${reset}" && exit 0
