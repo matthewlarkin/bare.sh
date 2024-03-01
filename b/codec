@@ -2,47 +2,47 @@
 # Encode and decode strings to and from various formats
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-[[ -z $1 ]] && b/usage -t "commands" -w 8 $0 \
-    url.encode "Encode a URL" \
-    url.decode "Decode a URL" \
-    base64.encode "Encode a string to base64" \
-    base64.decode "Decode a base64 string" \
-    hex.encode "Encode a string to hex" \
-    hex.decode "Decode a hex string" \
-    html.encode "Encode a string to HTML entities" \
-    html.decode "Decode HTML entities" && exit 0;
+[[ -z $1 ]] && b/usage -t "command" -w 16 $0 \
+	url.encode		"Encode a URL" \
+	url.decode		"Decode a URL" \
+	base64.encode	"Encode a string to base64" \
+	base64.decode	"Decode a base64 string" \
+	hex.encode		"Encode a string to hex" \
+	hex.decode		"Decode a hex string" \
+	html.encode		"Encode a string to HTML entities" \
+	html.decode		"Decode HTML entities" && exit 0;
 
 scope="$1"
 
 [[ -z $2 ]] && b/usage -t "arguments" -w 2 "$0 $1" \
-    string "string to encode or decode" && exit 0;
+	string "string to encode or decode" && exit 0;
 
 case $scope in
-    "url.encode")
-        echo -n "$2" | jq -s -R -r @uri
-        ;;
-    "url.decode")
-        echo -n "$2" | jq -s -R -r @uri
-        ;;
-    "base64.encode")
-        echo -n "$2" | jq -s -R -r @base64
-        ;;
-    "base64.decode")
-        echo -n "$2" | jq -s -R -r @base64d
-        ;;
-    "hex.encode")
-        echo -n "$2" | xxd -ps
-        ;;
-    "hex.decode")
-        echo -n "$2" | xxd -r -p
-        ;;
-    "html.encode")
-        echo -n "$2" | jq -s -R -r @html
-        ;;
-    "html.decode")
-        echo -n "$2" | perl -MHTML::Entities -pe 'decode_entities($_);'
-        ;;
-    *)
-        echo "Error: Invalid scope."
-        ;;
+	"url.encode")
+		echo -n "$2" | jq -s -R -r @uri
+		;;
+	"url.decode")
+		echo -n "$2" | jq -s -R -r @uri
+		;;
+	"base64.encode")
+		echo -n "$2" | jq -s -R -r @base64
+		;;
+	"base64.decode")
+		echo -n "$2" | jq -s -R -r @base64d
+		;;
+	"hex.encode")
+		echo -n "$2" | xxd -ps
+		;;
+	"hex.decode")
+		echo -n "$2" | xxd -r -p
+		;;
+	"html.encode")
+		echo -n "$2" | jq -s -R -r @html
+		;;
+	"html.decode")
+		echo -n "$2" | perl -MHTML::Entities -pe 'decode_entities($_);'
+		;;
+	*)
+		echo "Error: Invalid scope."
+		;;
 esac
