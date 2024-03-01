@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Note-taking with encryption and tagging
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
 [[ -z $1 ]] && b/usage -t "commands" -w 12 $0 \

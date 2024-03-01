@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Decrypt text symmetrically encrypted by your BARE_ENCRYPTION_KEY
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
 [[ -z "$BARE_ENCRYPTION_KEY" ]] && echo "bare_encryption_key environment variable not set" && exit 1

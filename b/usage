@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 # Print usage information for a script or command
-
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
 [[ -z $1 ]] && b/usage -t "options" -w 12 $0 \

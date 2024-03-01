@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Send and receive email with SMTP/POP3 and Postmark
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
 # simple sending and checking of email via curl

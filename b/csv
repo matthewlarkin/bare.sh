@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 # Interface with CSV files
-
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
 [[ -z "$1" ]] && b/usage -w 8 -t "commands" $0 \
