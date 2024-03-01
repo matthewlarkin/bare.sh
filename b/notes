@@ -2,14 +2,21 @@
 # Note-taking with encryption and tagging
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-[[ -z $1 ]] && b/usage -t "commands" -w 12 $0 \
-	notebooks.create	"Create a new notebook" \
-	notebooks.list		"List notebooks" \
-	create				"Add a new note" \
-	list				"List notes" \
-	show				"Show a note" \
-    edit				"Edit an existing note" \
-	delete				"Delete a note" && exit 0
+# set up documentation as an array
+declare -a documentation=(
+	"title"				"notes"
+	"description"		"Note-taking with encryption and tagging"
+	"notebooks.create" 	"Create a new notebook"
+	"notebooks.list"	"List notebooks"
+	"create"			"Add a new note"
+	"list"				"List notes"
+	"show"				"Show a note"
+	"edit"				"Edit an existing note"
+	"delete"			"Delete a note"
+) && export documentation
+
+# debug, print documentation and exit
+[[ $1 == "-h" ]] && b/usage -t "commands" -w 12 $0 "${documentation[@]}" && exit 0
 
 command="$1"
 shift
