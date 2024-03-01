@@ -1,98 +1,133 @@
 #!/usr/bin/env bash
+# Interface with CSV files
+
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
 [[ -z "$1" ]] && b/usage -w 8 -t "commands" $0 \
-    "<csv_file>" "* The csv file to operate on" \
-    limit "  Print the first n lines of a csv file" \
-    dedupe "  Deduplicate a csv file" \
-    filter "  Filter a csv file based on a given column and match string"
+	"<csv_file>"	"* The csv file to operate on" \
+	limit			"  Print the first n lines of a csv file" \
+	dedupe			"  Deduplicate a csv file" \
+	filter			"  Filter a csv file based on a given column and match string" \
+	math			"  Perform math operations on a csv file"
 
 file="$1"
 command="$2"
-shift 2  # Shift off the first two arguments
+shift 2 # Shift off the first two arguments
 
 case $command in
 
-    limit )
+	math ) 
+		# getopts for -c (columns to perform math on)
+		while getopts "c:o:" opt; do
+			case $opt in
+				c ) columns=$OPTARG ;; #columns given as comma separated list
+				o ) operation=$OPTARG ;; #operation to perform
+				\? ) echo "Invalid option: -$OPTARG" >&2 ;;
+			esac
+		done
 
-        [[ -z $1 ]] && b/usage -w 8 -t "options" $0 \
-            "<limit>" "* The number of rows to print" \
-            "-o" "  The output file to write to" \
-            "-P" "  Print the output in a pretty table format"
+		[[ -z $columns ]] && echo "No columns specified to perform math on" && exit 1
 
-        limit="$1" && shift
-        print=false
-        while getopts ":o:PJ" opt; do
-            case $opt in
-                o ) output_file=$OPTARG ;; #output file
-                P ) print=true ;;
-                J ) return_json=true ;;
-                \? ) echo "Invalid option: -$OPTARG" >&2 ;;
-            esac
-        done
+		valid_operations=(
+			"sum"		"mean"		"median"
+			"mode"		"min"		"max"
+			"range"		"variance"	"std_dev"
+			"unique" 	"count"
+		)
 
-        if [[ -n $return_json ]]; then
-            output=$(head -n $(($limit + 1)) $file | csvjson)
-        elif [[ $print = true ]]; then
-            output=$(head -n $(($limit + 1)) $file | csvlook)
-        else
-            output=$(head -n $(($limit + 1)) $file)
-        fi
+		# Check if operation is valid
+		if [[ " ${valid_operations[@]} " =~ " ${operation} " ]]; then
+			csvstat -c "$columns" --$operation $file
+		else b/error invalid_operation "Invalid operation: $operation"; fi
+		;;
 
-        if [[ -z $output_file ]]; then
-            echo "$output"
-        else
-            echo "$output" > "$output_file"
-        fi
-        ;;
+	limit )
 
-    dedupe )
-        # getopts for -d (dynamic deduplication)
-        while getopts "f:d:" opt; do
-            case $opt in
-                o ) output=$OPTARG ;; #output deduped
-                d ) columns=$OPTARG ;; #columns given as comma separated list
-                \? ) echo "Invalid option: -$OPTARG" >&2 ;;
-            esac
-        done
+		[[ -z $1 ]] && b/usage -w 8 -t "options" $0 \
+			"<limit>"	"* The number of rows to print" \
+			"-o"		"  The output file to write to" \
+			"-P"		"  Print the output in a pretty table format"
 
-        [[ -z $output ]] && output="./var/deduped.$(date +%s).csv"
+		limit="$1" && shift
+		print=false
+		while getopts ":o:PJ" opt; do
+			case $opt in
+				o ) output_file=$OPTARG ;; #output file
+				P ) print=true ;;
+				J ) return_json=true ;;
+				\? ) echo "Invalid option: -$OPTARG" >&2 ;;
+			esac
+		done
 
-        if [[ -n $columns ]]; then
-            tmp_csv="./tmp/$(b/random string 30).csv"
-            csvsort -c "$columns" $file > $tmp_csv
-            head -1 $file > $output
-            tail -n +2 $tmp_csv | awk -v cols="$columns" -F, '!seen[$cols]++' >> $output
-            rm $tmp_csv
-        else
-            csvsort "$file" | uniq
-        fi
-        ;;
+		if [[ -n $return_json ]]; then
+			output=$(head -n $(($limit + 1)) $file | csvjson)
+		elif [[ $print = true ]]; then
+			output=$(head -n $(($limit + 1)) $file | csvlook)
+		else
+			output=$(head -n $(($limit + 1)) $file)
+		fi
 
-    filter )
-        # getopts for -c (columns to filter on)
-        case_insentivie=false
-        while getopts "c:m:C" opt; do
-            case $opt in
-                c ) columns=$OPTARG ;; #columns given as comma separated list
-                m ) match=$OPTARG ;; #match string
-                b ) begins_with=$OPTARG ;; #match string
-                C ) case_insensitive=true ;; #case insensitive match
-                \? ) echo "Invalid option: -$OPTARG" >&2 ;;
-            esac
-        done
+		if [[ -z $output_file ]]; then
+			echo "$output"
+		else
+			echo "$output" > "$output_file"
+		fi
+		;;
 
-        [[ -z $columns ]] && echo "No columns specified to filter on" && exit 1
+	dedupe )
+		# getopts for -d (dynamic deduplication)
+		while getopts "f:d:" opt; do
+			case $opt in
+				o ) output=$OPTARG ;; #output deduped
+				d ) columns=$OPTARG ;; #columns given as comma separated list
+				\? ) echo "Invalid option: -$OPTARG" >&2 ;;
+			esac
+		done
 
-        if [[ -n $begins_with ]]; then
-            csvgrep -c "$columns" -r "^$match" $file
-        elif [[ $case_insensitive = true ]]; then
-            csvgrep -c "$columns" -r "(?i)$match" $file
-        else
-            csvgrep -c "$columns" -m "$match" $file
-        fi
-        ;;
+		[[ -z $output ]] && output="./var/deduped.$(date +%s).csv"
 
-    * ) echo "Invalid command" && exit 1 ;;
+		if [[ -n $columns ]]; then
+			tmp_csv="./tmp/$(b/random string 30).csv"
+			csvsort -c "$columns" $file > $tmp_csv
+			head -1 $file > $output
+			tail -n +2 $tmp_csv | awk -v cols="$columns" -F, '!seen[$cols]++' >> $output
+			rm $tmp_csv
+		else
+			csvsort "$file" | uniq
+		fi
+		;;
+
+	filter )
+
+		[[ -z $1 ]] && b/usage -w 8 -t "options" $0 \
+			"-c"		"* The column(s) to filter on" \
+			"-m"		"= The match string" \
+			"-b"		"= Match strings that begin with the given string" \
+			"-C"		"  Perform a case insensitive match"
+
+		# getopts for -c (columns to filter on)
+		case_insentivie=false
+		while getopts "c:m:C" opt; do
+			case $opt in
+				c ) columns=$OPTARG ;; #columns given as comma separated list
+				m ) match=$OPTARG ;; #match string
+				b ) begins_with=$OPTARG ;; #match string
+				C ) case_insensitive=true ;; #case insensitive match
+				\? ) echo "Invalid option: -$OPTARG" >&2 ;;
+			esac
+		done
+
+		[[ -z $columns ]] && echo "No columns specified to filter on" && exit 1
+
+		if [[ -n $begins_with ]]; then
+			csvgrep -c "$columns" -r "^$match" $file
+		elif [[ $case_insensitive = true ]]; then
+			csvgrep -c "$columns" -r "(?i)$match" $file
+		else
+			csvgrep -c "$columns" -m "$match" $file
+		fi
+		;;
+
+	* ) echo "Invalid command" && exit 1 ;;
 
 esac
