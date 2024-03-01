@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Encode and decode strings to and from various formats
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
 [[ -z $1 ]] && b/usage -t "commands" -w 8 $0 \
