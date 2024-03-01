@@ -4,7 +4,7 @@
 source "$(dirname "${BASH_SOURCE[0]}")/lib/init"
 
 declare -A scopes
-for scope in b/*; do
+for scope in $(ls b/*); do
     if [[ -f $scope ]]; then
         scope_name=$(basename $scope)
         scope_desc=$(sed -n '2p' $scope | cut -c 3-)
@@ -13,12 +13,12 @@ for scope in b/*; do
 done
 
 [[ -z "$1" ]] && {
-    args=""
-    for scope in "${!scopes[@]}"; do
-        args+="$scope \"${scopes[$scope]}\" "
-    done
-    eval "b/usage -w 8 -t \"scope\" $0 $args"
-    exit 0
+	args=""
+	for scope in $(echo "${!scopes[@]}" | tr ' ' '\n' | sort); do
+		args+="$scope \"${scopes[$scope]}\" "
+	done
+	eval "b/usage -w 8 -t \"scope\" $0 $args"
+	exit 0
 }
 
 # make sure the first argument is a valid scope.
