@@ -83,7 +83,7 @@ case $command in
         # if -E is set, -P must also be set
         [ -n "$encrypt" ] && [ -z "$password" ] && echo "Error: Encryption flag (-E) requires a password (-P)" && exit 1
 
-        command=("nb" "$notebook:_add" --print --no-color)
+        command=("nb" "$notebook:add" --no-color)
 
         [ -n "$title" ] && command+=("--title" "$title")
         [ -n "$content" ] && command+=("--content" "$content")
