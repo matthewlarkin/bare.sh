@@ -16,7 +16,7 @@ declare -a documentation=(
 ) && export documentation
 
 # debug, print documentation and exit
-[[ $1 == "-h" ]] && b/usage -t "commands" -w 12 $0 "${documentation[@]}" && exit 0
+[[ $1 == "--help" ]] && b/usage -t "commands" -w 16 $0 "${documentation[@]}" && exit 0
 
 command="$1"
 shift
