@@ -3,8 +3,13 @@
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
 [[ -z $1 ]] && b/usage -t "commands" -w 12 $0 \
-    add "Add a new note" \
-    edit "Edit an existing note" && exit 0;
+	notebooks.create	"Create a new notebook" \
+	notebooks.list		"List notebooks" \
+	create				"Add a new note" \
+	list				"List notes" \
+	show				"Show a note" \
+    edit				"Edit an existing note" \
+	delete				"Delete a note" && exit 0
 
 command="$1"
 shift
@@ -13,6 +18,27 @@ shift
 [[ ! -d $BARE_NOTES_DIR ]] && nb init > /dev/null 2>&1
 
 case $command in
+
+	notebooks.create )
+		[[ -z $1 ]] && b/usage -t "options" -w 2 "$0 new-notebook" \
+			-n "* Name of the notebook" && exit 0;
+
+		while getopts "n:" opt; do
+			case $opt in
+				n ) name=$OPTARG ;;
+				\? ) echo "Invalid option: -$OPTARG" && exit 1 ;;
+				: ) echo "Option -$OPTARG requires an argument." && exit 1 ;;
+			esac
+		done
+
+		# create a new notebook with nb
+		nb notesbooks add "$name"
+		;;
+
+	notebooks.list )
+
+		nb notebooks
+		;;
 
     list )
 
@@ -42,7 +68,7 @@ case $command in
         nb show "$file" --print
         ;;
 
-    add )
+    create )
 
         [[ -z $1 ]] && b/usage -t "options" -w 2 "$0 add" \
             -T "  Title of the note" \
@@ -105,7 +131,7 @@ case $command in
         format_nb_response "$output"
         ;;
 
-    edit)
+    edit )
 
         [[ -z $1 ]] && b/usage -t "options" -w 2 "$0 edit" \
             -n "* ID of the note to edit" \
@@ -173,7 +199,6 @@ case $command in
         file="$1"
         nb delete "$file" --force
         ;;
-    *)
-        echo "Invalid command: $command"
-        ;;
+
+    * ) echo "Invalid command: $command" ;;
 esac
