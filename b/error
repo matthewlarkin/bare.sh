@@ -1,9 +1,14 @@
 #!/usr/bin/env bash
-# Displays an error message and exits with a non-zero status code
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-[[ -z "$1" ]] && b/usage -w 4 $0 \
-    ':1' "* error_code" \
-    ':2' "  description" && exit 0
+# ================================== DOC ===================================
+declare doc_name="error"
+declare doc_description="Print an error message and exit with status code 1"
+declare -a doc_options=(
+	":code"		"The error code"
+	":message"	"The error message"
+) && [[ "$1" == '--inspect' ]] && return 0
+
+[[ $2 == '--inspect' ]] && unset doc_options && return 0
 
 printf "\n❌ ${red}$1${reset}: $2\n\n" && exit 1

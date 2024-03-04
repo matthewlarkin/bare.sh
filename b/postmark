@@ -1,23 +1,20 @@
 #!/usr/bin/env bash
-# Postmark API client
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
+
+# ================================== DOC ===================================
+declare doc_name="postmark"
+declare doc_description="Send and receive email with Postmark"
+declare -a doc_options=(
+	"send"		"Send email"
+) && [[ "$1" == '--inspect' ]] && return 0
+# ==========================================================================
 
 [ ! -x "$(command -v curl)" ] && echo "🚨 curl is not installed" && exit 1
 [ ! -x "$(command -v jq)" ] && echo "🚨 jq is not installed" && exit 1
 [ -z "$POSTMARK_SERVER_TOKEN" ] && echo "🚨 POSTMARK_SERVER_TOKEN environment variable is not set" && exit 1
 
-[[ -z "$1" ]] && b/usage -w 4 $0 \
-    "-t" "Recipient email address" \
-    "-s" "Email subject" \
-    "-b" "HTML body" \
-    "-f" "From email address" \
-    "-r" "Reply-to email address" \
-    "-x" "Text body" \
-    "-j" "JSON string" \
-    "-i" "JSON file" && exit 0
 
-command="$1"
-shift
+command="$1" && shift
 
 curlPostmarkRequest() {
     url="$1"
@@ -41,38 +38,31 @@ case $command in
     # ========================================================
     send )
 
-        [[ -z "$1" ]] && b/usage -w 4 "$0 send" \
-            -t "* Recipient email address" \
-            -s "* Email subject" \
-            -b "* HTML body" \
-            -f "* From email address" \
-            -r "  Reply-to email address" \
-            -x "~ Text body" \
-            -j "  JSON string" \
-            -i "  JSON file" && exit 0
+		doc_name+=" send"
+		doc_description="Send email"
+		declare -a doc_options=(
+			"to"		"* Recipient email address"
+			"subject"	"* Email subject"
+			"htmlBody"	"* HTML body"
+			"from"		"* From email address"
+			"replyTo"	"  Reply-to email address"
+			"textBody"	"= Text body"
+			"jsonString"	"  JSON string"
+			"jsonFile"	"  JSON file"
+		) && [[ "$1" == '--inspect' ]] && return 0
 
         while getopts ":t:s:b:f:r:x:j:f:" opt; do
             case $opt in
-                t )
-                    to="$OPTARG" ;;
-                s )
-                    subject="$OPTARG" ;;
-                b )
-                    htmlBody="$OPTARG" ;;
-                f )
-                    from="$OPTARG" ;;
-                r )
-                    replyTo="$OPTARG" ;;
-                x )
-                    textBody="$OPTARG" ;;
-                j )
-                    jsonString="$OPTARG" ;;
-                i )
-                    jsonFile="$OPTARG" ;;
-                \? )
-                    echo "🌿 Invalid option: -$OPTARG" && exit 1 ;;
-                : )
-                    echo "🌿 Option -$OPTARG requires an argument" && exit 1 ;;
+                t ) to="$OPTARG" ;;
+                s ) subject="$OPTARG" ;;
+                b ) htmlBody="$OPTARG" ;;
+                f ) from="$OPTARG" ;;
+                r ) replyTo="$OPTARG" ;;
+                x ) textBody="$OPTARG" ;;
+                j ) jsonString="$OPTARG" ;;
+                i ) jsonFile="$OPTARG" ;;
+                \? ) echo "🌿 Invalid option: -$OPTARG" && exit 1 ;;
+                : ) echo "🌿 Option -$OPTARG requires an argument" && exit 1 ;;
             esac
         done
         shift $((OPTIND -1))
@@ -118,8 +108,4 @@ case $command in
         curlPostmarkRequest "https://api.postmarkapp.com/email" "$payload" | jq
         ;;
 
-    # ========================================================
-    * )
-        echo "🌿 Invalid command: $command" && exit 1
-        ;;
 esac

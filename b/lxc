@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
-# Simple lxc wrapper for creating containers with resource limits
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
+
+# ================================== DOC ===================================
+declare doc_name="lxc"
+declare doc_description="Interface with LXC containers"
+declare -a doc_options=(
+	"create"    "Create a new container"
+) && [[ "$1" == '--inspect' ]] && return 0
 
 # if on mac, recommend installing lxc via brew with remote lxd
 if [[ "${BARE_OS,,}" == "darwin"* ]]; then
@@ -8,22 +14,21 @@ if [[ "${BARE_OS,,}" == "darwin"* ]]; then
     exit 0
 fi
 
-# Check if a container name is provided
-[[ -z "$1" ]] && b/usage -w 8 -t "commands" $0 \
-    create "Create a new container" && exit 0;
-
 command="$1"
 shift
 
 case "$command" in
-    "create")
 
-        # Check if a container name is provided
-        [[ -z "$1" ]] && b/usage -w 2 -t "options" "$0 create" \
-            -c "CPU limit (default: 1)" \
-            -m "Memory limit (default: 200MiB)" \
-            -d "Disk space (default: 3GiB)" \
-            -D "Distro (default: ubuntu:22.04)" && exit 0;
+    create)
+	
+		doc_name+=" create"
+		doc_description="Create a new container"
+		declare -a doc_options=(
+			"-c"		"  CPU limit"
+			"-m"		"  Memory limit"
+			"-d"		"  Disk space"
+			"-D"		"  Distro"
+		) && [[ "$1" == '--inspect' ]] && return 0
 
         container_name=$1
         shift

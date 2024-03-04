@@ -2,6 +2,18 @@
 # Print usage information for a script or command
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
+# ================================== DOC ===================================
+
+declare doc_name="daily"
+declare doc_description="Daily.co API"
+
+declare -a doc_options=(
+	"rooms.create" "Create a new room"
+	"transcriptions.list" "List transcriptions"
+) && [[ "$1" == '--inspect' ]] && return 0
+
+# ==========================================================================
+
 [ -z "$DAILY_API_KEY" ] && b/error missing_key "Daily.co API key not set (DAILY_API_KEY)" && exit 1
 
 command=$1
@@ -10,6 +22,23 @@ shift
 case $command in
 
     rooms.create )
+
+		# ============== DOC ==============
+		doc_name+=" rooms.create"
+		doc_description="Create a new room"
+		declare -a doc_options=(
+			"-n"		"* Name of the room"
+			"-p"		"Privacy of the room (public or private)"
+			"-w"		"Not before date"
+			"-x"		"Expiration date"
+			"-l"		"Participants limit"
+			"-s"		"Screensharing"
+			"-k"		"Knocking"
+			"-e"		"Eject at expiration"
+			"-r"		"Allow recording"
+			"-t"		"Allow transcription"
+		) && [[ "$1" == '--inspect' ]] && return 0
+		# ================================
 
         while getopts "hn:p:w:x:l:s:k:e:r:t" opt; do
             case $opt in
@@ -84,27 +113,27 @@ case $command in
             -H "Authorization: Bearer $DAILY_API_KEY" \
             -d "$json_payload") || { b/error api_error "Failed to create room"; exit 1; }
 
-        echo $response | jq
+        echo "$response" | jq
 
         ;;
 
 
-
-    # ====================================================================
     transcriptions.list )
+
+		# ============== DOC ==============
+		doc_name+=" transcriptions.list"
+		doc_description="List transcriptions"
+		declare -a doc_options=(
+			"None" "No options"
+		) && [[ "$1" == '--inspect' ]] && return 0
+		# ================================
 
         response=$(curl https://api.daily.co/v1/transcript -s \
             -H "Content-Type: application/json" \
             -H "Authorization: Bearer $DAILY_API_KEY") || { b/error api_error "Failed to list transcriptions"; exit 1; }
 
-        echo $response | jq
+        echo "$response" | jq
 
-        ;;
-        
-
-    * )
-        b/error invalid_command "Invalid command: $command"
-        exit 1
         ;;
 
 

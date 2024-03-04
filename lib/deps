@@ -12,6 +12,15 @@ if ! [ -x "$(command -v curl)" ]; then
     fi
 fi
 
+# check that glow is installed
+if ! [ -x "$(command -v glow)" ]; then
+	if [ "$OS" = "Linux" ]; then
+		sudo snap install glow
+	elif [ "$OS" = "Darwin" ]; then
+		brew install glow
+	fi
+fi
+
 # check that snap is installed
 if ! [ -x "$(command -v snap)" ]; then
     if [ "$OS" = "Linux" ]; then

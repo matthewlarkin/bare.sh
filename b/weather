@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
+
+declare doc_name="weather"
+declare doc_description="Get the current weather for a location"
+declare -a doc_options=(
+		"[:location] today"		"Get today's weather"
+		"[:location] forecast" 	"Get a three-day forecast"
+) && [[ "$1" == '--inspect' ]] && return 0
+
+[[ $1 == 'clear' ]] && rm "$BARE_DIR"/tmp/weather.* && exit 0
+
+location="asheville+nc"
+command="today"
+color="C"
+
+while (( "$#" )); do
+	case "$1" in
+		-T)
+			color="T"
+			shift
+			;;
+		today|forecast)
+			location="$2"
+			command="$1"
+			shift 2
+			;;
+		-J)
+			command="json"
+			shift
+			;;
+		*)
+			location="$1"
+			shift
+			;;
+	esac
+done
+
+cache="$BARE_DIR/tmp/weather.$location.$command.${color}.txt"
+if [[ -f "$cache" ]] && [[ $(date -r "$cache" +%s) -gt $(date -v-30M +%s) ]]; then
+	cat "$cache" && echo && exit 0
+else
+	[[ $command == 'json' ]] && params="$location?format=j1"
+	# [[ $command == 'basic' ]] && params="$location?uQF$color&format=%c+%m+%t"
+	[[ $command == 'today' ]] && params="$location?u0QF$color"
+	[[ $command == 'forecast' ]] && params="$location?u3QF$color"
+	curl -s "wttr.in/$params" > "$cache"
+	if [[ $? -ne 0 ]]; then
+		echo "Error: Failed to fetch weather data."
+		exit 1
+	fi
+	cat "$cache" && echo && exit 0
+fi

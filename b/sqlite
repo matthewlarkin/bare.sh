@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
-# SQLite database management (pending)
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
+
+# ================================== DOC ===================================
+declare doc_name="sqlite"
+declare doc_description="Run a SQLite query"
+declare -a doc_options=(
+	":database"	"The SQLite database file"
+	":query"	"The query to run"
+) && [[ "$1" == '--inspect' ]] && return 0
+# ==========================================================================
 
 # Coming someday

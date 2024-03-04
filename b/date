@@ -2,36 +2,51 @@
 # Date functions, calendars, and reminders
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-[[ -z $1 ]] && b/usage -w 8 -t "commands" $0 \
-	next		"  Various next dates and keywords" \
-	last		"  Various previous dates and keywords" \
-	cal			"  Print calendar(s)" \
-	date		"* Print the current date and time" \
-	stamp		"  Print the current date and time in a timestamp format" \
-	countdown	"  Print a countdown to a given date and time" \
-	add			"  Add a given number of days to the current date" \
-	subtract	"  Subtract a given number of days from the current date" \
-	format		"  Format a given date and time string" \
-	parse		"  Parse a given date and time string" && exit 0
+# ================================== DOC ===================================
+
+declare doc_name="date"
+declare doc_description="Date functions, calendars, and reminders"
+
+declare -a doc_options=(
+	"cal"		"Print a calendar"
+	"date"		"Print the current date and time"
+	"stamp"		"Print the current date and time in a timestamp format"
+	"countdown"	"Print a countdown to a given date and time"
+	"add"		"Add a given number of days to the current date"
+	"subtract"	"Subtract a given number of days from the current date"
+	"format"	"Format a given date and time string"
+	"parse"		"Parse a given date and time string"
+) && [[ "$1" == '--inspect' ]] && return 0
+
+# ==========================================================================
+
+
 
 command="$1" && shift
 
 case $command in
 
-	cal ) cal "$@" ;;
+	cal )
+	
+		# ============== DOC ==============
+		doc_name+=" cal"
+		doc_description="Print a calendar"
+		declare -a doc_options=(
+			"-m"		"  The month to print a calendar for"
+			"-y"		"  The year to print a calendar for"
+		) && [[ "$1" == '--inspect' ]] && return 0
+		# ================================
+
+		cal "$@" ;;
 
 	# date, January 1, 1970 style
-	date ) date -f "%A, %B %d, %Y" ;;
+	date )
+		;;
 
-	stamp ) date +%s ;;
+	stamp )
+		;;
 
 	countdown ) 
-		[[ -z $1 ]] && b/usage -w 8 -t "options" $0 \
-			"<date>"	"* The date and time to count down to" \
-			"-f"		"  The format of the date and time"
-		[[ -z $2 ]] && b/error arg_error "Please provide a date and time to count down to"
-		[[ -z $3 ]] && b/error arg_error "Please provide a format for the date and time"
-		[[ -n $1 && -n $2 ]] && b/countdown $1 $2
 		;;
 
 	diff )
@@ -41,7 +56,4 @@ case $command in
 	format ) 
 
 		;;
-
-	* )
-		b/error invalid_command "Invalid command: $command"
 esac

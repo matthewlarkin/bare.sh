@@ -1,48 +1,81 @@
 #!/usr/bin/env bash
-# Encode and decode strings to and from various formats
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-[[ -z $1 ]] && b/usage -t "command" -w 16 $0 \
-	url.encode		"Encode a URL" \
-	url.decode		"Decode a URL" \
-	base64.encode	"Encode a string to base64" \
-	base64.decode	"Decode a base64 string" \
-	hex.encode		"Encode a string to hex" \
-	hex.decode		"Decode a hex string" \
-	html.encode		"Encode a string to HTML entities" \
-	html.decode		"Decode HTML entities" && exit 0;
+# =============================================================================
 
-scope="$1"
+declare doc_name="codec"
+declare doc_description="Encode and decode strings to and from various formats"
 
-[[ -z $2 ]] && b/usage -t "arguments" -w 2 "$0 $1" \
-	string "string to encode or decode" && exit 0;
+declare -a doc_options=(
+	"url.encode" "Encode a URL"
+	"url.decode" "Decode a URL"
+	"base64.encode" "Encode a string to base64"
+	"base64.decode" "Decode a base64 string"
+	"hex.encode" "Encode a string to hex"
+	"hex.decode" "Decode a hex string"
+	"html.encode" "Encode a string to HTML entities"
+	"html.decode" "Decode HTML entities"
+)
+
+declare -a doc_examples=(
+	"b/codec url.encode 'https://example.com'" "Encode a URL"
+	"b/codec url.decode 'https%3A%2F%2Fexample.com'" "Decode a URL"
+	"b/codec base64.encode 'hello world'" "Encode a string to base64"
+	"b/codec base64.decode 'aGVsbG8gd29ybGQ='" "Decode a base64 string"
+	"b/codec hex.encode 'hello world'" "Encode a string to hex"
+	"b/codec hex.decode 'f09f8e8920f09f8e8920f09f988e20626172652e736820f09f8e8920f09f8e89'" "Decode a hex string"
+	"b/codec html.encode '<h1>Hello, world!</h1>'" "Encode a string to HTML entities"
+	"b/codec html.decode '&lt;h1&gt;Hello, world!&lt;/h1&gt;'" "Decode HTML entities"
+) && [[ "$1" == '--inspect' ]] && return 0
+
+# =============================================================================
+
+
+
+scope="$1" && shift
+
+[[ $1 == '--inspect' ]] && unset doc_options && return 0
 
 case $scope in
-	"url.encode")
-		echo -n "$2" | jq -s -R -r @uri
+
+	url.encode )
+
+		echo "$1" | jq -s -R -r @uri
 		;;
-	"url.decode")
-		echo -n "$2" | jq -s -R -r @uri
+
+	url.decode )
+
+		echo -n "$1" | perl -pe 's/%([0-9a-f]{2})/sprintf("%s", pack("H2",$1))/eig'
 		;;
-	"base64.encode")
-		echo -n "$2" | jq -s -R -r @base64
+		
+	base64.encode )
+
+		echo "$1" | jq -s -R -r @base64
 		;;
-	"base64.decode")
-		echo -n "$2" | jq -s -R -r @base64d
+		
+	base64.decode )
+
+		echo "$1" | perl -MMIME::Base64 -ne 'print decode_base64($_)'
 		;;
-	"hex.encode")
-		echo -n "$2" | xxd -ps
+		
+	hex.encode )
+	
+		echo "$1" | xxd -ps
 		;;
-	"hex.decode")
-		echo -n "$2" | xxd -r -p
+
+	hex.decode )
+	
+		echo "$1" | xxd -r -p
 		;;
-	"html.encode")
-		echo -n "$2" | jq -s -R -r @html
+
+	html.encode )
+
+		echo "$1" | jq -j -s -R -r @html
 		;;
-	"html.decode")
-		echo -n "$2" | perl -MHTML::Entities -pe 'decode_entities($_);'
+
+	html.decode )
+
+		echo "$1" | php -R 'echo html_entity_decode($argn, ENT_QUOTES|ENT_HTML5) . "\n";'
 		;;
-	*)
-		echo "Error: Invalid scope."
-		;;
+
 esac

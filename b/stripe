@@ -1,22 +1,19 @@
 #!/usr/bin/env bash
-# Stripe API client
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
+
+# ================================== DOC ===================================
+declare doc_name="stripe"
+declare doc_description="Interact with the Stripe API"
+declare -a doc_options=(
+	"checkouts.create"  "Create a new checkout session"
+	"checkout.get"      "Get a checkout session"
+	"customers.list"    "List all customers"
+	"customers.create"  "Create a new customer"
+) && [[ "$1" == '--inspect' ]] && return 0
+# ==========================================================================
 
 
 [[ -z "$STRIPE_SECRET_KEY" ]] && b/error "env_error" "Please set the STRIPE_SECRET_KEY variable in your .env file"
-
-
-[[ -z "$1" ]] && b/usage -t "commands" -w 12 $0 \
-    checkouts.create "Creates a new checkout session" \
-    checkout.get "Retrieves a checkout session" \
-    customers.list "Lists customers" \
-    customers.create "Creates a new customer" \
-    customer.edit "Edits a customer" \
-    customer.get "Retrieves a customer" \
-    invoices.create "Creates a new invoice" \
-    invoice.get_url "Retrieves an invoice" \
-    line_items.create "Creates a new line item" \
-    line_item.edit "Edits a line item" && exit 0;
 
 command="$1"
 shift
@@ -24,6 +21,18 @@ shift
 case $command in
 
     checkouts.create)
+
+		# ============== DOC ==============
+		doc_name+=" checkouts.create"
+		doc_description="Create a new checkout session"
+		declare -a doc_options=(
+			"-a"		"* The amount to charge"
+			"-c"		"* The currency to charge"
+			"-u"		"* The customer to charge"
+			"-s"		"* The success URL"
+			"-l"		"* A line item to charge"
+		) && [[ "$1" == '--inspect' ]] && return 0
+
         amount=""
         currency=""
         customer=""
@@ -62,6 +71,15 @@ case $command in
         done
         ;;
     checkout.get)
+
+		# ============== DOC ==============
+		doc_name+=" checkout.get"
+		doc_description="Get a checkout session"
+		declare -a doc_options=(
+			"-i"		"* The ID of the checkout session"
+		) && [[ "$1" == '--inspect' ]] && return 0
+		# ================================
+
         id=""
         while getopts "i:" opt; do
             case $opt in
@@ -73,11 +91,30 @@ case $command in
         curl -s -X GET https://api.stripe.com/v1/checkout/sessions/$id \
             -u $bare_stripe_api_key: | jq
         ;;
+
     customers.list)
+
+		# ============== DOC ==============
+		doc_name+=" customers.list"
+		doc_description="List all customers"
+		declare -a doc_options=(
+			"-l"		"Limit the number of customers returned"
+		) && [[ "$1" == '--inspect' ]] && return 0
+		# ================================
+
         curl -s -X GET https://api.stripe.com/v1/customers \
             -u $bare_stripe_api_key: | jq
         ;;
-    customers.create)
+    
+	customers.create)
+
+		# ============== DOC ==============
+		doc_name+=" customers.create"
+		doc_description="Create a new customer"
+		declare -a doc_options=(
+			"-e"		"* The email of the customer"
+		) && [[ "$1" == '--inspect' ]] && return 0
+
         email=""
         while getopts "e:" opt; do
             case $opt in

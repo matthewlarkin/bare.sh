@@ -1,27 +1,31 @@
 #!/usr/bin/env bash
-# Call a script from the b/ directory.
-
+# Call a script from the b/ directory, passing along any subsequent arguments
 source "$(dirname "${BASH_SOURCE[0]}")/lib/init"
 
-declare -A scopes
-for scope in $(ls b/*); do
-    if [[ -f $scope ]]; then
-        scope_name=$(basename $scope)
-        scope_desc=$(sed -n '2p' $scope | cut -c 3-)
-        scopes[$scope_name]=$scope_desc
-    fi
+# ================================== DOC ===================================
+declare doc_name="bare"
+declare doc_description="A collection of scripts for common tasks"
+declare -a doc_options=(
+	":command"	"The command to run"
+) && [[ "$1" == '--inspect' ]] && return 0
+# ==========================================================================
+
+# Get the list of allowed commands from the b/ directory
+mapfile -t allowed_commands < <(find b/ -type f ! -name ".*" -exec basename {} \;)
+
+command="$1" && shift
+
+found=false
+for cmd in "${allowed_commands[@]}"; do
+	if [[ $cmd == $command ]]; then
+		found=true
+		break
+	fi
 done
 
-[[ -z "$1" ]] && {
-	args=""
-	for scope in $(echo "${!scopes[@]}" | tr ' ' '\n' | sort); do
-		args+="$scope \"${scopes[$scope]}\" "
-	done
-	eval "b/usage -w 8 -t \"scope\" "bare" $args"
-	exit 0
-}
-
-# make sure the first argument is a valid scope.
-[[ -z "${scopes[$1]}" ]] && b/error invalid_scope "Only executables in the b/ directory are allowed."
-
-command="$1" && shift && "b/$command" "$@" # vroom vroom
+if $found; then
+	"b/$command" "$@" # vroom vroom
+else
+	echo "Error: Invalid command"
+	exit 1
+fi

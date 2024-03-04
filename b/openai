@@ -1,39 +1,35 @@
 #!/usr/bin/env bash
-# OpenAI API client
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
+declare doc_name="openai"
+declare doc_description="OpenAI API client"
 
+declare -a doc_options=(
+	"chat"						"Send a message to an AI model"
+	"assistants.create"			"Create a new assistant"
+	"threads.create"			"Create a new thread"
+	"thread.messages.append"	"Append a message to a thread"
+	"thread.messages.list"		"List messages in a thread"
+	"thread.run"				"Run an assistant on a thread"
+	"thread.run.poll"			"Poll the status of a thread run"
+	"files.upload"				"Upload a file to the OpenAI API"
+	"files.list"				"List files uploaded to the OpenAI API"
+	"file.delete"				"Delete a file from the OpenAI API"
+	"images.create"				"Generate images from a prompt"
+	"audio.create"				"Generate audio from a text prompt"
+	"audio.transcribe"			"Transcribe an audio file"
+)
 
+declare -a doc_examples=(
+	"openai chat -m 'What is the meaning of life?'" "Sends a message to a chat assistant"
+	"openai assistants.create -n 'My New Assistant' -i 'This is a helpful AI assistant.'" "Sends a message to a chat assistant with declared assistant instructions"
+	"openai threads.create -m 'Hello, world!'" "Creates a thread with an initial message"
+	"openai thread.messages.append -t 'thread_id' -m 'Hello, world!'" "Appends a message to a thread"
+	"openai thread.messages.list -t 'thread_id'" "Lists messages from a given thread"
+) && [[ $1 == '--inspect' ]] && return 0
 
-
-# Use color variables in output
-[ -z "$OPENAI_API_KEY" ] && b/error "env_error" "OPENAI_API_KEY environment variable is not set"
-
-
-
-
-
-# Display usage if no arguments are provided
-if [ -z "$1" ]; then
-    b/usage -t commands -w 24 $0 \
-        chat "Send a message to an AI model" \
-        assistants.create "Create a new assistant" \
-        threads.create "Create a new thread" \
-        thread.messages.append "Append a message to a thread" \
-        thread.messages.list "List messages in a thread" \
-        thread.run "Run an assistant on a thread" \
-        thread.run.poll "Poll the status of a thread run" \
-        files.upload "Upload a file to the OpenAI API" \
-        files.list "List files uploaded to the OpenAI API" \
-        file.delete "Delete a file from the OpenAI API" \
-        images.create "Generate images from a prompt" \
-        audio.create "Generate audio from a text prompt" \
-        audio.transcribe "Transcribe an audio file"
-    exit 0
-fi
-
-
-
+# Requirements
+[ -z "$OPENAI_API_KEY" ] && b/error env_error "OPENAI_API_KEY environment variable is not set"
 
 
 # Function to make a request to the OpenAI API
@@ -43,7 +39,7 @@ curlRequest() {
     curl_opts=(-H "Authorization: Bearer $OPENAI_API_KEY" -H "OpenAI-Beta: assistants=v1" --silent)
 
     while getopts "u:f:p:d:j" opt; do
-        case ${opt} in
+        case $opt in
             u ) url="$OPTARG" ;;
             f ) file="$OPTARG" ;;
             p ) purpose="$OPTARG" ;;
@@ -57,10 +53,6 @@ curlRequest() {
     [[ -n "$purpose" ]] && curl_opts+=(-F "purpose=$purpose")
     [[ -n "$data" ]] && curl_opts+=(-d "$data")
     [[ -n "$json" ]] && curl_opts+=(-H "Content-Type: application/json") || curl_opts+=(-H "Content-Type: multipart/form-data")
-
-    if [ $? -ne 0 ] || ! echo "$response" | jq . > /dev/null 2>&1; then
-        echo "Failed to communicate with the API or received an invalid response." >&2; return 1
-    fi
     
     response=$(curl "$url" "${curl_opts[@]}")
 
@@ -68,17 +60,11 @@ curlRequest() {
 }
 
 
-
-
-
 # Set default values
 api_url="https://api.openai.com/v1"
 default_model="gpt-3.5-turbo-0125"
 command="$1"
 shift
-
-
-
 
 
 # Parse command line options
@@ -89,14 +75,18 @@ case $command in
     # ========================================================
     chat )
 
-        [[ -z "$2" ]] && b/usage -w 4 "$0 chat" \
-            -m "* The message to send" \
-            -a "~ The system prompt (assistant prompt)" \
-            -o "  The model to use" \
-            -j "  Requests OpenAI's response as JSON" \
-            -J "  Return as verbose JSON object" \
-            -V "  Return the vendor response, verbosely" && exit 0
-        
+		doc_name+=" chat"
+		doc_description="Send a message to an AI model"
+
+		declare -a doc_options=(
+			"-m" "* The message to send"
+			"-a" "  The system prompt (assistant prompt)"
+			"-o" "  The model to use"
+			"-j" "  Requests OpenAI's response as JSON"
+			"-J" "  Return as verbose JSON object"
+			"-V" "  Return the vendor response, verbosely"
+		) && [[ $1 == "--inspect" ]] && return 0
+
         format="text"
         raw_json=false
 
@@ -109,7 +99,7 @@ case $command in
                 J ) respond="as_json" ;;
                 v ) verbose=true ;;
                 \? ) b/error invalid_option "-$OPTARG" ;;
-                : ) IFS= read -d '' -n 1 message <&0 ;;
+                : ) IFS= read -rd '' -n 1 message <&0 ;;
             esac
         done
 
@@ -136,14 +126,20 @@ case $command in
 
     # ========================================================
     assistants.create )
-        
-        [[ -z "$2" ]] && b/usage -w 4 "$0 assistants.create" \
-            -n "* The name of the assistant" \
-            -i "* Instructions for the assistant" \
-            -o "  The model to use" \
-            -t "  The tools to enable (pipe separated)" \
-            -J "  Return the response as JSON" \
-            -V "  Return the vendor response in verbose mode" && exit 0
+
+		# ==========================
+		doc_name+=" assistants.create"
+		doc_description="Create a new assistant"
+
+		declare -a doc_options=(
+			"-n" "* The name of the assistant"
+			"-i" "* Instructions for the assistant"
+			"-o" "  The model to use"
+			"-t" "  The tools to enable (pipe separated)"
+			"-J" "  Return the response as JSON"
+			"-V" "  Return the vendor response in verbose mode"
+		) && [[ $1 == "--inspect" ]] && return 0
+		# ==========================
 
         tools=()
         model=$default_model
@@ -187,11 +183,15 @@ case $command in
     # ========================================================
     threads.create )
 
-        [[ -z "$2" ]] && b/usage -w 4 "$0 threads.create" \
-            -m "* The initial message to send" \
-            -f "  The file IDs to attach (comma-separated list)" \
-            -J "  Return the response as JSON" \
-            -V "  Return the response in verbose mode" && exit 0
+		doc_name+=" threads.create"
+		doc_description="Create a new thread"
+
+		declare -a doc_options=(
+			"-m" "* The initial message to send"
+			"-f" "  The file IDs to attach (comma-separated list)"
+			"-J" "  Return the response as JSON"
+			"-V" "  Return the response in verbose mode"
+		) && [[ $1 == "--inspect" ]] && return 0
 
         file_ids=""
 
@@ -228,16 +228,20 @@ case $command in
     # ========================================================
     thread.messages.append)
 
-        [[ -z "$2" ]] && b/usage -w 4 "$0 thread.messages.append" \
-            -t "* The thread ID" \
-            -m "* The message to send" \
-            -f "  The file IDs to attach (array)" \
-            -J "  Return the response as JSON" \
-            -V "  Return the vendor response in verbose mode" && exit 0
+		doc_name+=" thread.messages.append"
+		doc_description="Append a message to a thread"
+
+		declare -a doc_options=(
+			"-t" "* The thread ID"
+			"-m" "* The message to send"
+			"-f" "  The file IDs to attach (array)"
+			"-J" "  Return the response as JSON"
+			"-V" "  Return the vendor response in verbose mode"
+		) && [[ $1 == "--inspect" ]] && return 0
 
         file_ids="[]"
 
-        while getopts ":t:m:f:v" opt; do
+        while getopts ":t:m:f:JV" opt; do
             case ${opt} in
                 t ) thread_id="$OPTARG" ;;
                 m ) message="$OPTARG" ;;
@@ -270,11 +274,15 @@ case $command in
     # ========================================================
     thread.messages.list )
 
-        [[ -z "$2" ]] && b/usage -w 4 "$0 thread.messages.list" \
-            -t "* The thread ID" \
-            -l "  The number of messages to return" \
-            -J "  Return the response as JSON" \
-            -V "  Return the vendor response in verbose mode" && exit 0
+		doc_name+=" thread.messages.list"
+		doc_description="List messages in a thread"
+
+		declare -a doc_options=(
+			"-t" "* The thread ID"
+			"-l" "  The number of messages to return (default: 5)"
+			"-J" "  Return the response as JSON"
+			"-V" "  Return the vendor response in verbose mode"
+		) && [[ $1 == "--inspect" ]] && return 0
 
         limit=5
         
@@ -307,11 +315,15 @@ case $command in
     # ========================================================
     thread.run)
 
-        [[ -z "$2" ]] && b/usage -w 4 "$0 thread.run" \
-            -t "* The thread ID" \
-            -a "* The assistant ID" \
-            -J "  Return the response as JSON" \
-            -V "  Return the vendor response in verbose mode" && exit 0
+		doc_name+=" thread.run"
+		doc_description="Run an assistant on a thread"
+		
+		declare -a doc_options=(
+			"-t" "* The thread ID"
+			"-a" "* The assistant ID"
+			"-J" "  Return the response as JSON"
+			"-V" "  Return the vendor response in verbose mode"
+		) && [[ $1 == "--inspect" ]] && return 0
 
         while getopts ":t:a:JV" opt; do
             case ${opt} in
@@ -344,11 +356,15 @@ case $command in
     # ========================================================
     thread.run.poll )
 
-        [[ -z "$2" ]] && b/usage -w 4 "$0 thread.run.poll" \
-            -t "* The thread ID" \
-            -r "* The run ID" \
-            -J "  Return the response as JSON" \
-            -V "  Return the vendor response in verbose mode" && exit 0
+		doc_name+=" thread.run.poll"
+		doc_description="Poll the status of a thread run"
+
+		declare -a doc_options=(
+			"-t" "* The thread ID"
+			"-r" "* The run ID"
+			"-J" "  Return the response as JSON"
+			"-V" "  Return the vendor response in verbose mode"
+		) && [[ $1 == "--inspect" ]] && return 0
 
         while getopts ":t:r:JV" opt; do
             case ${opt} in
@@ -377,11 +393,15 @@ case $command in
     # ========================================================
     files.upload )
 
-        [[ -z "$2" ]] && b/usage -w 4 "$0 files.upload" \
-            -f "* The file to upload" \
-            -p "  The purpose of the file [fine-tune|assistants] defaults to assistants" \
-            -J "  Return the response as JSON" \
-            -V "  Return the vendor response in verbose mode" && exit 0
+		doc_name+=" files.upload"
+		doc_description="Upload a file to the OpenAI API"
+
+		declare -a doc_options=(
+			"-f" "* The file to upload"
+			"-p" "  The purpose of the file [assistants] defaults to assistants"
+			"-J" "  Return the response as JSON"
+			"-V" "  Return the vendor response in verbose mode"
+		) && [[ $1 == "--inspect" ]] && return 0
 
         purpose="assistants"
         while getopts ":f:p:JV" opt; do
@@ -408,11 +428,15 @@ case $command in
 
     # ========================================================
     files.list )
+	
+		doc_name+=" files.list"
+		doc_description="List files uploaded to the OpenAI API"
 
-        [[ "$1" == "--help" ]] && b/usage -w 4 "$0 files.list" \
-            -p "  Filters the files by given purpose" \
-            -J "  Return the response as JSON" \
-            -V "  Return the vendor response in verbose mode" && exit 0
+		declare -a doc_options=(
+			"-p" "  The purpose of the file [assistants] defaults to assistants"
+			"-J" "  Return the response as JSON"
+			"-V" "  Return the vendor response in verbose mode"
+		) && [[ $1 == "--inspect" ]] && return 0
 
         purpose="assistants"
 
@@ -441,199 +465,220 @@ case $command in
 
     # ========================================================
     file.show )
-            
-            [[ -z "$2" ]] && b/usage -w 4 "$0 file.show" \
-                -f "* The file ID to show" \
-                -J "  Return the response as JSON" \
-                -V "  Return the response in verbose mode" && exit 0
+
+		doc_name+=" file.show"
+		doc_description="Show details of a file uploaded to the OpenAI API"
+		
+		declare -a doc_options=(
+			"-f" "* The file ID"
+			"-J" "  Return the response as JSON"
+			"-V" "  Return the vendor response in verbose mode"
+		) && [[ $1 == "--inspect" ]] && return 0
     
-            while getopts ":f:JV" opt; do
-                case ${opt} in
-                    f ) file_id="$OPTARG" ;;
-                    J ) respond="as_json" ;;
-                    V ) verbose=true ;;
-                    \? ) b/error invalid_option "$OPTARG" && exit 1 ;;
-                esac
-            done
-    
-            response=$(curlRequest -u "$api_url/files/$file_id")
-    
-            # [[ "$verbose" == true ]] && echo "$response" | jq -r || echo "$response" | jq -r '{file_id: .id, status: .status, created_at: .created_at}'
-            if [[ "$verbose" == true ]]; then
-                echo "$response" | jq -r
-            elif [[ "$respond" == "as_json" ]]; then
-                echo "$response" | jq -r '{file_id: .id, status: .status, created_at: .created_at}'
-            else
-                echo "$response" | jq -r '.status'
-            fi
-            ;;
+		while getopts ":f:JV" opt; do
+			case ${opt} in
+				f ) file_id="$OPTARG" ;;
+				J ) respond="as_json" ;;
+				V ) verbose=true ;;
+				\? ) b/error invalid_option "$OPTARG" && exit 1 ;;
+			esac
+		done
+
+		response=$(curlRequest -u "$api_url/files/$file_id")
+
+		# [[ "$verbose" == true ]] && echo "$response" | jq -r || echo "$response" | jq -r '{file_id: .id, status: .status, created_at: .created_at}'
+		if [[ "$verbose" == true ]]; then
+			echo "$response" | jq -r
+		elif [[ "$respond" == "as_json" ]]; then
+			echo "$response" | jq -r '{file_id: .id, status: .status, created_at: .created_at}'
+		else
+			echo "$response" | jq -r '.status'
+		fi
+		;;
 
 
     # ========================================================
     file.delete )
-    
-            [[ -z "$2" ]] && b/usage -w 4 "$0 file.delete" \
-                -f "* The file ID to delete" \
-                -J "  Return the response as JSON" \
-                -V "  Return the vendor response in verbose mode" && exit 0
-    
-            while getopts ":f:JV" opt; do
-                case ${opt} in
-                    f ) file_id="$OPTARG" ;;
-                    J ) respond="as_json" ;;
-                    V ) verbose=true ;;
-                    \? ) b/error invalid_option "$OPTARG" && exit 1 ;;
-                esac
-            done
-    
-            response=$(curl -X DELETE -H "Authorization: Bearer $OPENAI_API_KEY" --silent "$api_url/files/$file_id")
+	
+		doc_name+=" file.delete"
+		doc_description="Delete a file from the OpenAI API"
 
-            if [[ "$verbose" == true ]]; then
-                echo "$response" | jq -r
-            elif [[ "$respond" == "as_json" ]]; then
-                echo "$response" | jq -r '{file_id: .id, deleted: .deleted}'
-            else
-                exit 0
-            fi
-            ;;
+		declare -a doc_options=(
+			"-f" "* The file ID"
+			"-J" "  Return the response as JSON"
+			"-V" "  Return the vendor response in verbose mode"
+		) && [[ $1 == "--inspect" ]] && return 0
+    
+		while getopts ":f:JV" opt; do
+			case ${opt} in
+				f ) file_id="$OPTARG" ;;
+				J ) respond="as_json" ;;
+				V ) verbose=true ;;
+				\? ) b/error invalid_option "$OPTARG" && exit 1 ;;
+			esac
+		done
+
+		response=$(curl -X DELETE -H "Authorization: Bearer $OPENAI_API_KEY" --silent "$api_url/files/$file_id")
+
+		if [[ "$verbose" == true ]]; then
+			echo "$response" | jq -r
+		elif [[ "$respond" == "as_json" ]]; then
+			echo "$response" | jq -r '{file_id: .id, deleted: .deleted}'
+		else
+			exit 0
+		fi
+		;;
 
 
     # ========================================================
     images.create )
-    
-            [[ -z "$2" ]] && b/usage -w 4 "$0 images.create" \
-                -p "* The prompt for the image" \
-                -m "  The model to use" \
-                -n "  The number of images to generate" \
-                -q "  The quality of the image" \
-                -r "  The response format" \
-                -s "  The size of the image" \
-                -t "  The style of the image" \
-                -u "  A unique identifier representing your end-user" \
-                -v "  Return the response in verbose mode" && exit 0
-    
-            model="dall-e-3"
-            n=1
-            quality="standard"
-            response_format="url"
-            size="1024x1024"
-            style="vivid"
-    
-            while getopts ":p:m:n:q:r:s:t:u:JV" opt; do
-                case ${opt} in
-                    p ) prompt="$OPTARG" ;;
-                    m ) model="$OPTARG" ;;
-                    n ) n="$OPTARG" ;;
-                    q ) quality="$OPTARG" ;;
-                    r ) response_format="$OPTARG" ;;
-                    s ) size="$OPTARG" ;;
-                    t ) style="$OPTARG" ;;
-                    u ) user="$OPTARG" ;;
-                    J ) respond="as_json" ;;
-                    V ) verbose=true ;;
-                    \? ) b/error invalid_option "$OPTARG" && exit 1 ;;
-                esac
-            done
-    
-            payload=$(jq -n --arg model "$model" --arg prompt "$prompt" --argjson n "$n" --arg quality "$quality" --arg response_format "$response_format" --arg size "$size" --arg style "$style" --arg user "$user" '{
-                model: $model,
-                prompt: $prompt,
-                n: $n,
-                quality: $quality,
-                response_format: $response_format,
-                size: $size,
-                style: $style,
-                user: $user
-            }')
-    
-            response=$(curlRequest -u "$api_url/images/generations" -d "$payload" -j)
-    
-            # [[ "$verbose" == true ]] && echo "$response" | jq -r || echo "$response" | jq -r '{images: [.data[].url]}'
 
-            if [[ "$verbose" == true ]]; then
-                echo "$response" | jq -r
-            elif [[ "$respond" == "as_json" ]]; then
-                echo "$response" | jq -r '{images: [.data[].url]}'
-            else
-                echo "$response" | jq -r '.data[].url'
-            fi
-            ;;
+		doc_name+=" images.create"
+		doc_description="Generate images from a prompt"
+
+		declare -a doc_options=(
+			"-p" "* The prompt to generate images from"
+			"-m" "  The model to use"
+			"-n" "  The number of images to generate"
+			"-q" "  The quality of the images"
+			"-r" "  The response format"
+			"-s" "  The size of the images"
+			"-t" "  The style of the images"
+			"-u" "  A unique identifier representing your end-user"
+			"-J" "  Return the response as JSON"
+			"-V" "  Return the vendor response in verbose mode"
+		) && [[ $1 == "--inspect" ]] && return 0
+    
+		model="dall-e-3"
+		n=1
+		quality="standard"
+		response_format="url"
+		size="1024x1024"
+		style="vivid"
+
+		while getopts ":p:m:n:q:r:s:t:u:JV" opt; do
+			case ${opt} in
+				p ) prompt="$OPTARG" ;;
+				m ) model="$OPTARG" ;;
+				n ) n="$OPTARG" ;;
+				q ) quality="$OPTARG" ;;
+				r ) response_format="$OPTARG" ;;
+				s ) size="$OPTARG" ;;
+				t ) style="$OPTARG" ;;
+				u ) user="$OPTARG" ;;
+				J ) respond="as_json" ;;
+				V ) verbose=true ;;
+				\? ) b/error invalid_option "$OPTARG" && exit 1 ;;
+			esac
+		done
+
+		payload=$(jq -n --arg model "$model" --arg prompt "$prompt" --argjson n "$n" --arg quality "$quality" --arg response_format "$response_format" --arg size "$size" --arg style "$style" --arg user "$user" '{
+			model: $model,
+			prompt: $prompt,
+			n: $n,
+			quality: $quality,
+			response_format: $response_format,
+			size: $size,
+			style: $style,
+			user: $user
+		}')
+
+		response=$(curlRequest -u "$api_url/images/generations" -d "$payload" -j)
+
+		# [[ "$verbose" == true ]] && echo "$response" | jq -r || echo "$response" | jq -r '{images: [.data[].url]}'
+
+		if [[ "$verbose" == true ]]; then
+			echo "$response" | jq -r
+		elif [[ "$respond" == "as_json" ]]; then
+			echo "$response" | jq -r '{images: [.data[].url]}'
+		else
+			echo "$response" | jq -r '.data[].url'
+		fi
+		;;
 
         
     # ========================================================
     audio.create )
-    
-            [[ -z "$2" ]] && b/usage -w 4 "$0 audio.create" \
-                -i "* The input text" \
-                -m "  The model to use" \
-                -v "  The voice to use" \
-                -r "  The response format" \
-                -s "  The speed of the audio" \
-                -u "  A unique identifier representing your end-user" \
-                -J "  Return the response as JSON" \
-                -V "  Return the vendor response in verbose mode" && exit 0
-    
-            model="tts-1"
-            voice="alloy"
-            response_format="mp3"
-            speed=1.0
-    
-            while getopts ":i:m:v:r:s:u:JV" opt; do
-                case ${opt} in
-                    i ) input="$OPTARG" ;;
-                    m ) model="$OPTARG" ;;
-                    v ) voice="$OPTARG" ;;
-                    r ) response_format="$OPTARG" ;;
-                    s ) speed="$OPTARG" ;;
-                    u ) user="$OPTARG" ;;
-                    J ) respond="as_json" ;;
-                    V ) verbose=true ;;
-                    \? ) b/error invalid_option "$OPTARG" && exit 1 ;;
-                esac
-            done
-    
-            payload=$(jq -n --arg model "$model" --arg input "$input" --arg voice "$voice" --arg response_format "$response_format" --arg speed "$speed" --arg user "$user" '{
-                model: $model,
-                input: $input,
-                voice: $voice,
-                response_format: $response_format,
-                speed: $speed,
-                user: $user
-            }')
+	
+		doc_name+=" audio.create"
+		doc_description="Generate audio from a text prompt"
 
-            random_file_name=$(openssl rand -hex 16)
-
-            curl https://api.openai.com/v1/audio/speech \
-                -H "Authorization: Bearer $OPENAI_API_KEY" \
-                -H "Content-Type: application/json" \
-                -d "$payload" \
-                --silent \
-                --output ./tmp/$random_file_name.mp3
+		declare -a doc_options=(
+			"-i" "* The input text"
+			"-m" "  The model to use"
+			"-v" "  The voice to use"
+			"-r" "  The response format"
+			"-s" "  The speed of the audio"
+			"-u" "  A unique identifier representing your end-user"
+			"-J" "  Return the response as JSON"
+			"-V" "  Return the vendor response in verbose mode"
+		) && [[ $1 == "--inspect" ]] && return 0
     
-            if [[ "$verbose" == true ]]; then
-                echo "{ \"file_path\": \"./$random_file_name.mp3\" }"
-            elif [[ "$respond" == "as_json" ]]; then
-                echo "{ \"file_path\": \"./$random_file_name.mp3\" }"
-            else
-                echo "./tmp/$random_file_name.mp3"
-            fi
-            ;;
+		model="tts-1"
+		voice="alloy"
+		response_format="mp3"
+		speed=1.0
+
+		while getopts ":i:m:v:r:s:u:JV" opt; do
+			case ${opt} in
+				i ) input="$OPTARG" ;;
+				m ) model="$OPTARG" ;;
+				v ) voice="$OPTARG" ;;
+				r ) response_format="$OPTARG" ;;
+				s ) speed="$OPTARG" ;;
+				u ) user="$OPTARG" ;;
+				J ) respond="as_json" ;;
+				V ) verbose=true ;;
+				\? ) b/error invalid_option "$OPTARG" && exit 1 ;;
+			esac
+		done
+
+		payload=$(jq -n --arg model "$model" --arg input "$input" --arg voice "$voice" --arg response_format "$response_format" --arg speed "$speed" --arg user "$user" '{
+			model: $model,
+			input: $input,
+			voice: $voice,
+			response_format: $response_format,
+			speed: $speed,
+			user: $user
+		}')
+
+		random_file_name=$(openssl rand -hex 16)
+
+		curl https://api.openai.com/v1/audio/speech \
+			-H "Authorization: Bearer $OPENAI_API_KEY" \
+			-H "Content-Type: application/json" \
+			-d "$payload" \
+			--silent \
+			--output ./tmp/$random_file_name.mp3
+
+		if [[ "$verbose" == true ]]; then
+			echo "{ \"file_path\": \"./$random_file_name.mp3\" }"
+		elif [[ "$respond" == "as_json" ]]; then
+			echo "{ \"file_path\": \"./$random_file_name.mp3\" }"
+		else
+			echo "./tmp/$random_file_name.mp3"
+		fi
+		;;
 
 
     # ========================================================
     audio.transcribe )
+	
+		doc_name+=" audio.transcribe"
+		doc_description="Transcribe an audio file"
 
-        [[ -z "$2" ]] && b/usage -w 4 "$0 audio.transcribe" \
-            -f "* The audio file to transcribe" \
-            -o "~ The output file name (ie, output.txt) -- helpful for longer transcriptions" \
-            -m "  The model to use" \
-            -l "  The language of the input audio" \
-            -p "  An optional text to guide the model's style or continue a previous audio segment" \
-            -r "  The response format" \
-            -t "  The sampling temperature" \
-            -g "  The timestamp granularities to populate for this transcription" \
-            -J "  Return the response as JSON" \
-            -V "  Return the vendor response in verbose mode" && exit 0
+		declare -a doc_options=(
+			"-f" "* The audio file to transcribe"
+			"-o" "  The output file"
+			"-m" "  The model to use"
+			"-l" "  The language of the audio"
+			"-p" "  The prompt to use"
+			"-r" "  The response format"
+			"-t" "  The temperature of the transcription"
+			"-g" "  The timestamp granularities"
+			"-J" "  Return the response as JSON"
+			"-V" "  Return the vendor response in verbose mode"
+		) && [[ $1 == "--inspect" ]] && return 0
 
         language="en"
         output_file="$BARE_DIR/tmp/transcription-$(date +%Y%m%d-%H%M%S).txt"
@@ -677,7 +722,7 @@ case $command in
             fi
 
             random_dir_name=$(openssl rand -hex 16)
-            tmp_dir=$(mkdir -p ./tmp/$random_dir_name && echo ./tmp/$random_dir_name)
+            tmp_dir=$(mkdir -p ./tmp/"$random_dir_name" && echo ./tmp/"$random_dir_name")
 
             # Split the file into chunks and put them in the random directory
             ffmpeg -i "$file" -f segment -segment_time 300 -c copy -map 0 -segment_format mp3 -segment_list "$tmp_dir/files.txt" "$tmp_dir/chunk%03d.mp3" > /dev/null 2>&1
@@ -699,7 +744,7 @@ case $command in
                         response=$(echo "$response" | jq '.segments[].text = (.segments[].text | .[0:140] + "...")')
                         response_array+="$response,"
                     else
-                        echo "$(echo "$response" | jq -r '.text')" >> "$output_file"
+                        echo "$response" | jq -r '.text' >> "$output_file"
                     fi
                 else
                     echo "Error: Invalid response from API"
@@ -711,7 +756,7 @@ case $command in
             done < "$tmp_dir/files.txt"
 
             # remove the tmp directory
-            rm -r $tmp_dir
+            rm -r "$tmp_dir"
 
             # If verbose mode, print the response array
             if [[ "$verbose" = true ]]; then
@@ -720,7 +765,7 @@ case $command in
                 response_array+="]"
                 echo "$response_array"
             else
-                echo "$(jq -n --arg file "$output_file" '{file: $file}')"
+                jq -n --arg file "$output_file" '{file: $file}'
             fi
         else
             # Send the request to the API
@@ -731,9 +776,9 @@ case $command in
             if echo "$response" | jq -e . >/dev/null 2>&1 && echo "$response" | jq 'has("text")' | grep -q true; then
                 # If verbose mode, store entire response, else extract text
                 if [[ "$verbose" = true ]]; then
-                    echo $(echo "$response" | jq -r) >> "$output_file"
+                    echo "$response" | jq -r >> "$output_file"
                 else
-                    echo "$(echo "$response" | jq -r '.text')" >> "$output_file"
+                    echo "$response" | jq -r '.text' >> "$output_file"
                 fi
             else
                 echo "Error: Invalid response from API"
@@ -748,11 +793,10 @@ case $command in
         if [[ "$verbose" == true ]]; then
             echo "$response" | jq -r
         elif [[ "$respond" == "as_json" ]]; then
-            echo "$(jq -n --arg file "$output_file" '{file: $file}')"
+            jq -n --arg file "$output_file" '{file: $file}'
         else
-            echo "$(jq -rn --arg file "$output_file" '$file')"
+            jq -rn --arg file "$output_file" '$file'
         fi
-
 
 
 esac

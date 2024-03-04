@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
+
+# ================================== DOC ===================================
+declare doc_name="relay"
+declare doc_description="Relays information (outputs it to the stdout or a file)"
+declare -a doc_options=(
+	"-c"	"Text string to relay"
+	"-o"	"Output file to relay to (defaults to stdout)"
+	"-f"	"File to relay"
+	"-s"	"List the files and directories of the specified directory within the .nb folder"
+) && [[ "$1" == '--inspect' ]] && return 0
+# ==========================================================================
+
+content=""
+output="/dev/stdout"
+file=""
+list_dir=""
+
+# Function to validate filename
+validate_filename() {
+	local filename=$1
+	if [[ -z "$filename" || "$filename" =~ ^- ]]; then
+		echo "Invalid filename: $filename"
+		exit 1
+	fi
+}
+
+# Function to validate directory path
+validate_dirpath() {
+	local dirpath=$1
+	if [[ -z "$dirpath" || "$dirpath" =~ ^- ]]; then
+		echo "Invalid directory path: $dirpath"
+		exit 1
+	fi
+}
+
+while getopts ":c:o:f:s:" opt; do
+	case ${opt} in
+		c ) content=$OPTARG ;;
+		o ) output="$BARE_DIR/var/.nb/$OPTARG"
+			validate_filename "$output" ;;
+		f ) file="$BARE_DIR/var/.nb/$OPTARG"
+			validate_dirpath "$file" ;;
+		s ) list_dir="$BARE_DIR/var/.nb/$OPTARG"
+			validate_dirpath "$list_dir" ;;
+		\? ) echo "Invalid option: -$OPTARG" 1>&2 && exit 1 ;;
+	esac
+done
+
+# Rest of your code...
+
+if [[ -z $content && -z $file && -z $list_dir ]]; then
+	echo "Error: Please provide content to write out, a file to read from, or a directory to list."
+	exit 1
+fi
+
+if [[ $output != "/dev/stdout" && ! -e "$output" ]]; then
+	touch "$output"
+	if [[ $? -ne 0 ]]; then
+		echo "Error: Cannot create file $output."
+		exit 1
+	fi
+elif [[ $output != "/dev/stdout" && ! -w "$output" ]]; then
+	echo "Error: Cannot write to file $output."
+	exit 1
+fi
+
+if [[ -n $file ]]; then
+	if [[ ! -r "$file" ]]; then
+		echo "Error: Cannot read from file $file."
+		exit 1
+	fi
+	content=$(cat "$file")
+fi
+
+if [[ -n $list_dir ]]; then
+	if [[ ! -d "$list_dir" ]]; then
+		echo "Error: Directory $list_dir does not exist."
+		exit 1
+	fi
+	content=$(ls "$list_dir")
+fi
+
+printf "%s\n" "$content" > "$output"
+
+exit 0

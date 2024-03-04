@@ -1,19 +1,24 @@
 #!/usr/bin/env bash
-# SSH key management
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-b/usage $0 \
-    "-l" "List all public keys" \
-    "-n" "Create a new key pair" \
-    "-d" "Print the default public key" && exit 0
+# ================================== DOC ===================================
+declare doc_name="ssh"
+declare doc_description="Manage SSH keys"
+declare -a doc_options=(
+	"-l"	"List all SSH keys"
+	"-n"	"Create a new SSH key"
+	"-d"	"Display the default SSH key"
+) && [[ "$1" == '--inspect' ]] && return 0
 
 while getopts "l:n:d:" opt; do
     case $opt in
         l)
-            for key in $(ls ~/.ssh/*.pub); do sudo basename "$key"; done 2>/dev/null
+			for key in ~/.ssh/*.pub; do
+				sudo basename "$key";
+			done 2>/dev/null
             ;;
         n)
-            ssh-keygen -t ecdsa -b 521 -f ~/.ssh/$OPTARG -C "${2:-}" && cat ~/.ssh/$OPTARG.pub
+            ssh-keygen -t ecdsa -b 521 -f ~/.ssh/"$OPTARG" -C "${2:-}" && cat ~/.ssh/"$OPTARG".pub
             ;;
         d)
             [ ! -f ~/.ssh/id_ecdsa.pub ] && printf "\n${red}No default key found${reset}\n" || cat ~/.ssh/id_ecdsa.pub

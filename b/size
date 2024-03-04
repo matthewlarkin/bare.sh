@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
-# Get the size of a file
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-[[ -z $1 ]] && b/usage -t options -w 4 $0 \
-    -f "The path to the file to get the size of." && exit 0
-
+# ================================== DOC ===================================
+declare doc_name="size"
+declare doc_description="Print the size of a file"
+declare -a doc_options=(
+	":file"		"The file to print the size of"
+) && [[ "$1" == '--inspect' ]] && return 0
+# ==========================================================================
 
 ls -lh "$1" | awk '{print $5}'

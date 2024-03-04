@@ -1,10 +1,14 @@
 #!/usr/bin/env bash
 set -e
+BARE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.."; pwd)" && export BARE_DIR
 
-cd "$(dirname "${BASH_SOURCE[0]}")/../"
-
-source lib/colors
-source lib/deps
+cd "$BARE_DIR"
 
 # Load the env variables
-[[ ! -f lib/.env ]] && cp lib/samples/.env lib/.env; source lib/.env && export NB_DIR="$BARE_NOTES_DIR"
+[[ ! -f "$BARE_DIR"/lib/.env ]] && cp "$BARE_DIR"/lib/samples/.env lib/.env
+
+source "$BARE_DIR"/lib/.env
+export NB_DIR="$BARE_NOTES_DIR"
+
+source "$BARE_DIR"/lib/colors
+source "$BARE_DIR"/lib/deps

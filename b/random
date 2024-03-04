@@ -1,25 +1,46 @@
 #!/usr/bin/env bash
-# Generate a random string or number of a given length
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
+
+declare doc_name="random"
+declare doc_description="Generate a random string or number of a given length"
+
+declare -a doc_options=(
+	"string" "* The command (string or number)"
+	"length" "= The length of the string or number (default: 16)"
+)
+
+declare -a doc_examples=(
+	"b/random string 32" "Generate a random string of length 32"
+	"b/random number 8" "Generate a random number of length 8"
+) && [[ $1 == '--inspect' ]] && return 0
 
 # Get the command and length
 command=$1
 length=${2:-16}
-
-# Check if the required arguments are provided
-[[ -z "$1" ]] && b/usage -t "options" -w 2 $0 \
-    ":1" "= command (string or number)" \
-    ":2" "= length of the string or number (default: 16)" && exit 0;
 
 [[ ! $length =~ ^[0-9]+$ ]] && echo "Invalid length: $length. Must be a positive integer." && exit 1;
 
 case $command in
 
     string )
+
+		doc_name+=" string"
+		doc_description="Generate a random string of a given length"
+		declare -a doc_options=(
+			":integer"		"The length of the string (default: 16)"
+		) && [[ "$1" == '--inspect' ]] && return 0
+
         # Generate a random alphanumeric string of the given length
         echo $(LC_ALL=C tr -dc 'a-zA-Z0-9' < /dev/urandom | head -c $length)
         ;;
     number )
+
+		doc_name+=" number"
+		doc_description="Generate a random number of a given length"
+		declare -a doc_options=(
+			":integer"		"The length of the number (default: 16)"
+		) && [[ "$1" == '--inspect' ]] && return 0
+
         # Generate a random numeric string of the given length
         echo $(LC_ALL=C tr -dc '0-9' < /dev/urandom | head -c $length)
         ;;

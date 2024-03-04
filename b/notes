@@ -1,22 +1,18 @@
 #!/usr/bin/env bash
-# Note-taking with encryption and tagging
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-# set up documentation as an array
-declare -a documentation=(
-	"title"				"notes"
-	"description"		"Note-taking with encryption and tagging"
-	"notebooks.create" 	"Create a new notebook"
+# ================================== DOC ===================================
+declare doc_name="notes"
+declare doc_description="Manage notes with nb"
+declare -a doc_options=(
+	"notebooks.create"	"Create a new notebook"
 	"notebooks.list"	"List notebooks"
-	"create"			"Add a new note"
 	"list"				"List notes"
 	"show"				"Show a note"
-	"edit"				"Edit an existing note"
+	"create"			"Create a new note"
+	"edit"				"Edit a note"
 	"delete"			"Delete a note"
-) && export documentation
-
-# debug, print documentation and exit
-[[ $1 == "--help" ]] && b/usage -t "commands" -w 16 $0 "${documentation[@]}" && exit 0
+) && [[ "$1" == '--inspect' ]] && return 0
 
 command="$1"
 shift
@@ -27,8 +23,13 @@ shift
 case $command in
 
 	notebooks.create )
-		[[ -z $1 ]] && b/usage -t "options" -w 2 "$0 new-notebook" \
-			-n "* Name of the notebook" && exit 0;
+	
+		# ============== DOC ==============
+		doc_name+=" notebooks.create"
+		doc_description="Create a new notebook"
+		declare -a doc_options=(
+			"-n"		"* Name of the notebook"
+		) && [[ "$1" == '--inspect' ]] && return 0
 
 		while getopts "n:" opt; do
 			case $opt in
@@ -49,16 +50,18 @@ case $command in
 
     list )
 
+		doc_name+=" list"
+		doc_description="List notes"
+		declare -a doc_options=(
+			"-l"		"Limit the number of notes to display"
+		) && [[ "$1" == '--inspect' ]] && return 0
+
         limit=10
 
-        while getopts "l:H" opt; do
+        while getopts "l:" opt; do
             case $opt in
                 l )
                     limit=$OPTARG ;;
-                -H )
-                    b/usage -t "options" -w 2 "$0 list" \
-                        -l "  limit (default: 10)" && exit 0
-                    ;;
                 \? )
                     echo "Invalid option: -$OPTARG" 1>&2
                     exit 1
@@ -77,15 +80,18 @@ case $command in
 
     create )
 
-        [[ -z $1 ]] && b/usage -t "options" -w 2 "$0 add" \
-            -T "  Title of the note" \
-            -C "* Content of the note" \
-            -t "  Comma-separated tags for the note (my-tag,tag2,another-tag)" \
-            -E "  Encrypt the note" \
-            -P "= Password for the note" \
-            -N "  Notebook to save the note in (defaults to 'home')" \
-            -F "  Folder to save the note in" \
-            -f "  Filename for the note" && exit 0;
+		doc_name+=" create"
+		doc_description="Create a new note"
+		declare -a doc_options=(
+			"-T"		"Title of the note"
+			"-C"		"Content of the note"
+			"-t"		"Comma-separated tags for the note (my-tag,tag2,another-tag)"
+			"-E"		"Encrypt the note"
+			"-P"		"Password for the note"
+			"-N"		"Notebook to save the note in (defaults to 'home')"
+			"-F"		"Folder to save the note in"
+			"-f"		"Filename for the note"
+		) && [[ "$1" == '--inspect' ]] && return 0
 
         notebook="home"
         content=""
@@ -140,16 +146,19 @@ case $command in
 
     edit )
 
-        [[ -z $1 ]] && b/usage -t "options" -w 2 "$0 edit" \
-            -n "* ID of the note to edit" \
-            -T "  Title of the note" \
-            -C "  Content of the note" \
-            -t "  Comma-separated tags for the note (my-tag,tag2,another-tag)" \
-            -E "  Encrypt the note" \
-            -P "= Password for the note" \
-            -N "  Notebook to save the note in (defaults to 'home')" \
-            -F "  Folder to save the note in" \
-            -f "  Filename for the note" && exit 0;
+		doc_name+=" edit"
+		doc_description="Edit a note"
+		declare -a doc_options=(
+			"-n"		"ID of the note"
+			"-T"		"Title of the note"
+			"-C"		"Content of the note"
+			"-t"		"Comma-separated tags for the note (my-tag,tag2,another-tag)"
+			"-E"		"Encrypt the note"
+			"-P"		"Password for the note"
+			"-N"		"Notebook to save the note in (defaults to 'home')"
+			"-F"		"Folder to save the note in"
+			"-f"		"Filename for the note"
+		) && [[ "$1" == '--inspect' ]] && return 0
 
         notebook="home"
         content=""
@@ -203,9 +212,17 @@ case $command in
         ;;
 
     delete )
+
+		doc_name+=" delete"
+		doc_description="Delete a note"
+		declare -a doc_options=(
+			"-f"		"Filename of the note"
+		) && [[ "$1" == '--inspect' ]] && return 0
+
         file="$1"
         nb delete "$file" --force
         ;;
 
     * ) echo "Invalid command: $command" ;;
+	
 esac
