@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
+
+# ================================== DOC ===================================
+declare doc_name="import"
+declare doc_description="Import a file or directory into the \$BARE_DIR/var/.nb directory"
+declare -a doc_options=(
+	":1"		"The URL to import"
+	":1"		"The file or directory to import"
+	":2"		"The destination directory (default: \$BARE_DIR/var/.nb/imports)"
+) && [[ "$1" == '--inspect' ]] && return 0
+# ==========================================================================
+
+input="$1"
+destination_directory="$BARE_DIR/var/.nb/${2:-imports}"
+
+# make sure the destination directory exists
+mkdir -p "$destination_directory"
+
+# check if the input is a URL
+if [[ $input == http* ]]; then
+	file_name=$(basename "$input")
+	curl -sL "$input" -o "$destination_directory/$file_name"
+	chown $(whoami) "$destination_directory/$file_name"
+# check if the input is a file path
+elif [[ -f $input ]]; then
+	cp "$input" "$destination_directory"
+	chown $(whoami) "$destination_directory/$(basename "$input")"
+else
+	echo "Error: Invalid URL or file path"
+fi

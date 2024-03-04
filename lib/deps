@@ -12,6 +12,35 @@ if ! [ -x "$(command -v curl)" ]; then
     fi
 fi
 
+# check that npm is installed
+if ! [ -x "$(command -v npm)" ]; then
+	if [ "$OS" = "Linux" ]; then
+		sudo apt update
+		sudo apt install -y npm
+	elif [ "$OS" = "Darwin" ]; then
+		brew install npm
+	fi
+fi
+
+# check that marp is installed
+if ! [ -x "$(command -v marp)" ]; then
+	if [ "$OS" = "Linux" ]; then
+		sudo npm install -g @marp-team/marp-cli
+	elif [ "$OS" = "Darwin" ]; then
+		brew install marp-cli
+	fi
+fi
+
+# check that tiv is installed
+if ! [ -x "$(command -v tiv)" ]; then
+	if [ "$OS" = "Linux" ]; then
+		sudo apt update
+		sudo apt install -y tiv
+	elif [ "$OS" = "Darwin" ]; then
+		brew install tiv
+	fi
+fi
+
 # check that glow is installed
 if ! [ -x "$(command -v glow)" ]; then
 	if [ "$OS" = "Linux" ]; then

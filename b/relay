@@ -79,7 +79,7 @@ if [[ -n $list_dir ]]; then
 		echo "Error: Directory $list_dir does not exist."
 		exit 1
 	fi
-	content=$(ls "$list_dir")
+	content=$(ls -p "$list_dir")
 fi
 
 printf "%s\n" "$content" > "$output"
