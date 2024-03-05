@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
+
+declare doc_name="research"
+declare doc_desc="Go do some research on a given topic"
+declare -a doc_options=(
+	"<query>" "The query you want to search for"
+) && [[ $1 == '--inspect' ]] && return 0
+
+# make sure research notebook exists
+[[ ! -d $BARE_DIR/var/.nb/research ]] && b/notes notebooks.create -n "research" > /dev/null 2>&1
+
+
+query="$1"
+time=$(date +%s)
+
+b/notes -T "$query @$time"
+
+ddgr --noprompt --json --num 10 "$query" > "$BARE_DIR/.nb/research/$filename.$time.tmp.json"
+touch results.md && echo "# Research results for $query" > "$BARE_DIR/.nb/research/$filename.$time.results.md"
+
+for i in {0..9}; do
+	title=$(jq -r ".[$i].title" results.json)
+	abstract=$(jq -r ".[$i].abstract" results.json)
+	url=$(jq -r ".[$i].url" results.json)
+	
+	# Skip if the URL is from YouTube or Vimeo (not semantic enough)
+	if [[ $url == *"youtube"* || $url == *"vimeo"* ]]; then
+		continue
+	fi
+
+	content=$(xidel "$url" --silent -e 'css("p") | css("h1")')
+	summary=$(echo "$content" | sumy lex-rank --length=10 --file=<(cat))
+	{
+		echo ""
+		echo "## $title"
+		echo "**URL**: $url"
+		echo "**abstract**: $abstract"
+		echo ""
+		echo "$summary"
+		echo ""
+		echo ""
+		echo "- - - - - - - - - - - - - - - - - - - - -"
+	} >> results.md
+done

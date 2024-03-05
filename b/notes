@@ -22,30 +22,21 @@ shift
 
 case $command in
 
-	notebooks.create )
-	
-		# ============== DOC ==============
-		doc_name+=" notebooks.create"
-		doc_description="Create a new notebook"
-		declare -a doc_options=(
-			"-n"		"* Name of the notebook"
-		) && [[ "$1" == '--inspect' ]] && return 0
-
-		while getopts "n:" opt; do
-			case $opt in
-				n ) name=$OPTARG ;;
-				\? ) echo "Invalid option: -$OPTARG" && exit 1 ;;
-				: ) echo "Option -$OPTARG requires an argument." && exit 1 ;;
-			esac
-		done
-
-		# create a new notebook with nb
-		nb notesbooks add "$name"
+	notebooks.add )
+		nb notebooks add "$1"
 		;;
 
 	notebooks.list )
-
 		nb notebooks
+		;;
+
+	notebook.rename )
+		nb notebooks rename "$1" "$2" --no-color
+		;;
+
+	notebook.delete )
+		# make sure the notebook exists
+		nb notebooks delete "$1" --force --no-color
 		;;
 
     list )
@@ -57,11 +48,14 @@ case $command in
 		) && [[ "$1" == '--inspect' ]] && return 0
 
         limit=10
-
-        while getopts "l:" opt; do
+		types="note"
+		reverse=false
+		declare -a args=("-s" "--no-indicator" "--no-color")
+        while getopts "l:t:r" opt; do
             case $opt in
-                l )
-                    limit=$OPTARG ;;
+                l ) limit=$OPTARG ;;
+				t ) types=$OPTARG ;;
+				r ) reverse=true ;;
                 \? )
                     echo "Invalid option: -$OPTARG" 1>&2
                     exit 1
@@ -69,13 +63,36 @@ case $command in
             esac
         done
 
-        nb list --limit "$limit" --no-color
+		[[ "$reverse" = true ]] && args+=("--reverse")
+		[[ -n "$types" ]] && args+=("--type" "$types")
+		[[ -n "$limit" ]] && args+=("--limit" "$limit")
+
+        nb list "${args[@]}"
         ;;
 
     show )
 
-        file="$1"
-        nb show "$file" --print
+		scope="$1" && shift # can be 'note | folder | audio | document | text | video'
+
+		# [1] My first note
+		# [2] My folder
+		# [3] My third note
+
+		case $scope in
+
+			note )
+
+				id="$1" && shift
+				if [[ "$1" == "--title" ]]; then
+					# print everything after the first space
+					nb list "$1" --no-color --no-indicator | awk '{print substr($0, index($0,$2))}'
+				else
+					nb show "$id" --print
+				fi
+
+				;;
+
+		esac
         ;;
 
     create )
@@ -116,13 +133,13 @@ case $command in
             esac
         done
 
-        # make sure content is set
-        [ -z "$content" ] && echo "Error: Content is required" && exit 1
+        # make sure at least title or content is set
+		[ -z "$title" ] && [ -z "$content" ] && echo "Error: Must provide a title (-T) or content (-C)" && exit 1
 
         # if -E is set, -P must also be set
         [ -n "$encrypt" ] && [ -z "$password" ] && echo "Error: Encryption flag (-E) requires a password (-P)" && exit 1
 
-        command=("nb" "$notebook:add" --no-color)
+        command=("nb" "$notebook:_add" --no-color)
 
         [ -n "$title" ] && command+=("--title" "$title")
         [ -n "$content" ] && command+=("--content" "$content")
@@ -152,7 +169,6 @@ case $command in
 			"-n"		"ID of the note"
 			"-T"		"Title of the note"
 			"-C"		"Content of the note"
-			"-t"		"Comma-separated tags for the note (my-tag,tag2,another-tag)"
 			"-E"		"Encrypt the note"
 			"-P"		"Password for the note"
 			"-N"		"Notebook to save the note in (defaults to 'home')"
@@ -160,19 +176,22 @@ case $command in
 			"-f"		"Filename for the note"
 		) && [[ "$1" == '--inspect' ]] && return 0
 
+		id="$1" && shift
         notebook="home"
-        content=""
-        while getopts "n:T:C:t:EP:N:F:f:" opt; do
+        declare -a content=()
+		silent=false
+		append=false
+        while getopts "T:C:EP:N:F:f:sa" opt; do
             case $opt in
-                n ) id=$OPTARG ;;
                 T ) title=$OPTARG ;;
-                C ) content=$OPTARG ;;
-                t ) tags=$OPTARG ;;
+                C ) content+=("$OPTARG") ;;
                 E ) encrypt=$OPTARG ;;
                 P ) password=$OPTARG ;;
                 N ) notebook=$OPTARG ;;
                 F ) folder=$OPTARG ;;
                 f ) filename=$OPTARG ;;
+				s ) silent=true ;;
+				a ) append=true ;;
                 \? )
                     echo "Invalid option: -$OPTARG" 1>&2
                     exit 1
@@ -184,30 +203,29 @@ case $command in
             esac
         done
 
-        # if -E is set, -P must also be set
-        [ -n "$encrypt" ] && [ -z "$password" ] && echo "Error: Encryption flag (-E) requires a password (-P)" && exit 1
+		[ -z "$id" ] && echo "Error: Must provide an ID (-n)" && exit 1
+		[ -n "$encrypt" ] && [ -z "$password" ] && echo "Error: Encryption flag (-E) requires a password (-P)" && exit 1
 
-        command=("nb" "_edit" --print --no-color)
+		nb use "$notebook" > /dev/null
+		declare -a edit_command=("edit" "$id" "--no-color")
 
-        [ -n "$id" ] && command+=("--id" "$id")
-        [ -n "$title" ] && command+=("--title" "$title")
-        [ -n "$content" ] && command+=("--content" "$content")
-        [ -n "$tags" ] && command+=("--tags" "$tags")
-        [ -n "$password" ] && command+=("-e" "--password" "$password")
-        [ -n "$folder" ] && command+=("--folder" "$folder")
-        [ -n "$filename" ] && command+=("--filename" "$filename")
+		[[ "$append" = false ]] && {
+			[[ -z "$title" ]] && title=$(nb show "$id" --print | head -n 1)
+			[[ -n "$title" ]] && edit_command+=("--content" "# $title")
+		}
+		[[ "$append" = false ]] && edit_command+=("--overwrite")
+		[ -n "$notebook" ] && edit_command+=("--notebook" "$notebook")
+		[ -n "$folder" ] && edit_command+=("--folder" "$folder")
+		[ -n "$filename" ] && edit_command+=("--filename" "$filename")
+		for item in "${content[@]}"; do edit_command+=("--content" "$item"); done
+        [ -n "$password" ] && edit_command+=("-e" "--password" "$password")
 
-        format_nb_response() {
-            input="$1"
-            id=$(echo "$input" | awk -F'[][]' '{print $2}')
-            filename=$(echo "$input" | awk '{print $3}')
-            title=$(echo "$input" | awk -F'\"' '{print $2}')
-            # echo as json
-            echo "{\"id\":\"$id\",\"filename\":\"$filename\",\"title\":\"$title\"}"
-        }
+		nb "${edit_command[@]}"
 
-        output=$("${command[@]}")
-        format_nb_response "$output"
+		[[ "$append" = false ]] && nb rename "$id" --to-title -y
+
+		# reset
+		nb use home > /dev/null
 
         ;;
 
