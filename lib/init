@@ -1,5 +1,30 @@
 #!/usr/bin/env bash
 set -e
+
+BARE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$BARE_DIR"
+
+declare -A env=(
+	["BARE_OS"]="${BARE_OS:-$(uname -s)}"
+	["BARE_ENCRYPTION_KEY"]=""
+	["BARE_GIT_NAME"]=""
+	["BARE_GIT_EMAIL"]=""
+	["BARE_OPENAI_KEY"]=""
+	["BARE_POSTMARK_TOKEN"]=""
+	["BARE_STRIPE_KEY"]=""
+	["BARE_DAILY_TOKEN"]=""
+	["BARE_NOTES_DIR"]=""
+)
+
+# set default values
+
+
+# check if lib/.env exists
+if [[ ! -f "$bare_dir"/lib/.env ]]; then
+	touch "$bare_dir"/lib/.env
+fi
+
+
 BARE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.."; pwd)" && export BARE_DIR
 
 cd "$BARE_DIR"
