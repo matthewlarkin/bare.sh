@@ -31,13 +31,13 @@ if ! [ -x "$(command -v marp)" ]; then
 	fi
 fi
 
-# check that tiv is installed
-if ! [ -x "$(command -v tiv)" ]; then
+# check that feh is installed
+if ! [ -x "$(command -v feh)" ]; then
 	if [ "$OS" = "Linux" ]; then
 		sudo apt update
-		sudo apt install -y tiv
+		sudo apt install -y feh
 	elif [ "$OS" = "Darwin" ]; then
-		brew install tiv
+		brew install feh
 	fi
 fi
 
