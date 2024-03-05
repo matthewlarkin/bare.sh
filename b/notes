@@ -17,7 +17,8 @@ declare -a doc_options=(
 command="$1"
 shift
 
-# make sure nb notebooks are present
+# make sure nb home notebook is present
+[[ ! -d $BARE_NOTES_DIR/home ]] && nb notebooks add home > /dev/null 2>&1
 
 # make sure we've initialized the notes
 [[ ! -d $BARE_NOTES_DIR ]] && nb init > /dev/null 2>&1
@@ -49,26 +50,22 @@ case $command in
 			"-l"		"Limit the number of notes to display"
 		) && [[ "$1" == '--inspect' ]] && return 0
 
-        limit=10
-		types="note"
-		reverse=false
-		declare -a args=("-s" "--no-indicator" "--no-color")
-        while getopts "l:t:r" opt; do
-            case $opt in
-                l ) limit=$OPTARG ;;
-				t ) types=$OPTARG ;;
-				r ) reverse=true ;;
-                \? )
-                    echo "Invalid option: -$OPTARG" 1>&2
-                    exit 1
-                    ;;
-            esac
-        done
+		declare -a args=()
+		[[ -n "$1" ]] && args+=("$1")
+		args+=("-s" "--no-indicator" "--no-color")
+		while getopts "l:t:r" opt; do
+			case $opt in
+				l ) args+=("--limit" "$OPTARG"); shift 2 ;;
+				t ) args+=("--type" "$OPTARG"); shift 2 ;;
+				r ) args+=("--reverse"); shift 1 ;;
+				\? )
+					echo "Invalid option: -$OPTARG" 1>&2
+					exit 1
+					;;
+			esac
+		done
 
-		[[ "$reverse" = true ]] && args+=("--reverse")
-		[[ -n "$types" ]] && args+=("--type" "$types")
-		[[ -n "$limit" ]] && args+=("--limit" "$limit")
-
+		echo "args: ${args[@]}" && exit 0
         nb list "${args[@]}"
         ;;
 
@@ -141,26 +138,17 @@ case $command in
         # if -E is set, -P must also be set
         [ -n "$encrypt" ] && [ -z "$password" ] && echo "Error: Encryption flag (-E) requires a password (-P)" && exit 1
 
-        command=("nb" "$notebook:_add" --no-color)
+        declare -a args=("$notebook:add" "--no-color")
 
-        [ -n "$title" ] && command+=("--title" "$title")
-        [ -n "$content" ] && command+=("--content" "$content")
-        [ -n "$tags" ] && command+=("--tags" "$tags")
-        [ -n "$password" ] && command+=("-e" "--password" "$password")
-        [ -n "$folder" ] && command+=("--folder" "$folder")
-        [ -n "$filename" ] && command+=("--filename" "$filename")
+        [ -n "$title" ] && args+=("--title" "$title")
+        [ -n "$content" ] && args+=("--content" "$content")
+        [ -n "$tags" ] && args+=("--tags" "$tags")
+        [ -n "$password" ] && args+=("-e" "--password" "$password")
+        [ -n "$folder" ] && args+=("--folder" "$folder")
+        [ -n "$filename" ] && args+=("--filename" "$filename")
 
-        format_nb_response() {
-            input="$1"
-            id=$(echo "$input" | awk -F'[][]' '{print $2}')
-            filename=$(echo "$input" | awk '{print $3}')
-            title=$(echo "$input" | awk -F'\"' '{print $2}')
-            # echo as json
-            echo "{\"id\":\"$id\",\"filename\":\"$filename\",\"title\":\"$title\"}"
-        }
-
-        output=$("${command[@]}")
-        format_nb_response "$output"
+		output=$(nb "${args[@]}")
+		echo "$output" | awk -F'[][]' '{print $2}'
         ;;
 
     edit )
