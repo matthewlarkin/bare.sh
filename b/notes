@@ -17,6 +17,8 @@ declare -a doc_options=(
 command="$1"
 shift
 
+# make sure nb notebooks are present
+
 # make sure we've initialized the notes
 [[ ! -d $BARE_NOTES_DIR ]] && nb init > /dev/null 2>&1
 
