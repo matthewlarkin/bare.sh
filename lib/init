@@ -1,13 +1,8 @@
 #!/usr/bin/env bash
 set -e
+BARE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.."; pwd)" && export BARE_DIR
 
-BARE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$BARE_DIR"
-
-# check if lib/.env exists
-if [[ ! -f "$bare_dir"/lib/.env ]]; then
-	touch "$bare_dir"/lib/.env && source "$BARE_DIR"/i/bare.install.sh
-fi
 
 # Load the env variables
 [[ ! -f "$BARE_DIR"/lib/.env ]] && cp "$BARE_DIR"/lib/samples/.env lib/.env
