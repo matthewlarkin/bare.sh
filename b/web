@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+# ================================== DOC ===================================
+declare doc_name="web"
+declare doc_description="Starts a SQLPage web server instance"
+declare -a doc_options=(
+	"n/a" "no options"
+) && [[ "$1" == '--inspect' ]] && return 0
+# =========================================================================
+
+# Start the server
+cd "$BARE_DIR"/var/www && sqlpage

@@ -8,7 +8,7 @@ declare -a doc_options=(
 	"-c"	"Text string to relay"
 	"-o"	"Output file to relay to (defaults to stdout)"
 	"-f"	"File to relay"
-	"-s"	"List the files and directories of the specified directory within the .nb folder"
+	"-l"	"List the files and directories of the specified directory within the .nb folder"
 ) && [[ "$1" == '--inspect' ]] && return 0
 # ==========================================================================
 
@@ -35,14 +35,14 @@ validate_dirpath() {
 	fi
 }
 
-while getopts ":c:o:f:s:" opt; do
+while getopts ":c:o:f:l:" opt; do
 	case ${opt} in
 		c ) content=$OPTARG ;;
 		o ) output="$BARE_DIR/var/.nb/$OPTARG"
 			validate_filename "$output" ;;
 		f ) file="$BARE_DIR/var/.nb/$OPTARG"
 			validate_dirpath "$file" ;;
-		s ) list_dir="$BARE_DIR/var/.nb/$OPTARG"
+		l ) list_dir="$BARE_DIR/var/.nb/$OPTARG"
 			validate_dirpath "$list_dir" ;;
 		\? ) echo "Invalid option: -$OPTARG" 1>&2 && exit 1 ;;
 	esac

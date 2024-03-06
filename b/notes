@@ -25,12 +25,12 @@ shift
 
 case $command in
 
-	notebooks.add )
+	notebooks.create )
 		nb notebooks add "$1"
 		;;
 
 	notebooks.list )
-		nb notebooks
+		nb notebooks --no-color
 		;;
 
 	notebook.rename )
@@ -51,47 +51,43 @@ case $command in
 		) && [[ "$1" == '--inspect' ]] && return 0
 
 		declare -a args=()
-		[[ -n "$1" ]] && args+=("$1")
-		args+=("-s" "--no-indicator" "--no-color")
-		while getopts "l:t:r" opt; do
+		args+=("--no-color" "--no-indicator")
+		while getopts "l:t:rN:" opt; do
 			case $opt in
 				l ) args+=("--limit" "$OPTARG"); shift 2 ;;
 				t ) args+=("--type" "$OPTARG"); shift 2 ;;
 				r ) args+=("--reverse"); shift 1 ;;
+				N ) notebook=$OPTARG; shift 2 ;;
 				\? )
 					echo "Invalid option: -$OPTARG" 1>&2
 					exit 1
 					;;
 			esac
 		done
+		scope=${1:-"home:"}
+		args+=("$scope")
 
-		echo "args: ${args[@]}" && exit 0
-        nb list "${args[@]}"
+        list=$(nb list "${args[@]}")
+		[[ $(echo "$list" | head -n 1) == "0 items." ]] && exit 0 || echo "$list"
+
         ;;
 
     show )
 
-		scope="$1" && shift # can be 'note | folder | audio | document | text | video'
+		doc_name+=" show"
+		doc_description="Show a note"
+		declare -a doc_options=(
+			"<:id>"		"Print a note by given ID"
+		) && [[ "$1" == '--inspect' ]] && return 0
 
-		# [1] My first note
-		# [2] My folder
-		# [3] My third note
 
-		case $scope in
+		id="$1" && shift
+		if [[ "$1" == "--title" ]]; then
+			nb list "$1" --no-color --no-indicator | awk '{print substr($0, index($0,$2))}'
+		else
+			nb show "$id" --print
+		fi
 
-			note )
-
-				id="$1" && shift
-				if [[ "$1" == "--title" ]]; then
-					# print everything after the first space
-					nb list "$1" --no-color --no-indicator | awk '{print substr($0, index($0,$2))}'
-				else
-					nb show "$id" --print
-				fi
-
-				;;
-
-		esac
         ;;
 
     create )
@@ -110,11 +106,11 @@ case $command in
 		) && [[ "$1" == '--inspect' ]] && return 0
 
         notebook="home"
-        content=""
+        declare -a content=()
         while getopts "T:C:t:EP:N:F:f:" opt; do
             case $opt in
                 T ) title=$OPTARG ;;
-                C ) content=$OPTARG ;;
+                C ) content+=("$OPTARG") ;;
                 t ) tags=$OPTARG ;;
                 E ) encrypt=$OPTARG ;;
                 P ) password=$OPTARG ;;
@@ -141,14 +137,15 @@ case $command in
         declare -a args=("$notebook:add" "--no-color")
 
         [ -n "$title" ] && args+=("--title" "$title")
-        [ -n "$content" ] && args+=("--content" "$content")
+		for item in "${content[@]}"; do args+=("--content" "$item"); done
         [ -n "$tags" ] && args+=("--tags" "$tags")
         [ -n "$password" ] && args+=("-e" "--password" "$password")
         [ -n "$folder" ] && args+=("--folder" "$folder")
         [ -n "$filename" ] && args+=("--filename" "$filename")
 
 		output=$(nb "${args[@]}")
-		echo "$output" | awk -F'[][]' '{print $2}'
+		id=$(echo "$output" | awk -F'[][]' '{print $2}')
+		echo "$id"
         ;;
 
     edit )
@@ -197,22 +194,20 @@ case $command in
 		[ -n "$encrypt" ] && [ -z "$password" ] && echo "Error: Encryption flag (-E) requires a password (-P)" && exit 1
 
 		nb use "$notebook" > /dev/null
-		declare -a edit_command=("edit" "$id" "--no-color")
+		declare -a args=("edit" "$id" "--no-color")
 
 		[[ "$append" = false ]] && {
 			[[ -z "$title" ]] && title=$(nb show "$id" --print | head -n 1)
-			[[ -n "$title" ]] && edit_command+=("--content" "# $title")
+			[[ -n "$title" ]] && args+=("--content" "# $title")
 		}
-		[[ "$append" = false ]] && edit_command+=("--overwrite")
-		[ -n "$notebook" ] && edit_command+=("--notebook" "$notebook")
-		[ -n "$folder" ] && edit_command+=("--folder" "$folder")
-		[ -n "$filename" ] && edit_command+=("--filename" "$filename")
-		for item in "${content[@]}"; do edit_command+=("--content" "$item"); done
-        [ -n "$password" ] && edit_command+=("-e" "--password" "$password")
+		[[ "$append" = false ]] && args+=("--overwrite")
+		[ -n "$notebook" ] && args+=("--notebook" "$notebook")
+		[ -n "$folder" ] && args+=("--folder" "$folder")
+		[ -n "$filename" ] && args+=("--filename" "$filename")
+		for item in "${content[@]}"; do args+=("--content" "$item"); done
+        [ -n "$password" ] && args+=("-e" "--password" "$password")
 
-		nb "${edit_command[@]}"
-
-		[[ "$append" = false ]] && nb rename "$id" --to-title -y
+		nb "${args[@]}" > /dev/null
 
 		# reset
 		nb use home > /dev/null
@@ -228,7 +223,7 @@ case $command in
 		) && [[ "$1" == '--inspect' ]] && return 0
 
         file="$1"
-        nb delete "$file" --force
+        nb delete "$file" --force --no-color > /dev/null
         ;;
 
     * ) echo "Invalid command: $command" ;;
