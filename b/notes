@@ -106,7 +106,7 @@ case $command in
 		) && [[ "$1" == '--inspect' ]] && return 0
 
         notebook="home"
-        declare -a content=()
+        declare -a content=("- - - - -")
         while getopts "T:C:t:EP:N:F:f:" opt; do
             case $opt in
                 T ) title=$OPTARG ;;
