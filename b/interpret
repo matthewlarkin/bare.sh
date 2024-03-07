@@ -23,7 +23,7 @@ process_line() {
 		# Remove the "consider" and "as" parts from the line
 		words=("${@:2:$#-3}")
 		# Set the variable to the result of the ./bare command
-		export "$var_name=$(./bare "${words[@]}")"
+		export "$var_name=$(./bare "${words[@]}" "${additional_args[@]}")"
 	else
 		if [[ $# -gt 0 ]]; then
 			./bare "$@"
@@ -43,8 +43,12 @@ if [[ $1 == "-I" ]]; then
 	exit 0
 fi
 
+# if we're this far, we're about to run a script. Check if additional positional arguments were passed
+script_name=$1 && shift
+additional_args=("$@")
+
 # Construct the full path to the file
-file_path="$BARE_DIR/var/.nb/scripts/$1"
+file_path="$BARE_DIR/var/.nb/scripts/$script_name"
 
 # Check if the file exists and is in the var/.nb/scripts directory
 if [[ -f $file_path ]]; then
@@ -64,7 +68,7 @@ if [[ -f $file_path ]]; then
 			# Remove the "consider" and "as" parts from the line
 			words=("${words[@]:1:${#words[@]}-3}")
 			# Set the variable to the result of the ./bare command
-			export "$var_name=$(./bare "${words[@]}")"
+			export "$var_name=$(./bare "${words[@]}" "${additional_args[@]}")"
 		else
 			if [[ ${#words[@]} -gt 0 ]]; then
 				./bare "${words[@]}"
