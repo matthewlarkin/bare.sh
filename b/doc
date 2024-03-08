@@ -1,101 +1,40 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-# ================================== DOC ===================================
-declare doc_name="doc"
-declare doc_description="Takes a script from the b/ directory and generates a markdown file with the script's documentation. If the script has been modified more recently than the markdown file, the markdown file will be updated."
-declare -a doc_options=(
-	"flush" "Remove all markdown files in the lib/docs/b/ directory"
-	":scope" "Prints the documentation for the given scope"
-) && [[ "$1" == '--inspect' ]] && return 0
-# ==========================================================================
+# Define the documentation in JSON format
+declare -x doc='{
+	"name": "doc",
+	"description": "Takes a script from the b/ directory and generates a markdown file with the script'\''s documentation.",
+	"options": [
+		{
+			"name": ":scope",
+			"description": "Prints the documentation for the given scope"
+		}
+	]
+}'
 
-
+# Get the command from the arguments
 command="$1" && shift
-[[ $1 == '--inspect' ]] && unset doc_options && return 0
 
+# Handle the command
 case $command in
-
-	flush )
-
-		rm "$BARE_DIR/lib/docs/b/"*.md && exit 0
-		;;
-
+	
+	--inspect ) inspect ;;
 
 	* )
-
+		# Loop over the executables in the b/ directory
 		for executable in "$BARE_DIR/b"/*; do
-			
 			executable=$(basename "$executable")
 
-			[[ "$command" == "$(basename "$executable")" ]] && {
-				
+			# If the command matches the executable
+			if [[ "$command" == "$executable" ]]; then
 				source "$BARE_DIR/b/$executable" --inspect
-				doc_path="$BARE_DIR/lib/docs/b/$executable.md"
-
-				# check if the markdown file does not exist or has been modified more recently than the script file
-				response=$({
-					printf "# %s\n\n" "$executable"
-					printf "*%s*\n\n" "$doc_description"
-
-					# find the maximum length of the option keys
-					max_length=0
-					for (( i=0; i<${#doc_options[@]}; i+=2 )); do
-						option_length=${#doc_options[$i]}
-						if (( option_length > max_length )); then
-							max_length=$option_length
-						fi
-					done
-
-					# loop through the options and add them to the markdown file
-					for (( i=0; i<${#doc_options[@]}; i+=2 )); do
-						option=${doc_options[$i]} && description=${doc_options[$i+1]}
-						printf " - %-*s %s\n" $((max_length + 5)) "**$option**" "$description"
-					done
-				})
-
-				# loop over given doc_options (odd indexes) and check if the given option is valid
-				for (( o=0; o<${#doc_options[@]}; o+=2 )); do
-					if [[ "$1" == "${doc_options[$o]}" ]]; then
-						option="$1" && shift
-						doc_path="$BARE_DIR/lib/docs/b/$executable-$option.md"
-						# source the script with the given option and print the documentation
-						source "$BARE_DIR/b/$executable" "$option" "--inspect"
-						response=$({
-							printf "# %s\n\n" "$executable $option"
-							printf "*%s*\n\n" "$doc_description"
-
-							# find the maximum length of the option keys
-							max_length=0
-							for (( i=0; i<${#doc_options[@]}; i+=2 )); do
-								option_length=${#doc_options[$i]}
-								if (( option_length > max_length )); then
-									max_length=$option_length
-								fi
-							done
-
-							# loop through the options and add them to the markdown file
-							for (( i=0; i<${#doc_options[@]}; i+=2 )); do
-								option=${doc_options[$i]} && description=${doc_options[$i+1]}
-								printf " - %-*s %s\n" $((max_length + 5)) "**$option**" "$description"
-							done
-						})
-					fi
-				done
-
-				[[ $response ]] && {
-					[[ $1 == '-b' ]] && echo "$response" > "$doc_path" && exit 0
-					[[ $1 == '-r' ]] && echo "$response" && exit 0
-					echo "$response" | glow && exit 0
-				}
-				break
-			}
-
+			fi
 		done
 
-		# if we've gotten this far, the command is not a valid scope
-		b/error invalid_scope "$command"
-	
-		;;
+		# If we've gotten this far, the command is not a valid scope
+		echo "Invalid command: $command" && exit 1
 
+		;;
+		
 esac

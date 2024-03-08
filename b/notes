@@ -140,7 +140,7 @@ case $command in
         [ -n "$folder" ] && args+=("--folder" "$folder")
         [ -n "$filename" ] && args+=("--filename" "$filename")
 
-		[[ -z "$content" ]] && output=$(echo "" | nb "${args[@]}")
+		[[ -z "${content[0]}" ]] && output=$(echo "" | nb "${args[@]}")
 		[[ -n "$content" ]] && output=$(nb "${args[@]}")
 
 		id=$(echo "$output" | awk -F'[][]' '{print $2}') && echo "$id"
@@ -187,9 +187,8 @@ case $command in
 		id="$1" && shift
         notebook="home"
         declare -a content=()
-		silent=false
 		append=false
-        while getopts "T:C:EP:N:F:f:sa" opt; do
+        while getopts "T:C:EP:N:F:f:a" opt; do
             case $opt in
                 T ) title=$OPTARG ;;
                 C ) content+=("$OPTARG") ;;
@@ -198,7 +197,6 @@ case $command in
                 N ) notebook=$OPTARG ;;
                 F ) folder=$OPTARG ;;
                 f ) filename=$OPTARG ;;
-				s ) silent=true ;;
 				a ) append=true ;;
 				* ) echo "Invalid option: -$OPTARG" 1>&2; exit 1 ;;
             esac
@@ -229,6 +227,17 @@ case $command in
         ;;
 
     delete )
+
+		doc='{
+			"name": "delete",
+			"description": "Delete a note",
+			"options" : [
+				{
+					"name": "-f",
+					"description": "Filename of the note"
+				}
+			]
+		}'
 
 		doc_name+=" delete"
 		doc_description="Delete a note"

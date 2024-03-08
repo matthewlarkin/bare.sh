@@ -1,18 +1,28 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-# ================================== DOC ===================================
-declare doc_name="import"
-declare doc_description="Import a file or directory into the \$BARE_DIR/var/.nb directory"
-declare -a doc_options=(
-	":1"		"The URL to import"
-	":1"		"The file or directory to import"
-	":2"		"The destination directory (default: \$BARE_DIR/var/.nb/imports)"
-) && [[ "$1" == '--inspect' ]] && return 0
-# ==========================================================================
+doc=$(cat <<'EOF'
+# import
+Import a file or directory into the $BARE_DIR/var/.nb directory
+- <:1> | The URL or file path to import
+- (:2) | The destination path (defaults to $BARE_DIR/var/.nb/imports/$(basename $1))
+`b/import https://example.com/image.jpg images/myfolder/imported-image.jpg` | Import a file from a URL
+`b/import /path/to/file.txt files/myfolder/imported-file.txt` | Import a file from a file path 
+EOF
+)
+
+[[ $1 == '--inspect' ]] && inspect
 
 input="$1"
 destination_directory="$BARE_DIR/var/.nb/${2:-imports}"
+
+# separate file destination filename and path
+if [[ $input == *'/'* ]]; then
+	destination_directory="$BARE_DIR/var/.nb/${2%/*}"
+	destination_filename="${2##*/}"
+fi
+
+destination_path="${destination_directory:+/}$destination_filename"
 
 # make sure the destination directory exists
 mkdir -p "$destination_directory"
