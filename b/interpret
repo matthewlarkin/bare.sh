@@ -15,15 +15,27 @@ process_line() {
 		# Validate the variable name
 		if [[ ! $var_name =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
 			echo "Error: Invalid variable name '$var_name'"
-			return
+			return 1
 		fi
 		# Capture everything after the colon into the variable
-		export "$var_name=$(./bare "${@:2}")"
+		command_output=$(./bare "${@:2}" 2>/dev/null)
+		# Check the exit status of the command
+		if [[ $? -ne 0 ]]; then
+			echo "Error: Command failed"
+			return 1
+		fi
+		export "$var_name=$command_output"
 	else
 		if [[ $# -gt 0 ]]; then
-			./bare "$@"
+			./bare "$@" 2>/dev/null
+			# Check the exit status of the command
+			if [[ $? -ne 0 ]]; then
+				echo "Error: Command failed"
+				return 1
+			fi
 		fi
 	fi
+	return 0
 }
 
 # Check if the first argument is -I
@@ -61,10 +73,21 @@ if [[ -f $file_path ]]; then
 				continue
 			fi
 			# Capture everything after the colon into the variable
-			export "$var_name=$(./bare "${words[@]:1}" "${additional_args[@]}")"
+			command_output=$(./bare "${words[@]:1}" "${additional_args[@]}")
+			# Check the exit status of the command
+			if [[ $? -ne 0 ]]; then
+				echo "Error: Command failed"
+				continue
+			fi
+			export "$var_name=$command_output"
 		else
 			if [[ ${#words[@]} -gt 0 ]]; then
 				./bare "${words[@]}"
+				# Check the exit status of the command
+				if [[ $? -ne 0 ]]; then
+					echo "Error: Command failed"
+					continue
+				fi
 			fi
 		fi
 	done < "$file_path"
