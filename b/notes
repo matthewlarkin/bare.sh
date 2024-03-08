@@ -51,7 +51,7 @@ case $command in
 		) && [[ "$1" == '--inspect' ]] && return 0
 
 		declare -a args=()
-		args+=("--no-color" "--no-indicator")
+		args+=("--no-color" "--no-indicator" "--filenames")
 		while getopts "l:t:rN:" opt; do
 			case $opt in
 				l ) args+=("--limit" "$OPTARG"); shift 2 ;;
@@ -88,25 +88,26 @@ case $command in
 			nb show "$id" --print
 		fi
 
-        ;;
+		;;
 
     create )
 
 		doc_name+=" create"
 		doc_description="Create a new note"
 		declare -a doc_options=(
-			"-T"		"Title of the note"
-			"-C"		"Content of the note"
-			"-t"		"Comma-separated tags for the note (my-tag,tag2,another-tag)"
-			"-E"		"Encrypt the note"
-			"-P"		"Password for the note"
-			"-N"		"Notebook to save the note in (defaults to 'home')"
-			"-F"		"Folder to save the note in"
-			"-f"		"Filename for the note"
+			"-T"	"Title of the note"
+			"-C"	"Content of the note"
+			"-t"	"Comma-separated tags for the note (my-tag,tag2,another-tag)"
+			"-E"	"Encrypt the note"
+			"-P"	"Password for the note"
+			"-N"	"Notebook to save the note in (defaults to 'home')"
+			"-F"	"Folder to save the note in"
+			"-f"	"Filename for the note"
 		) && [[ "$1" == '--inspect' ]] && return 0
 
         notebook="home"
-        declare -a content=("- - - - -")
+		title="$1"
+        declare -a content=()
         while getopts "T:C:t:EP:N:F:f:" opt; do
             case $opt in
                 T ) title=$OPTARG ;;
@@ -128,14 +129,10 @@ case $command in
             esac
         done
 
-        # make sure at least title or content is set
-		[ -z "$title" ] && [ -z "$content" ] && echo "Error: Must provide a title (-T) or content (-C)" && exit 1
-
         # if -E is set, -P must also be set
         [ -n "$encrypt" ] && [ -z "$password" ] && echo "Error: Encryption flag (-E) requires a password (-P)" && exit 1
 
         declare -a args=("$notebook:add" "--no-color")
-
         [ -n "$title" ] && args+=("--title" "$title")
 		for item in "${content[@]}"; do args+=("--content" "$item"); done
         [ -n "$tags" ] && args+=("--tags" "$tags")
@@ -143,24 +140,48 @@ case $command in
         [ -n "$folder" ] && args+=("--folder" "$folder")
         [ -n "$filename" ] && args+=("--filename" "$filename")
 
-		output=$(nb "${args[@]}")
-		id=$(echo "$output" | awk -F'[][]' '{print $2}')
-		echo "$id"
+		[[ -z "$content" ]] && output=$(echo "" | nb "${args[@]}")
+		[[ -n "$content" ]] && output=$(nb "${args[@]}")
+
+		id=$(echo "$output" | awk -F'[][]' '{print $2}') && echo "$id"
         ;;
+
+	open )
+
+		doc_name+=" open"
+		doc_description="Open a note in the default editor"
+		declare -a doc_options=(
+			"<:id>"		"Open a note by given ID"
+			"-N"		"Notebook to open the note from"
+		) && [[ "$1" == '--inspect' ]] && return 0
+
+		id="$1" && shift
+		notebook="home"
+		while getopts "N:" opt; do
+			case $opt in
+				N ) notebook=$OPTARG ;;
+				* ) echo "Invalid option: -$OPTARG" 1>&2; exit 1 ;;
+			esac
+		done
+
+		nb use "$notebook" > /dev/null
+		nb edit "$id" --edit
+
+		;;
 
     edit )
 
 		doc_name+=" edit"
 		doc_description="Edit a note"
 		declare -a doc_options=(
-			"-n"		"ID of the note"
-			"-T"		"Title of the note"
-			"-C"		"Content of the note"
-			"-E"		"Encrypt the note"
-			"-P"		"Password for the note"
-			"-N"		"Notebook to save the note in (defaults to 'home')"
-			"-F"		"Folder to save the note in"
-			"-f"		"Filename for the note"
+			"-n"	"ID of the note"
+			"-T"	"Title of the note"
+			"-C"	"Content of the note"
+			"-E"	"Encrypt the note"
+			"-P"	"Password for the note"
+			"-N"	"Notebook to save the note in (defaults to 'home')"
+			"-F"	"Folder to save the note in"
+			"-f"	"Filename for the note"
 		) && [[ "$1" == '--inspect' ]] && return 0
 
 		id="$1" && shift
@@ -179,14 +200,7 @@ case $command in
                 f ) filename=$OPTARG ;;
 				s ) silent=true ;;
 				a ) append=true ;;
-                \? )
-                    echo "Invalid option: -$OPTARG" 1>&2
-                    exit 1
-                    ;;
-                : )
-                    echo "Option -$OPTARG requires an argument." 1>&2
-                    exit 1
-                    ;;
+				* ) echo "Invalid option: -$OPTARG" 1>&2; exit 1 ;;
             esac
         done
 

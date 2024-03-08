@@ -73,8 +73,7 @@ case $command in
 
 
     # ========================================================
-    chat )
-
+	chat )
 		doc_name+=" chat"
 		doc_description="Send a message to an AI model"
 
@@ -82,45 +81,37 @@ case $command in
 			"-m" "* The message to send"
 			"-a" "  The system prompt (assistant prompt)"
 			"-o" "  The model to use"
-			"-j" "  Requests OpenAI's response as JSON"
-			"-J" "  Return as verbose JSON object"
+			"-j" "  Requests OpenAI's response be JSON"
 			"-V" "  Return the vendor response, verbosely"
 		) && [[ $1 == "--inspect" ]] && return 0
 
-        format="text"
-        raw_json=false
+		format="text"
+		message="$1"
+		assistant_prompt="${2:-You are a helpful AI assistant.}"
+		model="$default_model"
+		while getopts ":m:a:o:jV" opt; do
+			case ${opt} in
+				m ) message="$OPTARG" ;;
+				a ) assistant_prompt="$OPTARG" ;;
+				o ) model="$OPTARG" ;;
+				j ) format="json_object" ;;
+				V ) verbose=true ;;
+				* ) echo "Invalid option: -$OPTARG" >&2; return 1 ;;
+			esac
+		done
 
-        while getopts ":m:a:o:jJv" opt; do
-            case ${opt} in
-                m ) message="$OPTARG" ;;
-                o ) model="$OPTARG" ;;
-                a ) assistant_prompt="${OPTARG:-You are a helpful AI assistant.}" ;;
-                j ) format="json_object" ;;
-                J ) respond="as_json" ;;
-                v ) verbose=true ;;
-                \? ) b/error invalid_option "-$OPTARG" ;;
-                : ) IFS= read -rd '' -n 1 message <&0 ;;
-            esac
-        done
+		response=$(curlRequest -u "$api_url/chat/completions" -d "$(jq -n --arg assistant_prompt "${assistant_prompt}" --arg model "${model}" --arg content "$message" --arg format "${format}" '{
+			model: $model,
+			response_format: { "type": $format },
+			messages: [
+				{ role: "system", content: $assistant_prompt },
+				{ role: "user", content: $content }
+			]
+		}')" -j)
+		content=$(echo "$response" | jq -r '.choices[0].message.content')
 
-        message_payload=$(jq -n --arg assistant_prompt "${assistant_prompt}" --arg model "${model:-$default_model}" --arg content "$message" --arg format "${format:-text}" '{
-            model: $model,
-            response_format: { "type": $format },
-            messages: [ { role: "system", content: $assistant_prompt }, { role: "user", content: $content } ]
-        }')
-
-        response=$(curlRequest -u "$api_url/chat/completions" -d "$message_payload" -j)
-
-        if [[ "$verbose" == true ]]; then
-            echo "$response" | jq -r
-        elif [[ "$format" == "json_object" ]]; then
-            echo "$response" | jq -r '.choices[0].message.content' | jq
-        elif [[ "$respond" == "as_json" ]]; then
-            echo "$response" | jq -r '{response: .choices[0].message.content}'
-        else
-            echo "$response" | jq -r '.choices[0].message.content'
-        fi
-        ;;
+		[[ $verbose ]] && echo "$response" | jq || echo "$content"
+		;;
 
 
 

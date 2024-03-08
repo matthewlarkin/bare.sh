@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+
+source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
+
+declare doc_name="research"
+declare doc_description="Go do some research on a given topic"
+declare -a doc_options=(
+	"list"		"List all bare scripts"
+	"create"	"Create a bare script"
+	"edit"		"Edit a bare script"
+	"delete"	"Delete a bare script"
+) && [[ $1 == '--inspect' ]] && return 0
+
+command="$1" && shift
+
+
+case $command in
+
+	list )
+
+		doc_name+=" list"
+		doc_description="List all bare scripts"
+		doc_options=(
+			"n/a"	"no options"
+		) && [[ "$1" == '--inspect' ]] && return 0
+
+		nb use scripts > /dev/null 2>&1
+		nb list --no-color --filenames --no-indicator --no-id
+
+		# reset
+		nb use home > /dev/null 2>&1
+
+		;;
+
+	show )
+
+		doc_name+=" show"
+		doc_description="Print out a bare script"
+		doc_options=(
+			":id"	"The name of the script to show"
+		) && [[ "$1" == '--inspect' ]] && return 0
+
+		[[ -n $1 ]] && b/notes show "scripts:$1" || b/notes show /dev/stdin
+
+		;;
+
+	open )
+	
+		b/notes open scripts:"$1"
+	
+		;;
+
+	run )
+
+		b/interpret "$1"
+
+		;;
+
+	create )
+		
+		b/notes create -N scripts -T "$1"
+		
+		;;
+
+esac

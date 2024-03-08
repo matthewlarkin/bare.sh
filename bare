@@ -1,31 +1,12 @@
 #!/usr/bin/env bash
-# Call a script from the b/ directory, passing along any subsequent arguments
 source "$(dirname "${BASH_SOURCE[0]}")/lib/init"
 
-# ================================== DOC ===================================
 declare doc_name="bare"
 declare doc_description="A collection of scripts for common tasks"
 declare -a doc_options=(
-	":command"	"The command to run"
+	":command | :return_string"		"The command to run or the string to return"
 ) && [[ "$1" == '--inspect' ]] && return 0
-# ==========================================================================
 
-# Get the list of allowed commands from the b/ directory
-mapfile -t allowed_commands < <(find b/ -type f ! -name ".*" -exec basename {} \;)
+[[ -e "b/$1" ]] && scope="$1" && shift && "b/$scope" "$@" && exit 0
 
-command="$1" && shift
-
-found=false
-for cmd in "${allowed_commands[@]}"; do
-	if [[ $cmd == $command ]]; then
-		found=true
-		break
-	fi
-done
-
-if $found; then
-	"b/$command" "$@" # vroom vroom
-else
-	echo "Error: Invalid command"
-	exit 1
-fi
+echo "$@"
