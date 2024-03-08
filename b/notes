@@ -240,6 +240,6 @@ case $command in
         nb delete "$file" --force --no-color > /dev/null
         ;;
 
-    * ) echo "Invalid command: $command" ;;
+    * ) echo "Invalid command: $command" && exit 1 ;;
 	
 esac
