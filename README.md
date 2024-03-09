@@ -16,7 +16,6 @@ Simplified API interfaces. Minimalist JSON responses. Few dependencies. Unreason
 - [Quick Samples](#quick-samples)
 - [Documentation](#documentation)
 - [Installation](#installation)
-- [Interactive Samples](#interactive-samples)
 
 ---
 
