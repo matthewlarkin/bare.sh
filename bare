@@ -1,18 +1,8 @@
 #!/usr/bin/env bash
 set +H
+set +o histexpand
 source "$(dirname "${BASH_SOURCE[0]}")/lib/init"
 
-doc="$(cat <<'EOF'
-# bare
-
-The bare interface
-
-`:scope`	| * The scope to activate (e.g. `b/openai`)
-
-> b/bare :scope [args]	| Activate a scope with arguments
-
-EOF
-)" && export doc && inspect "$1"
 
 [[ -z $1 ]] && echo "No scope specified" && exit 1
 

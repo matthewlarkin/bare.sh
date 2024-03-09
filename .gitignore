@@ -1,3 +1,6 @@
 .DS_Store
 lib/.env
 /sandbox.sh
+/lib/sqlpage
+/lib/nb
+/lib/.deps_cache

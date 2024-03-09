@@ -12,6 +12,40 @@ export NB_DIR="$BARE_NOTES_DIR"
 source "$BARE_DIR"/lib/colors
 source "$BARE_DIR"/lib/deps
 
+
+declare -A core_env
+
+core_env=(
+	["BARE_ENCRYPTION_KEY"]="used for encryption tools"
+	["OPENAI_API_KEY"]="used for OpenAI interfacing"
+	["STRIPE_SECRET_KEY"]="used for Stripe intrefacing"
+	["BARE_EDITOR"]="Used for command line note editing (defaults to vim)"
+)
+
+for key in "${!core_env[@]}"; do
+	if [[ -z "${!key}" ]]; then
+		echo -e "${RED}Error: ${key} is not set${NC}"
+		echo -e "${key} is ${core_env[$key]}"
+		read -rp "Please enter a value for ${key} (or press enter to skip): " value
+		if [[ -n $value ]]; then
+			perl -i -pe "s/${key}=.*/${key}=${value}/g" lib/.env
+		else
+			# set dummy value
+			perl -i -pe "s/${key}=.*/${key}=xxxxxxxxxx/g" lib/.env
+		fi
+	fi
+done
+
+# if encryption key is still not set, don't ask user, just set it to a random value
+[[ -z "$BARE_ENCRYPTION_KEY" ]] && {
+	echo -e "Setting BARE_ENCRYPTION_KEY to a random value"
+	perl -i -pe "s/BARE_ENCRYPTION_KEY=.*/BARE_ENCRYPTION_KEY=$(openssl rand -base64 32)/g" lib/.env
+}
+
+source "$BARE_DIR"/lib/.env
+
+
+
 function inspect() {
 
 	[[ $1 == '--inspect' ]] && {
@@ -28,11 +62,10 @@ function inspect() {
 				IFS='|' read -r first_col second_col <<< "$line"
 				if [[ $prefix == '>' ]]; then
 					# For examples, strip the > and preceding space, then print the second column as a comment before the command in a code block
-					first_col=$(echo "$first_col" | sed 's/^> //')
+					first_col=${first_col//^> /}
 					printf "\`\`\`bash\n#%s\n%s\n\`\`\`\n" "${second_col}" "${first_col}"
 				else
 					# For options, print the second column as a column
-					format="%-${max_length}s %s\n"
 					printf "%s %s\n" "$first_col" "$second_col"
 				fi
 			fi

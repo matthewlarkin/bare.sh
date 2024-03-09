@@ -1,146 +1,83 @@
 #!/usr/bin/env bash
 
 OS=$(uname)
+UPDATED=0
+CACHE_FILE="$BARE_DIR/lib/.deps_cache"
 
-# check that curl is installed
-if ! [ -x "$(command -v curl)" ]; then
-    if [ "$OS" = "Linux" ]; then
-        sudo apt update
-        sudo apt install -y curl
-    elif [ "$OS" = "Darwin" ]; then
-        brew install curl
-    fi
-fi
+# Create the cache file if it doesn't exist
+touch "$CACHE_FILE"
 
-# check that npm is installed
-if ! [ -x "$(command -v npm)" ]; then
-	if [ "$OS" = "Linux" ]; then
-		sudo apt update
-		sudo apt install -y npm
-	elif [ "$OS" = "Darwin" ]; then
-		brew install npm
+# Define a function to check if a command is available, and install a package if it's not
+check_install() {
+	cmd=$1
+	linux_pkg=$2
+	mac_pkg=$3
+
+	# Check the cache file before installing
+	if ! grep -q "^$cmd$" "$CACHE_FILE"; then
+		if ! [ -x "$(command -v $cmd)" ]; then
+			if [ "$OS" = "Linux" ]; then
+				if [ $UPDATED -eq 0 ]; then
+					sudo apt update
+					UPDATED=1
+				fi
+				if [ -n "$linux_pkg" ]; then
+					sudo apt install -y "$linux_pkg"
+				fi
+			elif [ "$OS" = "Darwin" ]; then
+				if [ -n "$mac_pkg" ]; then
+					if [ $UPDATED -eq 0 ]; then
+						brew update
+						UPDATED=1
+					fi
+					brew install "$mac_pkg"
+				else
+					return 0
+				fi
+			fi
+			# Add the command to the cache file
+			echo "$cmd" >> "$CACHE_FILE"
+		fi
+	fi
+}
+
+# Use the function to check and install each package
+check_install curl curl curl
+check_install npm npm npm
+check_install marp @marp-team/marp-cli marp-cli
+check_install feh feh feh
+check_install glow glow glow
+check_install snap snapd
+check_install jq jq jq
+check_install lxc lxd
+check_install git git git
+check_install nginx nginx nginx
+check_install ffmpeg ffmpeg ffmpeg
+check_install csvlook csvkit csvkit
+
+# Check and install nb
+if ! grep -q "^nb$" "$CACHE_FILE"; then
+	if ! [ -x "$(command -v nb)" ]; then
+		sudo curl -L https://raw.github.com/xwmx/nb/master/nb -o /usr/local/bin/nb && sudo chmod +x /usr/local/bin/nb
+		echo nb >> "$CACHE_FILE"
 	fi
 fi
 
-# check that marp is installed
-if ! [ -x "$(command -v marp)" ]; then
-	if [ "$OS" = "Linux" ]; then
-		sudo npm install -g @marp-team/marp-cli
-	elif [ "$OS" = "Darwin" ]; then
-		brew install marp-cli
+# Check and install sqlpage
+if ! grep -q "^sqlpage$" "$CACHE_FILE"; then
+	if ! [ -x "$(command -v sqlpage)" ]; then
+		if [ "$OS" = "Linux" ]; then
+			sudo curl -s -L -O https://github.com/lovasoa/SQLpage/releases/download/v0.19.1/sqlpage-linux.tgz
+			sudo tar -xzf sqlpage-linux.tgz && sudo rm sqlpage-linux.tgz
+			sudo mv sqlpage.bin /usr/bin/sqlpage
+			sudo chmod 750 /usr/bin/sqlpage
+		elif [ "$OS" = "Darwin" ]; then
+			if [ $UPDATED -eq 0 ]; then
+				brew update
+				UPDATED=1
+			fi
+			brew install sqlpage
+		fi
+		echo sqlpage >> "$CACHE_FILE"
 	fi
-fi
-
-# check that feh is installed
-if ! [ -x "$(command -v feh)" ]; then
-	if [ "$OS" = "Linux" ]; then
-		sudo apt update
-		sudo apt install -y feh
-	elif [ "$OS" = "Darwin" ]; then
-		brew install feh
-	fi
-fi
-
-# check that glow is installed
-if ! [ -x "$(command -v glow)" ]; then
-	if [ "$OS" = "Linux" ]; then
-		sudo snap install glow
-	elif [ "$OS" = "Darwin" ]; then
-		brew install glow
-	fi
-fi
-
-# check that snap is installed
-if ! [ -x "$(command -v snap)" ]; then
-    if [ "$OS" = "Linux" ]; then
-        sudo apt update
-        sudo apt install snapd -y
-    fi
-fi
-
-# check that nb is installed
-if ! [ -x "$(command -v nb)" ]; then
-    sudo curl -L https://raw.github.com/xwmx/nb/master/nb -o /usr/local/bin/nb && sudo chmod +x /usr/local/bin/nb
-fi
-
-# check that jq is installed
-if ! [ -x "$(command -v jq)" ]; then
-    if [ "$OS" = "Linux" ]; then
-        sudo apt install -y jq
-    elif [ "$OS" = "Darwin" ]; then
-        brew install jq
-    fi
-fi
-
-# check that lxc is installed
-if ! [ -x "$(command -v lxc)" ]; then
-    if [ "$OS" = "Linux" ]; then
-        sudo apt update
-        sudo apt install -y lxd
-    fi
-fi
-
-# check that git is installed
-if ! [ -x "$(command -v git)" ]; then
-    if [ "$OS" = "Linux" ]; then
-        sudo apt update
-        sudo apt install -y git
-    elif [ "$OS" = "Darwin" ]; then
-        brew install git
-    fi
-fi
-
-# check if global git user and email is set
-if [ -z "$(git config --global user.name)" ]; then
-    printf "\n- - - 🌿 Git Configuration 🌿 - - -\n"
-    printf "\nPlease enter your name for Git: " && read git_name
-    git config --global user.name "$git_name"
-    printf "\nPlease enter your email for Git: " && read git_email
-    git config --global user.email "$git_email"
-    # update the global git user and email in lib/.env
-    sed -i "s/GIT_USER=.*/GIT_USER=$git_name/g" lib/.env
-    sed -i "s/GIT_EMAIL=.*/GIT_EMAIL=$git_email/g" lib/.env
-    source lib/.env
-fi
-
-# check if Nginx is installed (and install it if it's not)
-if ! [ -x "$(command -v nginx)" ]; then
-    if [ "$OS" = "Linux" ]; then
-        sudo apt install -y nginx
-        sudo systemctl enable nginx
-        sudo systemctl start nginx
-    elif [ "$OS" = "Darwin" ]; then
-        brew install nginx
-        sudo brew services start nginx
-    fi
-fi
-
-# check if SQLPage is installed (and install it if it's not)
-if ! [ -x "$(command -v sqlpage)" ]; then
-    if [ "$OS" = "Linux" ]; then
-        sudo curl -s -L -O https://github.com/lovasoa/SQLpage/releases/download/v0.18.3/sqlpage-linux.tgz
-        sudo tar -xzf sqlpage-linux.tgz && sudo rm sqlpage-linux.tgz
-        sudo mv sqlpage.bin /usr/bin/sqlpage
-        sudo chmod 750 /usr/bin/sqlpage
-    elif [ "$OS" = "Darwin" ]; then
-        brew install sqlpage
-    fi
-fi
-
-# check that ffmpeg is installed
-if ! [ -x "$(command -v ffmpeg)" ]; then
-    if [ "$OS" = "Linux" ]; then
-        sudo apt install -y ffmpeg
-    elif [ "$OS" = "Darwin" ]; then
-        brew install ffmpeg
-    fi
-fi
-
-# check for csvkit
-if ! [ -x "$(command -v csvlook)" ]; then
-    if [ "$OS" = "Linux" ]; then
-        sudo apt install -y csvkit
-    elif [ "$OS" = "Darwin" ]; then
-        brew install csvkit
-    fi
 fi

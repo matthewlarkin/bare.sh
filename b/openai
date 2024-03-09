@@ -19,7 +19,7 @@ OpenAI API client
 `file.delete`				| Delete a file from the OpenAI API
 `images.create`				| Generate images from a prompt
 `audio.create`				| Generate audio from a text prompt
-`audio.transcribe`			| Transcribe an audio file"
+`audio.transcribe`			| Transcribe an audio file
 
 > openai chat "What is the capital of France?"									| Send a message to an AI model
 > openai assistants.create -n "My Assistant" -i "This is a helpful assistant"	| Create a new assistant
