@@ -18,13 +18,21 @@ check_install() {
 		if ! [ -x "$(command -v $cmd)" ]; then
 			if [ "$OS" = "Linux" ]; then
 				if [ $UPDATED -eq 0 ]; then
-					sudo apt update
+					sudo snap install core
 					UPDATED=1
 				fi
 				if [ -n "$linux_pkg" ]; then
-					sudo apt install -y "$linux_pkg"
+					sudo snap install "$linux_pkg"
 				fi
 			elif [ "$OS" = "Darwin" ]; then
+				# Check if Homebrew is installed, if not install it
+				if ! [ -x "$(command -v brew)" ]; then
+					/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+				fi
+				# Check if Git is installed, if not install it
+				if ! [ -x "$(command -v git)" ]; then
+					brew install git
+				fi
 				if [ -n "$mac_pkg" ]; then
 					if [ $UPDATED -eq 0 ]; then
 						brew update
@@ -44,7 +52,7 @@ check_install() {
 # Use the function to check and install each package
 check_install curl curl curl
 check_install npm npm npm
-check_install marp @marp-team/marp-cli marp-cli
+check_install marp marp-cli-carroarmato0 marp-cli
 check_install feh feh feh
 check_install glow glow glow
 check_install snap snapd
