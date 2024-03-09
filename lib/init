@@ -1,67 +1,14 @@
-function inspect() {
-	[[ -z "$doc" ]] && echo "No documentation found" && exit 1
-	{
-		# Calculate the maximum length of the first column in the options and examples sections
-		max_length_options=0
-		max_length_examples=0
-		while IFS= read -r line; do
-			if [[ $line == -* ]]; then
-				# Ignore lines starting with b/import
-				[[ $line == b/import* ]] && continue
-				IFS='|' read -r first_col second_col <<< "${line#[-*> ] }"
-				length=${#first_col}
-				if (( length > max_length_options )); then
-					max_length_options=$length
-				fi
-			elif [[ $line == \`* ]]; then
-				IFS='|' read -r first_col second_col <<< "${line#> }"
-				length=${#first_col}
-				if (( length > max_length_examples )); then
-					max_length_examples=$length
-				fi
-			fi
-		done <<< "$doc"
-		
-		# Add 4 to the maximum length for some extra spacing
-		max_length_options=$((max_length_options + 4))
-		max_length_examples=$((max_length_examples + 4))
-		
-		# Print the documentation
-		while IFS= read -r line; do
-			# If the line starts with a dash, it's an option
-			if [[ $line == -* ]]; then
-				# Only print the "Options" header once
-				if [[ -z $options ]]; then
-					echo "## Options"
-					echo
-					options=1
-				fi
-				# Split the line into two parts at the pipe
-				IFS='|' read -r first_col second_col <<< "${line#- }"
-				# Print the parts with a fixed width for the first part
-				printf "%-${max_length_options}s %s\n" "${first_col}" "${second_col}"
-			# If the line starts with an asterisk, it's an example
-			elif [[ $line == \`* ]]; then
-				# Only print the "Examples" header once
-				if [[ -z $examples ]]; then
-					echo "## Examples"
-					echo
-					examples=1
-				fi
-				# Split the line into two parts at the pipe
-				IFS='|' read -r first_col second_col <<< "${line#> }"
-				# Print the parts with a fixed width for the first part
-				printf "%-${max_length_examples}s %s\n" "${first_col}" "${second_col}"
-			# If it's the first line, it's the name
-			elif [[ -z $name ]]; then
-				name=$line
-				echo "# $name"
-			# If it's the second line, it's the description
-			elif [[ -z $description ]]; then
-				description=$line
-				echo "$description"
-				echo
-			fi
-		done <<< "$doc"
-	} | glow && exit 0
-}
+#!/usr/bin/env bash
+set -e
+BARE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.."; pwd)" && export BARE_DIR
+
+cd "$BARE_DIR"
+
+# Load the env variables
+[[ ! -f "$BARE_DIR"/lib/.env ]] && cp "$BARE_DIR"/lib/samples/.env lib/.env
+
+source "$BARE_DIR"/lib/.env
+export NB_DIR="$BARE_NOTES_DIR"
+
+source "$BARE_DIR"/lib/colors
+source "$BARE_DIR"/lib/deps
