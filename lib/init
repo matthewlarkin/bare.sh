@@ -33,7 +33,7 @@ function inspect() {
 				else
 					# For options, print the second column as a column
 					format="%-${max_length}s %s\n"
-					printf "$format" "${first_col}" "${second_col}"
+					printf "%s %s\n" "$first_col" "$second_col"
 				fi
 			fi
 		}

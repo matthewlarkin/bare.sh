@@ -70,12 +70,12 @@ command="$1" && shift
 
 
 # Parse command line options
-case $command in
+case "$command" in
 
 
 
 	# ========================================================
-	chat ) doc=$(cat <<'EOF'
+	chat ) doc="$(cat <<'EOF'
 # chat
 
 Send a message to an AI model
@@ -83,14 +83,14 @@ Send a message to an AI model
 `-m`	| * The message to send
 `-a`	|   The system prompt (assistant prompt)
 `-o`	|   The model to use
-`-j`	|   Requests OpenAI's response be JSON
+`-j`	|   Requests OpenAIs response be JSON
 `-V`	|   Return the vendor response, verbosely
 
 > openai chat "What is the capital of France?"											| Send a message to an AI model
 > openai chat -m "What is the capital of France?" -a "You are a helpful AI assistant."	| Send a message to an AI model
 
 EOF
-		) && inspect "$1"
+		)" && inspect "$1"
 
 		format="text"
 		message="$1"
@@ -123,7 +123,7 @@ EOF
 
 
     # ========================================================
-    assistants.create ) doc=$(cat <<'EOF'
+    assistants.create ) doc="$(cat <<'EOF'
 
 # assistants.create
 
@@ -133,13 +133,13 @@ Create a new assistant
 `-i`	| * Instructions for the assistant
 `-o`	|   The model to use
 `-t`	|   The tools to enable (pipe separated)
-`-J`	|   Requests OpenAI's response be JSON
+`-J`	|   Requests OpenAIs response be JSON
 `-V`	|   Return the vendor response, verbosely
 
 > openai assistants.create -n "My Assistant" -i "This is a helpful assistant"	| Create a new assistant
 
 EOF
-		) && export doc && inspect "$1"
+		)" && export doc && inspect "$1"
 
         tools=()
         model=$default_model
@@ -181,7 +181,7 @@ EOF
 
 
     # ========================================================
-    threads.create ) doc=$(cat <<'EOF'
+    threads.create ) doc="$(cat <<'EOF'
 
 # threads.create
 
@@ -189,13 +189,13 @@ Create a new thread
 
 `-m`	| * The initial message to send
 `-f`	|   The file IDs to attach (comma-separated list)
-`-J`	|   Requests OpenAI's response be JSON
+`-J`	|   Requests OpenAIs response be JSON
 `-V`	|   Return the vendor response, verbosely
 
 > openai threads.create -m "Hello, world!"	| Create a new thread
 
 EOF
-		) && export doc && inspect "$1"
+		)" && export doc && inspect "$1"
 
         file_ids=""
 
@@ -230,7 +230,7 @@ EOF
 
 
     # ========================================================
-    thread.messages.append) doc=$(cat <<'EOF'
+    thread.messages.append) doc="$(cat <<'EOF'
 
 # thread.messages.append
 
@@ -239,13 +239,13 @@ Append a message to a thread
 `-t`	| * The thread ID
 `-m`	| * The message to send
 `-f`	|   The file IDs to attach (array)
-`-J`	|   Requests OpenAI's response be JSON
+`-J`	|   Requests OpenAIs response be JSON
 `-V`	|   Return the vendor response, verbosely
 
 > openai thread.messages.append -t "thread_id" -m "Hello, world!"	| Append a message to a thread
 
 EOF
-		) && export doc && inspect "$1"
+		)" && export doc && inspect "$1"
 
 		file_ids="[]"
 
@@ -280,7 +280,7 @@ EOF
 
 
     # ========================================================
-    thread.messages.list ) doc=$(cat <<'EOF'
+    thread.messages.list ) doc="$(cat <<'EOF'
 
 # thread.messages.list
 
@@ -288,13 +288,13 @@ List messages in a thread
 
 `-t`	| * The thread ID
 `-l`	|   The number of messages to return (default: 5)
-`-J`	|   Requests OpenAI's response be JSON
+`-J`	|   Requests OpenAIs response be JSON
 `-V`	|   Return the vendor response, verbosely
 
 > openai thread.messages.list -t "thread_id"	| List messages in a thread
 
 EOF
-		) && export doc && inspect "$1"
+		)" && export doc && inspect "$1"
 
         limit=5
         
@@ -325,7 +325,7 @@ EOF
 
 
     # ========================================================
-    thread.run) doc=$(cat <<'EOF'
+    thread.run) doc="$(cat <<'EOF'
 
 # thread.run
 
@@ -333,13 +333,13 @@ Run an assistant on a thread
 
 `-t`	| * The thread ID
 `-a`	| * The assistant ID
-`-J`	|   Requests OpenAI's response be JSON
+`-J`	|   Requests OpenAIs response be JSON
 `-V`	|   Return the vendor response, verbosely
 
 > openai thread.run -t "thread_id" -a "assistant_id"	| Run an assistant on a thread
 
 EOF
-		) && export doc && inspect "$1"
+		)" && export doc && inspect "$1"
 
 		while getopts ":t:a:JV" opt; do
 			case ${opt} in
@@ -370,7 +370,7 @@ EOF
 
 
     # ========================================================
-    thread.run.poll ) doc=$(cat <<'EOF'
+    thread.run.poll ) doc="$(cat <<'EOF'
 
 # thread.run.poll
 
@@ -378,13 +378,13 @@ Poll the status of a thread run
 
 `-t`	| * The thread ID
 `-r`	| * The run ID
-`-J`	|   Requests OpenAI's response be JSON
+`-J`	|   Requests OpenAIs response be JSON
 `-V`	|   Return the vendor response, verbosely
 
 > openai thread.run.poll -t "thread_id" -r "run_id"	| Poll the status of a thread run
 
 EOF
-		) && export doc && inspect "$1"
+		)" && export doc && inspect "$1"
 
         while getopts ":t:r:JV" opt; do
             case ${opt} in
@@ -411,7 +411,7 @@ EOF
 
 
     # ========================================================
-    files.upload ) doc=$(cat <<'EOF'
+    files.upload ) doc="$(cat <<'EOF'
 
 # files.upload
 
@@ -419,13 +419,13 @@ Upload a file to the OpenAI API
 
 `-f`	| * The file to upload
 `-p`	|   The purpose of the file (assistants)
-`-J`	|   Requests OpenAI's response be JSON
+`-J`	|   Requests OpenAIs response be JSON
 `-V`	|   Return the vendor response, verbosely
 
 > openai files.upload -f "path/to/file"	| Upload a file to the OpenAI API
 
 EOF
-		) && export doc && inspect "$1"
+		)" && export doc && inspect "$1"
 
         purpose="assistants"
         while getopts ":f:p:JV" opt; do
@@ -451,20 +451,20 @@ EOF
 
 
     # ========================================================
-    files.list ) doc=$(cat <<'EOF'
+    files.list ) doc="$(cat <<'EOF'
 
 # files.list
 
 List files uploaded to the OpenAI API
 
 `-p`	|   The purpose of the file (assistants)
-`-J`	|   Requests OpenAI's response be JSON
+`-J`	|   Requests OpenAIs response be JSON
 `-V`	|   Return the vendor response, verbosely
 
 > openai files.list	| List files uploaded to the OpenAI API
 
 EOF
-		) && export doc && inspect "$1"
+		)" && export doc && inspect "$1"
 
 		purpose="assistants"
 		while getopts ":p:JV" opt; do
@@ -491,20 +491,20 @@ EOF
 
 
     # ========================================================
-    file.show ) doc=$(cat <<'EOF'
+    file.show ) doc="$(cat <<'EOF'
 
 # file.show
 
 Show details of a file uploaded to the OpenAI API
 
 `-f`	| * The file ID
-`-J`	|   Requests OpenAI's response be JSON
+`-J`	|   Requests OpenAIs response be JSON
 `-V`	|   Return the vendor response, verbosely
 
 > openai file.show -f "file_id"	| Show details of a file uploaded to the OpenAI API
 
 EOF
-		) && export doc && inspect "$1"
+		)" && export doc && inspect "$1"
     
 		while getopts ":f:JV" opt; do
 			case ${opt} in
@@ -529,20 +529,20 @@ EOF
 
 
     # ========================================================
-    file.delete ) doc=$(cat <<'EOF'
+    file.delete ) doc="$(cat <<'EOF'
 
 # file.delete
 
 Delete a file from the OpenAI API
 
 `-f`	| * The file ID
-`-J`	|   Requests OpenAI's response be JSON
+`-J`	|   Requests OpenAIs response be JSON
 `-V`	|   Return the vendor response, verbosely
 
 > openai file.delete -f "file_id"	| Delete a file from the OpenAI API
 
 EOF
-		) && export doc && inspect "$1"
+		)" && export doc && inspect "$1"
     
 		while getopts ":f:JV" opt; do
 			case ${opt} in
@@ -566,7 +566,7 @@ EOF
 
 
     # ========================================================
-    images.create ) doc=$(cat <<'EOF'
+    images.create ) doc="$(cat <<'EOF'
 
 # images.create
 
@@ -580,13 +580,13 @@ Generate images from a prompt
 `-s`	|   The size of the images
 `-t`	|   The style of the images
 `-u`	|   A unique identifier representing your end-user
-`-J`	|   Requests OpenAI's response be JSON
+`-J`	|   Requests OpenAIs response be JSON
 `-V`	|   Return the vendor response, verbosely
 
 > openai images.create -p "A painting of a sunset over the ocean"	| Generate images from a prompt
 
 EOF
-		) && export doc && inspect "$1"
+		)" && export doc && inspect "$1"
     
 		model="dall-e-3"
 		n=1
@@ -637,7 +637,7 @@ EOF
 
         
     # ========================================================
-    audio.create ) doc=$(cat <<'EOF'
+    audio.create ) doc="$(cat <<'EOF'
 
 # audio.create
 
@@ -649,13 +649,13 @@ Generate audio from a text prompt
 `-r`	|   The response format
 `-s`	|   The speed of the audio
 `-u`	|   A unique identifier representing your end-user
-`-J`	|   Requests OpenAI's response be JSON
+`-J`	|   Requests OpenAIs response be JSON
 `-V`	|   Return the vendor response, verbosely
 
 > openai audio.create -i "Hello, world!"	| Generate audio from a text prompt
 
 EOF
-		) && export doc && inspect "$1"
+		)" && export doc && inspect "$1"
     
 		model="tts-1"
 		voice="alloy"
@@ -705,7 +705,7 @@ EOF
 
 
     # ========================================================
-    audio.transcribe ) doc=$(cat <<'EOF'
+    audio.transcribe ) doc="$(cat <<'EOF'
 
 # audio.transcribe
 
@@ -719,13 +719,13 @@ Transcribe an audio file
 `-r`	|   The response format
 `-t`	|   The temperature of the transcription
 `-g`	|   The timestamp granularities
-`-J`	|   Requests OpenAI's response be JSON
+`-J`	|   Requests OpenAIs response be JSON
 `-V`	|   Return the vendor response, verbosely
 
 > openai audio.transcribe -f "path/to/audio"	| Transcribe an audio file
 
 EOF
-		) && export doc && inspect "$1"
+		)" && export doc && inspect "$1"
 
         language="en"
         output_file="$BARE_DIR/tmp/transcription-$(date +%Y%m%d-%H%M%S).txt"
