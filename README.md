@@ -45,14 +45,14 @@ curl -X POST -H "Authorization: Bearer $OPENAI_API_KEY" -H "Content-Type: applic
 
 # 🤩 using bare.sh
 
-b/random string
+bare random string
 # >> CYtxhPr55ILYwQ9c
 
-b/random number 10
+bare random number 10
 # >> 2348063108
 
-b/openai chat -a "You are a chef" -m "Are you a chef?"
-# >> response: {"response":"Yes, I am a chef! How can I help you today?"}
+bare openai chat -m "Are you a chef?" -a "You are a chef"
+# >> Yes, I am a chef! How can I help you today?
 ```
 
 **Notice**: *You don't have to know bash to use bare.sh*. Just like any other library, you just invoke the commands and pass in the necessary arguments.
@@ -79,18 +79,18 @@ Most of these scripts are small in scope, take simple input, and provide simple 
 Let's get something going. To give you an idea of how you can use the system, here are a few quick examples.
 ```bash
 # OpenAI
-b/openai chat -m "Hello there!"
+openai chat "Hello there!"
 
-# => { "response" : "General Kenobi! You are a bold one." }
+# => General Kenobi! You are a bold one.
 
 b/openai assistants.create \
-    -n "Suspicous Susan" \
-    -i "You take the given input and question it. \
-    You pick it apart and look for the pessimistic \
-    perspective and outline it succinctly." \
+    -n "Copy editor" \
+    -i "You are a copy editor. You take any content given \
+    to you and return the edited version, followed with \
+    structured constructive critiques." \
     -t "code_interpreter|retrieval" \
 
-# => { "assistant_id": "asst_LXpGvduRLm6muXHBC3i1PH3s", "tools": ["code_interpreter","retrieval"] }
+# => asst_LXpGvduRLm6muXHBC3i1PH3s
 
 # =============
 
@@ -103,66 +103,24 @@ b/ffmpeg video.360 -f my_video.mp4 -o my_video.360.mp4
 ---
 
 ## Documentation
-The system is self-documenting. Learn more about programs or their commands by witholding arguments:
+Bare is split into several *scopes* (`openai`, `ffmpeg`, `random`, etc). We can document the scopes using the `doc` scope.
 ```bash
-b/openai
+# document the OpenAI scope
+bare doc openai
 
-# - - -
-#
-# 📚 Usage: b/openai [commands]
-#
-#   chat                          Send a message to an AI model
-#   assistants.create             Create a new assistant
-#   threads.create                Create a new thread
-#   thread.messages.append        Append a message to a thread
-#   thread.messages.list          List messages in a thread
-#   thread.run                    Run an assistant on a thread
-#   thread.run.poll               Poll the status of a thread run
-#   files.upload                  Upload a file to the OpenAI API
-#   files.list                    List files uploaded to the OpenAI API
-#   file.delete                   Delete a file from the OpenAI API
-#   images.create                 Generate images from a prompt
-#   audio.create                  Generate audio from a text prompt
-#   audio.transcribe              Transcribe an audio file
-#
-# - - -
-
-b/openai chat
-
-# - - -
-#
-# 📚 Usage: b/openai chat [options]
-#
-#   -m    * The message to send
-#   -o      The model to use
-#   -j      Return the response as a JSON object
-#   -v      Return the response in verbose mode
-#
-# - - -
-```
-For subcommands, options are denoted:
-- `*` -- *required*
-- `~` -- *encouraged*
-- `=` -- *conditionally required*
-
+# document the OpenAI chat command
+bare doc openai chat
 ---
 
 ## Installation
-To install, simply clone the repo and run commands from the root of repo.
+To install, simply clone the repo. You can set ./bare as an alias in your shell for easy access.
 ```bash
 # Clone the repo and navigate to into it
 git clone https://github.com/matthewlarkin/bare.sh && cd bare.sh
 
+# Set the bare command as an alias
+echo "alias bare=$PWD/bare" >> ~/.bashrc # or ~/.zshrc, etc
+
 # Setup your environment variables in the lib/.env file
 vim lib/.env
-```
-
----
-
-## Interactive Samples
-To get a feel for the system, you can run the interactive samples provided at the root of this repo. We encourage you to study them as a starting point for your own scripts.
-
-```bash
-cd bare.sh
-bash sample.ai-chat.sh
 ```
