@@ -1,11 +1,20 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-declare doc_name="bare"
-declare doc_description="A collection of scripts for common tasks"
-declare -a doc_options=(
-	":command"	"The command to run"
-) && [[ "$1" == '--inspect' ]] && return 0
+doc=$(cat <<'EOF'
+
+# interpret
+
+Interpret scripts and commands
+
+`[-I]`			| Start an interactive session
+`[:command]`	| Runs a given script by name (scripts located in $BARE_DIR/var/.nb/scripts)
+
+> interpret -I				| Start an interactive session
+> interpret weather.bare	| Run a the weather script
+
+EOF
+) && export doc && inspect "$1"
 
 process_line() {
 	# Check if the line starts with a word ending in a colon

@@ -1,19 +1,20 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-# Define the documentation in JSON format
-declare -x doc='{
-	"name": "doc",
-	"description": "Takes a script from the b/ directory and generates a markdown file with the script'\''s documentation.",
-	"options": [
-		{
-			"name": ":scope",
-			"description": "Prints the documentation for the given scope"
-		}
-	]
-}'
+doc=$(cat <<'EOF'
 
-# Get the command from the arguments
+# doc
+
+View documentation for a command
+
+`<:scope> (:command)`	| View documentation for a scope (and optionally a command of that scope)
+
+> doc openai		| View documentation for the `openai` scope
+> doc openai chat 	| View documentation for the `openai chat` command
+
+EOF
+) && export doc && inspect "$1"
+
 command="$1" && shift
 
 # Handle the command
@@ -22,13 +23,14 @@ case $command in
 	--inspect ) inspect ;;
 
 	* )
+
 		# Loop over the executables in the b/ directory
 		for executable in "$BARE_DIR/b"/*; do
 			executable=$(basename "$executable")
 
 			# If the command matches the executable
 			if [[ "$command" == "$executable" ]]; then
-				source "$BARE_DIR/b/$executable" --inspect
+				source "$BARE_DIR/b/$executable" "$@" --inspect && exit 0
 			fi
 		done
 

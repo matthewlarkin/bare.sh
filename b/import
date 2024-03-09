@@ -2,16 +2,19 @@
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
 doc=$(cat <<'EOF'
-# import
-Import a file or directory into the $BARE_DIR/var/.nb directory
-- <:1> | The URL or file path to import
-- (:2) | The destination path (defaults to $BARE_DIR/var/.nb/imports/$(basename $1))
-`b/import https://example.com/image.jpg images/myfolder/imported-image.jpg` | Import a file from a URL
-`b/import /path/to/file.txt files/myfolder/imported-file.txt` | Import a file from a file path 
-EOF
-)
 
-[[ $1 == '--inspect' ]] && inspect
+# import
+
+Import a file or directory into the $BARE_DIR/var/.nb directory
+
+`:1`	| The URL or file path to import
+`(:2)`	| The destination path (defaults to $BARE_DIR/var/.nb/imports/$(basename $1))
+
+> b/import https://example.com/image.jpg images/myfolder/imported-image.jpg` | Import a file from a URL
+> b/import /path/to/file.txt files/myfolder/imported-file.txt` | Import a file from a file path 
+
+EOF
+) && export doc && inspect "$1"
 
 input="$1"
 destination_directory="$BARE_DIR/var/.nb/${2:-imports}"

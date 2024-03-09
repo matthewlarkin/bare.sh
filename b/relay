@@ -1,16 +1,23 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-# ================================== DOC ===================================
-declare doc_name="relay"
-declare doc_description="Relays information (outputs it to the stdout or a file)"
-declare -a doc_options=(
-	"-c"	"Text string to relay"
-	"-o"	"Output file to relay to (defaults to stdout)"
-	"-f"	"File to relay"
-	"-l"	"List the files and directories of the specified directory within the .nb folder"
-) && [[ "$1" == '--inspect' ]] && return 0
-# ==========================================================================
+doc=$(cat <<'EOF'
+
+# relay
+
+Relays information (outputs it to the stdout or a file)
+
+`-c`	| Text string to relay
+`-o`	| Output file to relay to (defaults to stdout)
+`-f`	| File to relay
+`-l`	| List the files and directories of the specified directory within the .nb folder
+
+> relay -c "Hello, world!"		| Relay a string
+> relay -f file.txt				| Relay the contents of a file
+> relay -l scripts				| List the files and directories of the specified directory within the .nb folder
+
+EOF
+) && export doc && inspect "$1"
 
 content=""
 output="/dev/stdout"

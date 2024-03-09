@@ -1,13 +1,18 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-# ================================== DOC ===================================
-declare doc_name="postmark"
-declare doc_description="Send and receive email with Postmark"
-declare -a doc_options=(
-	"send"		"Send email"
-) && [[ "$1" == '--inspect' ]] && return 0
-# ==========================================================================
+doc=$(cat <<'EOF'
+
+# postmark
+
+Send and receive email with Postmark
+
+`send`		| Send email
+
+> postmark send -t "info@example.com" -s "Hello, world!" -b "<h1>Hello there!</h1>" -f "me@mydomain.com" | Send an email with HTML body
+
+EOF
+) && export doc && inspect "$1"
 
 [ ! -x "$(command -v curl)" ] && echo "🚨 curl is not installed" && exit 1
 [ ! -x "$(command -v jq)" ] && echo "🚨 jq is not installed" && exit 1
@@ -36,20 +41,25 @@ jsonString=""
 case $command in
 
     # ========================================================
-    send )
+    send ) doc=$(cat <<'EOF'
 
-		doc_name+=" send"
-		doc_description="Send email"
-		declare -a doc_options=(
-			"to"		"* Recipient email address"
-			"subject"	"* Email subject"
-			"htmlBody"	"* HTML body"
-			"from"		"* From email address"
-			"replyTo"	"  Reply-to email address"
-			"textBody"	"= Text body"
-			"jsonString"	"  JSON string"
-			"jsonFile"	"  JSON file"
-		) && [[ "$1" == '--inspect' ]] && return 0
+# postmark send
+
+Send email
+
+`-t`		| Recipient email address
+`-s`		| Email subject
+`-b`		| HTML body
+`-f`		| From email address
+`-r`		| Reply-to email address
+`-x`		| Text body
+`-j`		| JSON string
+`-f`		| JSON file
+
+> postmark send -t "info@example.com" -s "Hello, world!" -b "<h1>Hello there!</h1>" -f "me@mydomain.com" | Send an email with HTML body
+
+EOF
+		) && export doc && inspect "$1"
 
         while getopts ":t:s:b:f:r:x:j:f:" opt; do
             case $opt in

@@ -1,150 +1,181 @@
 #!/usr/bin/env bash
-# Interface with CSV files
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
 # ================================== DOC ===================================
 
-declare doc_name="csv"
-declare doc_description="Interface with CSV files"
+doc=$(cat <<'EOF'
 
-declare -a doc_options=(
-	"limit"		"Print the first n lines of a csv file"
-	"dedupe"	"Deduplicate a csv file"
-	"filter"	"Filter a csv file based on a given column and match string"
-	"math"		"Perform math operations on a csv file"
-) && [[ "$1" == '--inspect' ]] && return 0
+# csv
+
+Interface with CSV files
+
+`limit`		| Print the first n lines of a csv file
+`dedupe`	| Deduplicate a csv file
+`filter`	| Filter a csv file based on a given column and match string
+`math`		| Perform math operations on a csv file
+
+> b/csv limit -f file.csv -o output.csv			| Print the first n lines of a csv file
+> b/csv dedupe -f file.csv -o output.csv		| Deduplicate a csv file
+> b/csv filter -f file.csv -c column -m match	| Filter a csv file based on a given column and match string
+> b/csv math -f file.csv -c column -o operation	| Perform math operations on a csv file
+
+EOF
+) && export doc
 
 # ==========================================================================
 
-
+inspect "$1"
 
 command="$1" && shift
 
 case $command in
 
-	math )
 
-		# ============== DOC ==============
-		doc_name+=" math"
-		doc_description="Perform math operations on a csv file"
-		declare -a doc_options=(
-			"-f"		"* The file to perform operations on"
-			"-c"		"* The column(s) to perform math on"
-			"-o"		"* The operation to perform"
-		) && [[ "$1" == '--inspect' ]] && return 0
-		# ================================
 
-		while getopts "f:c:o:" opt; do
-			case $opt in
-				f ) file=$OPTARG ;; #file to perform operations on
-				c ) columns=$OPTARG ;; #columns given as comma separated list
-				o ) operation=$OPTARG ;; #operation to perform
-				\? ) echo "Invalid option: -$OPTARG" >&2 ;;
-			esac
-		done
+	# =============================================================================
+	math ) doc=$(cat <<'EOF'
+# csv math
 
-		[[ -z $file ]] && echo "No file specified to perform operations on" && exit 1
-		[[ -z $columns ]] && echo "No columns specified to perform math on" && exit 1
+Perform math operations on a csv file
 
-		declare -a valid_operations=(
-			"sum"		"mean"		"median"
-			"mode"		"min"		"max"
-			"range"		"variance"	"std_dev"
-			"unique" 	"count"
-		)
+`-f`	| * The file to perform operations on
+`-c`	| * The column(s) to perform math on
+`-o`	| * The operation to perform
 
-		# Check if operation is valid
-		valid=false
-		for valid_operation in "${valid_operations[@]}"; do
-			if [[ $valid_operation == $operation ]]; then
-				valid=true
-				break
-			fi
-		done
+> b/csv math -f file.csv -c invoice_amount -o sum		| Sum the values in the invoice_amount column
 
-		if [[ $valid == true ]]; then
-			csvstat -c "$columns" --"$operation" "$file"
-		else b/error invalid_operation "Invalid operation: $operation"; fi
-		;;
+EOF
+	) && export doc && inspect "$1"
 
-	limit )
+	while getopts "f:c:o:" opt; do
+		case $opt in
+			f ) file=$OPTARG ;; #file to perform operations on
+			c ) columns=$OPTARG ;; #columns given as comma separated list
+			o ) operation=$OPTARG ;; #operation to perform
+			\? ) echo "Invalid option: -$OPTARG" >&2 ;;
+		esac
+	done
 
-		# ============== DOC ==============
-		doc_name+=" limit"
-		doc_description="Print the first n lines of a csv file"
-		declare -a doc_options=(
-			"-f"		"* The file to perform operations on"
-			"-o"		"= The output file"
-			"-P"		"  Print the output"
-			"-J"		"  Return the output as JSON"
-		) && [[ "$1" == '--inspect' ]] && return 0
-		# ================================
+	[[ -z $file ]] && echo "No file specified to perform operations on" && exit 1
+	[[ -z $columns ]] && echo "No columns specified to perform math on" && exit 1
 
-		while getopts "f:o:PJ" opt; do
-			case $opt in
-				f ) file=$OPTARG ;; #file to perform operations on
-				o ) output_file=$OPTARG ;; #output file
-				P ) print=true ;;
-				J ) return_json=true ;;
-				\? ) echo "Invalid option: -$OPTARG" >&2 ;;
-			esac
-		done
+	declare -a valid_operations=( sum mean median mode min max range variance std_dev unique count )
 
-		[[ -z $file ]] && echo "No file specified to perform operations on" && exit 1
+	# Check if operation is valid
+	valid=false
+	for valid_operation in "${valid_operations[@]}"; do
+		if [[ $valid_operation == "$operation" ]]; then
+		valid=true
+		break
+		fi
+	done
 
-		# Check if the file exists
-		[[ ! -f $file ]] && b/error file_not_found "File not found: $file" && exit 1
+	if [[ $valid == true ]]; then
+		csvstat -c "$columns" --"$operation" "$file"
+	else
+		b/error invalid_operation "Invalid operation: $operation"
+	fi
 
-		;;
+	;;
 
-	dedupe )
 
-		# ============== DOC ==============
-		doc_name+=" dedupe"
-		doc_description="Deduplicate a csv file"
-		declare -a doc_options=(
-			"-f"		"* The file to perform operations on"
-			"-o"		"= The output file"
-			"-d"		"= The columns to deduplicate on"
-		) && [[ "$1" == '--inspect' ]] && return 0
-		# ================================
 
-		while getopts "f:o:d:" opt; do
-			case $opt in
-				f ) file=$OPTARG ;; #file to perform operations on
-				o ) output=$OPTARG ;; #output deduped
-				d ) columns=$OPTARG ;; #columns given as comma separated list
-				\? ) echo "Invalid option: -$OPTARG" >&2 ;;
-			esac
-		done
+	# =============================================================================
+	limit ) doc=$(cat <<'EOF'
+# csv limit
 
-		;;
+Print the first n lines of a csv file
 
-	filter )
+`:limit` 	| The number of rows to output
+`-f`		| * The file to perform operations on
+`-o`		| = The output file
 
-		# ============== DOC ==============
-		doc_name+=" filter"
-		doc_description="Filter a csv file based on a given column and match string"
-		declare -a doc_options=(
-			"-f"		"* The file to perform operations on"
-			"-c"		"* The column(s) to filter on"
-			"-m"		"= The match string"
-			"-b"		"= Match strings that begin with the given string"
-			"-C"		"  Perform a case insensitive match"
-		) && [[ "$1" == '--inspect' ]] && return 0
-		# ================================
+> b/csv limit 10 -f file.csv -o output.csv		| Print the first n lines of a csv file
 
-		while getopts "f:c:m:b:C" opt; do
-			case $opt in
-				f ) file=$OPTARG ;; #file to perform operations on
-				c ) columns=$OPTARG ;; #columns given as comma separated list
-				m ) match=$OPTARG ;; #match string
-				b ) begins_with=$OPTARG ;; #match string
-				C ) case_insensitive=true ;; #case insensitive match
-				\? ) echo "Invalid option: -$OPTARG" >&2 ;;
-			esac
-		done
+EOF
+	) && export doc && inspect "$1"
 
-		;;
+	while getopts "f:o:" opt; do
+		case $opt in
+			f ) file=$OPTARG ;; #file to perform operations on
+			o ) output_file=$OPTARG ;; #output file
+			\? ) echo "Invalid option: -$OPTARG" >&2 ;;
+		esac
+	done
+
+	limit="${1:-10}"
+
+	[[ -z $file ]] && echo "No file specified to perform operations on" && exit 1
+
+	if [[ -n $output_file ]]; then
+		csvlook -n "$file" > "$output_file"
+	else
+		csvlook -n "$file"
+	fi
+
+	;;
+
+
+
+	# =============================================================================
+	dedupe ) doc=$(cat <<'EOF'
+
+# csv dedupe
+
+Deduplicate a csv file
+
+`-f`	| * The file to perform operations on
+`-o`	| = The output file
+`-d`	| = The columns to deduplicate on
+
+> b/csv dedupe -f file.csv -o output.csv		| Deduplicate a csv file
+
+EOF
+	) && export doc
+
+	while getopts "f:o:d:" opt; do
+		case $opt in
+			f ) file=$OPTARG ;; #file to perform operations on
+			o ) output=$OPTARG ;; #output deduped
+			d ) columns=$OPTARG ;; #columns given as comma separated list
+			\? ) echo "Invalid option: -$OPTARG" >&2 ;;
+		esac
+	done
+
+	;;
+
+
+
+	# =============================================================================
+	filter ) doc=$(cat <<'EOF'
+# csv filter
+
+Filter a csv file based on a given column and match string
+
+`-f`	| * The file to perform operations on
+`-c`	| * The column(s) to filter on
+`-m`	| = The match string
+`-b`	| = Match strings that begin with the given string
+`-C`	|   Perform a case insensitive match
+
+> b/csv filter -f file.csv -c column -m match	| Filter a csv file based on a given column and match string
+
+EOF
+	) && export doc && inspect "$1"
+
+	while getopts "f:c:m:b:C" opt; do
+		case $opt in
+			f ) file=$OPTARG ;; #file to perform operations on
+			c ) columns=$OPTARG ;; #columns given as comma separated list
+			m ) match=$OPTARG ;; #match string
+			b ) begins_with=$OPTARG ;; #match string
+			C ) case_insensitive=true ;; #case insensitive match
+			\? ) echo "Invalid option: -$OPTARG" >&2 ;;
+		esac
+	done
+
+	;;
+
+
 
 esac

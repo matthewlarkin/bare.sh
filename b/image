@@ -1,22 +1,39 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-# ================================== DOC ===================================
-declare doc_name="image"
-declare doc_description="Work with images, including viewing, converting, and resizing"
-declare -a doc_options=(
-	"view"		"View an image (accepts URLs or file paths)"
-) && [[ "$1" == '--inspect' ]] && return 0
-# ==========================================================================
+doc=$(cat <<'EOF'
+
+# image
+
+Work with images, including viewing, converting, and resizing
+
+`view`		| View an image (accepts URLs or file paths)
+
+> image view -u https://example.com/image.jpg -w 100 -h 100 -o /path/to/output.jpg | View an image from a URL
+
+EOF
+) && export doc && inspect "$1"
 
 command="$1" && shift
 
 case $command in
 
-	view )
+	view ) doc=$(cat <<'EOF'
 
-		# options: -u (URL) -f (file path, relative to $BARE_DIR/var/.nb/images), -w (width), -h (height), -o (output file path)
-		# example: ./image view -u https://example.com/image.jpg -w 100 -h 100 -o /path/to/output.jpg
+# image view
+
+View an image
+
+`-u`	| The URL of the image
+`-f`	| The file path of the image
+`-o`	| The output file path
+`-w`	| The width of the image
+`-h`	| The height of the image
+
+> image view -u https://example.com/image.jpg -w 100 -h 100 -o /path/to/output.jpg | View an image from a URL
+
+EOF
+		) && export doc && inspect "$1"
 
 		width=80
 		height=80

@@ -1,14 +1,19 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-# ================================== DOC ===================================
-declare doc_name="error"
-declare doc_description="Print an error message and exit with status code 1"
-declare -a doc_options=(
-	":code"		"The error code"
-	":message"	"The error message"
-) && [[ "$1" == '--inspect' ]] && return 0
+doc=$(cat <<'EOF'
 
-[[ $2 == '--inspect' ]] && unset doc_options && return 0
+# error
+
+Print an error message and exit with status code 1
+
+`<:code>`		| The error code
+`<:message>`	| The error message
+
+> error 999 "An unexpected error occurred" | Print an error message and exit with status code 999
+
+EOF
+) && export doc && inspect "$1"
+
 
 printf "\n❌ ${red}$1${reset}: $2\n\n" && exit 1

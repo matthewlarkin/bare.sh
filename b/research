@@ -1,11 +1,18 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-declare doc_name="research"
-declare doc_desc="Go do some research on a given topic"
-declare -a doc_options=(
-	":query" "The query you want to search for"
-) && [[ $1 == '--inspect' ]] && return 0
+doc=$(cat <<'EOF'
+
+# research
+
+Go do some research on a given topic, outputs the resulting research markdown
+
+`query`		| The query you want to search for
+
+> research "how to make a cake"	| Search for how to make a cake
+
+EOF
+) && export doc && inspect "$1"
 
 # make sure research notebook exists
 [[ ! -d $BARE_DIR/var/.nb/research ]] && b/notes notebooks.create "research" > /dev/null 2>&1
@@ -27,8 +34,28 @@ for ((i=0; i<length; i++)); do
 		continue
 	fi
 
-	content=$(xidel "$url" --silent -e 'css("p") | css("h1")')
+	# Use curl to fetch the webpage content
+	curl -sL "$url" -o temp.html
+
+	# Check if curl was successful
+	if [[ $? -ne 0 ]]; then
+		echo "Error encountered while processing URL: $url"
+		continue
+	fi
+
+	# Pass the temporary HTML file to xidel
+	content=$(xidel temp.html --silent -e 'css("p") | css("h1")')
+
+	# Check if content contains error message
+	if [[ $content == *"Error:"* ]]; then
+		echo "Error encountered while processing URL: $url"
+		continue
+	fi
+
 	summary=$(echo "$content" | sumy lex-rank --length=10 --file=<(cat))
+
+	# Remove the temporary HTML file
+	rm temp.html
 	{
 		echo ""
 		echo "## $title"

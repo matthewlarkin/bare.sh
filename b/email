@@ -1,14 +1,20 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-# ================================== DOC ===================================
-declare doc_name="email"
-declare doc_description="Send and receive email with SMTP/POP3 and Postmark"
-declare -a doc_options=(
-	"send"		"Send email"
-	"check"		"Check email"
-) && [[ "$1" == '--inspect' ]] && return 0
-# ==========================================================================
+doc=$(cat <<'EOF'
+
+# email
+
+Send and receive email with SMTP/POP3
+
+`send`		| Send email
+`check`		| Check email
+
+> b/email send -t "info@example.com" -f "me@mydomain.com" -s "Hello" -h "<p>Hey there!</p>" -h "smtp.example.com" -p 465 -p "mypassword" | Send an email
+> b/email check -H "pop3.mydomain.com" -P 995 -u "me@mydomain.com" -p "mypassword" | Check email
+
+EOF
+) && export doc && inspect "$1"
 
 command="$1"
 shift

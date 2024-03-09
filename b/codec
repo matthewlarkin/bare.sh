@@ -2,20 +2,25 @@
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
 doc=$(cat <<'EOF'
+
 # codec
+
 Encode and decode strings to and from various formats
-- url.encode | Encode a URL
-- url.decode | Decode a URL
-- base64.encode | Encode a string to base64
-- base64.decode | Decode a base64 string
-- hex.encode | Encode a string to hex
-- hex.decode | Decode a hex string
-- html.encode | Encode a string to HTML entities
-- html.decode | Decode HTML entities
-`b/codec url.encode 'https://example.com'` | Encode a URL
-`b/codec url.decode 'https%3A%2F%2Fexample.com'` | Decode a URL
-`b/codec base64.encode 'hello world'` | Encode a string to base64
-`b/codec base64.decode 'aGVsbG8gd29ybGQ='` | Decode a base64 string
+
+`url.encode`		| Encode a URL
+`url.decode`		| Decode a URL
+`base64.encode` 	| Encode a string to base64
+`base64.decode` 	| Decode a base64 string
+`hex.encode`		| Encode a string to hex
+`hex.decode`		| Decode a hex string
+`html.encode`		| Encode a string to HTML entities
+`html.decode`		| Decode HTML entities
+
+> codec url.encode 'https://example.com' 			| Encode a URL
+> codec url.decode 'https%3A%2F%2Fexample.com'		| Decode a URL
+> codec base64.encode 'hello world'					| Encode a string to base64
+> codec base64.decode 'aGVsbG8gd29ybGQ='			| Decode a base64 string
+
 EOF
 ) && export doc
 
@@ -23,50 +28,21 @@ EOF
 # =============================================================================
 
 
-
-[[ $1 == '--inspect' ]] && inspect
+inspect "$1"
 scope="$1" && shift
 
 case $scope in
 
-	url.encode )
+	url.encode ) echo -n "$1" | jq -s -R -r @uri ;;
+	url.decode ) echo -n "$1" | perl -pe 's/%([0-9a-f]{2})/sprintf("%s", pack("H2",$1))/eig' ;;
 
-		echo "$1" | jq -s -R -r @uri
-		;;
+	base64.encode ) echo -n "$1" | jq -s -R -r @base64 ;;
+	base64.decode ) echo -n "$1" | perl -MMIME::Base64 -ne 'print decode_base64($_)' ;;
 
-	url.decode )
+	hex.encode ) echo -n "$1" | xxd -ps ;;
+	hex.decode ) echo -n "$1" | xxd -r -p ;;
 
-		echo -n "$1" | perl -pe 's/%([0-9a-f]{2})/sprintf("%s", pack("H2",$1))/eig'
-		;;
-		
-	base64.encode )
-
-		echo "$1" | jq -s -R -r @base64
-		;;
-		
-	base64.decode )
-
-		echo "$1" | perl -MMIME::Base64 -ne 'print decode_base64($_)'
-		;;
-		
-	hex.encode )
-	
-		echo "$1" | xxd -ps
-		;;
-
-	hex.decode )
-	
-		echo "$1" | xxd -r -p
-		;;
-
-	html.encode )
-
-		echo "$1" | jq -j -s -R -r @html
-		;;
-
-	html.decode )
-
-		echo "$1" | php -R 'echo html_entity_decode($argn, ENT_QUOTES|ENT_HTML5) . "\n";'
-		;;
+	html.encode ) echo -n "$1" | jq -j -s -R -r @html ;;
+	html.decode ) echo -n "$1" | php -R 'echo html_entity_decode($argn, ENT_QUOTES|ENT_HTML5) . "\n";' ;;
 
 esac

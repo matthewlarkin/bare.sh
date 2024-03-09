@@ -1,16 +1,22 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-# ================================== DOC ===================================
-declare doc_name="ffmpeg"
-declare doc_description="Video and audio manipulation with ffmpeg"
-declare -a doc_options=(
-	"video-to-mp3" "Convert video to mp3"
-	"video.chunk" "Takes a file as input and separates it into equal chunks"
-	"video.merge" "Merges given chunks into a single file"
-	"video.360" "Converts a video to 360p"
-	"video.720" "Converts a video to 720p"
-) && [[ "$1" == '--inspect' ]] && return 0
+doc=$(cat <<'EOF'
+
+# ffmpeg
+
+Video and audio manipulation with ffmpeg
+
+`video-to-mp3`	| Convert video to mp3
+`video.chunk`	| Takes a file as input and separates it into equal chunks
+`video.merge`	| Merges given chunks into a single file
+`video.size`	| Converts a video to a specified size
+
+> ffmpeg video-to-mp3 -v video.mp4 -o audio.mp3 		| Convert video to mp3
+> ffmpeg video.size 240 -v video.mp4 -o video.240.mp4	| Converts a video to a specified size
+
+EOF
+) && export doc && inspect "$1"
 
 [ ! -x $(command -v ffmpeg) ] && b/error "ffmpeg not installed" "Please install ffmpeg to use this feature"
 
@@ -47,16 +53,21 @@ case $command in
 
     # Convert video to mp3
     # ========================================================================
-    video-to-mp3)
-	
-		doc_name+=" video-to-mp3"
-		doc_description="Convert video to mp3"
-		declare -a doc_options=(
-			"-v"		"* Input file"
-			"-o"		"  Output file (default: ./tmp/xxxxxxxxxx)"
-			"-s"		"  Suppress process"
-			"-S"		"  Suppress output"
-		) && [[ "$1" == '--inspect' ]] && return 0
+    video-to-mp3) doc=$(cat <<'EOF'
+
+# video-to-mp3
+
+Convert video to mp3
+
+`-v`	| Input file
+`(-o)`	| Output file (default: ./tmp/xxxxxxxxxx)
+`(-s)`	| Suppress process
+`(-S)`	| Suppress output
+
+> ffmpeg video-to-mp3 -v video.mp4 -o audio.mp3 | Convert video to mp3
+
+EOF
+		) && export doc && inspect "$1"
 
         output="./tmp/$(openssl rand -hex 8).mp3"
 
@@ -84,15 +95,20 @@ case $command in
 
 
     # ========================================================================
-    video.chunk)
-	
-		doc_name+=" video.chunk"
-		doc_description="Takes a file as input and separates it into equal chunks"
-		declare -a doc_options=(
-			"-v"		"* Input file"
-			"-o"		"  Output folder (default: ./tmp/xxxxxxxxxx)"
-			"-d"		"  Duration of each chunk in seconds (default: 60)"
-		) && [[ "$1" == '--inspect' ]] && return 0
+    video.chunk) doc=$(cat <<'EOF'
+
+# video.chunk
+
+Takes a file as input and separates it into equal chunks
+
+`-v`		| Input file
+`(-o)`		| Output folder (default: ./tmp/xxxxxxxxxx)
+`(-d)`		| Duration of each chunk in seconds (default: 60)
+
+> ffmpeg video.chunk -v video.mp4 -o ./chunks -d 30 | Takes a file as input and separates it into equal chunks
+
+EOF
+		) && export doc && inspect "$1"
 
         duration=60
         output="./tmp/$(openssl rand -hex 8)"
@@ -158,14 +174,19 @@ case $command in
 
 
     # ========================================================================
-    merge)
+    merge) doc=$(cat <<'EOF'
 
-		doc_name+=" merge"
-		doc_description="Merges given chunks into a single file"
-		declare -a doc_options=(
-			"-v"		"* Input files"
-			"-o"		"  Output file"
-		) && [[ "$1" == '--inspect' ]] && return 0
+# merge
+
+Merges given chunks into a single file
+
+`-v`		| Input files
+`(-o)`		| Output file
+
+> ffmpeg merge -v "chunk-1.mp4|chunk-2.mp4|chunk-3.mp4" -o video.mp4 | Merges given chunks into a single file
+
+EOF
+		) && export doc && inspect "$1"
 
         [ -z "$1" ] && b/error "No input files provided" "Please provide files to merge" && exit 1
         [ -z "$2" ] && b/error "No output file provided" "Please provide a file to merge" && exit 1
@@ -175,100 +196,53 @@ case $command in
 
 
     # ========================================================================
-    video.240)
+	video.size) doc=$(cat <<'EOF'
 
-		doc_name+=" video.240"
-		doc_description="Converts a video to 240p"
-		declare -a doc_options=(
-			"-v"		"* Input file"
-			"-o"		"  Output file (default: ./tmp/xxxxxxxxxx)"
-			"-s"		"  Suppress process"
-			"-S"		"  Suppress output"
-		) && [[ "$1" == '--inspect' ]] && return 0
+# video.size
 
-        output="./tmp/$(openssl rand -hex 8).mp4"
+Converts a video to a specified size
 
-        while getopts "v:o:sS" opt; do
-            case $opt in
-                v) video="$OPTARG" ;;
-                o) output="$OPTARG" ;;
-                s) suppress_process=true ;;
-                S) suppress_output=true ;;
+`:size`	| The size to convert to (240 | 360 | 720)
+`-v`		| Input file
+`(-o)`		| Output file (default: ./tmp/xxxxxxxxxx)
+`(-s)`		| Suppress process
+`(-S)`		| Suppress output
+
+EOF
+		) && export doc && inspect "$1"
+
+		case "$size" in
+			240)
+				scale="scale=426:240"
+				;;
+			360)
+				scale="scale=640:360"
+				;;
+			720)
+				scale="scale=1280:720"
+				;;
+			*)
+				b/error invalid_option "Invalid size: $size"
+				;;
+		esac
+
+		output="./tmp/$(openssl rand -hex 8).mp4"
+
+		while getopts "v:o:sS" opt; do
+			case $opt in
+				v) video="$OPTARG" ;;
+				o) output="$OPTARG" ;;
+				s) suppress_process=true ;;
+				S) suppress_output=true ;;
 				*) b/error invalid_option "Invalid option: -$OPTARG" ;;
-            esac
-        done
+			esac
+		done
 
-        check_file "$video"
-        run_ffmpeg "$video" "scale=426:240" "$output"
+		check_file "$video"
+		run_ffmpeg "$video" "$scale" "$output"
 
-        [ ! -n "$suppress_output" ] && echo '{"240p_file": "'$output'"}' && exit 0 || exit 0
-        ;;
-
-
-
-    # ========================================================================
-    video.360)
-	
-		doc_name+=" video.360"
-		doc_description="Converts a video to 360p"
-		declare -a doc_options=(
-			"-v"		"* Input file"
-			"-o"		"  Output file (default: ./tmp/xxxxxxxxxx)"
-			"-s"		"  Suppress process"
-			"-S"		"  Suppress output"
-		) && [[ "$1" == '--inspect' ]] && return 0
-
-        output="./tmp/$(openssl rand -hex 8).mp4"
-
-        while getopts "v:o:sS" opt; do
-            case $opt in
-                v) video="$OPTARG" ;;
-                o) output="$OPTARG" ;;
-                s) suppress_process=true ;;
-                S) suppress_output=true ;;
-				*) b/error invalid_option "Invalid option: -$OPTARG" ;;
-            esac
-        done
-
-        check_file "$video"
-        run_ffmpeg "$video" "scale=640:360" "$output"
-
-        [ ! -n "$suppress_output" ] && echo '{"360p_file": "'$output'"}' && exit 0 || exit 0
-
-        ;;
-
-
-
-    # ========================================================================
-    video.720)
-
-		doc_name+=" video.720"
-		doc_description="Converts a video to 720p"
-		declare -a doc_options=(
-			"-v"		"* Input file"
-			"-o"		"  Output file (default: ./tmp/xxxxxxxxxx)"
-			"-s"		"  Suppress process"
-			"-S"		"  Suppress output"
-		) && [[ "$1" == '--inspect' ]] && return 0
-
-        output="./tmp/$(openssl rand -hex 8).mp4"
-
-        while getopts "v:o:" opt; do
-            case $opt in
-                v) video="$OPTARG" ;;
-                o) output="$OPTARG" ;;
-                s) suppress_process=true ;;
-                S) suppress_output=true ;;
-				*) b/error invalid_option "Invalid option: -$OPTARG" ;;
-            esac
-        done
-
-        check_file "$video"
-        run_ffmpeg "$video" "scale=1280:720" "$output"
-
-        [ ! -n "$suppress_output" ] && echo '{"720p_file": "'$output'"}' && exit 0 || exit 0
-
-        ;;
+		[ -z "$suppress_output" ] && echo '{"$sizep_file": "$output"}' && exit 0 || exit 0
+		;;
 
 
 

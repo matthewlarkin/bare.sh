@@ -1,25 +1,28 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-# ================================== DOC ===================================
-declare doc_name="decrypt"
-declare doc_description="Decrypt text symmetrically encrypted by your BARE_ENCRYPTION_KEY"
-declare -a doc_options=(
-	"-s"    "The string to decrypt"
-	"-f"    "The file to decrypt"
-	"-o"    "The output file"
-	"-k"    "The encryption key"
-) && [[ $1 == "--inspect" ]] && return 0
-# ==========================================================================
+doc=$(cat <<'EOF'
+
+# decrypt
+
+Decrypt text symmetrically encrypted by your BARE_ENCRYPTION_KEY
+
+`-s`	| The string to decrypt
+`-f`	| The file to decrypt
+`-o`	| The output file
+`-k`	| The encryption key
+
+> b/decrypt -s "U2FsdGVkX1+
+
+EOF
+) && export doc && inspect "$1"
 
 [[ -z "$BARE_ENCRYPTION_KEY" ]] && echo "bare_encryption_key environment variable not set" && exit 1
 
 string=""
 input_file=""
 output_file=""
-key=$bare_encryption_key
-
-[[ $2 == '--inspect' ]] && unset doc_options && return 0
+key=$BARE_ENCRYPTION_KEY
 
 while getopts "s:f:o:k:" opt; do
     case $opt in

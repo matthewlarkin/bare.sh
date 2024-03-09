@@ -1,12 +1,19 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-# ================================== DOC ===================================
-declare doc_name="lxc"
-declare doc_description="Interface with LXC containers"
-declare -a doc_options=(
-	"create"    "Create a new container"
-) && [[ "$1" == '--inspect' ]] && return 0
+doc=$(cat <<'EOF'
+
+# lxc
+
+Interface with LXC containers
+
+`create`	| Create a new container
+
+> lxc create mycontainer -c 2 -m 512MiB -d 5GiB -D ubuntu:22.04 | Create a new container
+
+EOF
+) && export doc && inspect "$1"
+
 
 # if on mac, recommend installing lxc via brew with remote lxd
 if [[ "${BARE_OS,,}" == "darwin"* ]]; then
@@ -19,16 +26,21 @@ shift
 
 case "$command" in
 
-    create)
-	
-		doc_name+=" create"
-		doc_description="Create a new container"
-		declare -a doc_options=(
-			"-c"		"  CPU limit"
-			"-m"		"  Memory limit"
-			"-d"		"  Disk space"
-			"-D"		"  Distro"
-		) && [[ "$1" == '--inspect' ]] && return 0
+    create) doc=$(cat <<'EOF'
+
+# lxc create
+
+Create a new container
+
+`-c`	| CPU limit
+`-m`	| Memory limit
+`-d`	| Disk space
+`-D`	| Distro
+
+> lxc create mycontainer -c 2 -m 512MiB -d 5GiB -D ubuntu:22.04 | Create a new container
+
+EOF
+		) && export doc && inspect "$1"
 
         container_name=$1
         shift

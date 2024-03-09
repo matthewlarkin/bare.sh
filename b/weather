@@ -1,12 +1,20 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-declare doc_name="weather"
-declare doc_description="Get the current weather for a location"
-declare -a doc_options=(
-		"[:location] today"		"Get today's weather"
-		"[:location] forecast" 	"Get a three-day forecast"
-) && [[ "$1" == '--inspect' ]] && return 0
+doc=$(cat <<'EOF'
+
+# weather
+
+Get the current weather for a location
+
+`[:location] today`		| Get today's weather
+`[:location] forecast` 	| Get a three-day forecast
+
+> weather today		| Get today's weather
+> weather forecast	| Get a three-day forecast
+
+EOF
+) && export doc && inspect "$1"
 
 [[ $1 == 'clear' ]] && rm "$BARE_DIR"/tmp/weather.* && exit 0
 
@@ -35,54 +43,11 @@ while (( "$#" )); do
 	esac
 done
 
-geodata="$(b/geo ip "$(curl -s https://ipinfo.io/ip)")"
+location=$(b/geo "$location")
 
-[[ -z "$location" ]] && location="$(echo "$geodata" | jq -r '.city, .region, .country')"
-[[ -n "$location" ]] && coords="$(b/geo coords "$location")"
+[[ $command == 'json' ]] && params="$location?format=j1"
+# [[ $command == 'basic' ]] && params="$location?uQF$color&format=%c+%m+%t"
+[[ $command == 'today' ]] && params="$location?u0QF$color"
+[[ $command == 'forecast' ]] && params="$location?u3QF$color"
 
-cache="$BARE_DIR/tmp/weather.$location.$command.${color}.txt"
-if [[ -f "$cache" ]] && [[ $(date -r "$cache" +%s) -gt $(date -v-30M +%s) ]]; then
-	cat "$cache" && echo && exit 0
-else
-	[[ $command == 'json' ]] && params="$location?format=j1"
-	# [[ $command == 'basic' ]] && params="$location?uQF$color&format=%c+%m+%t"
-	[[ $command == 'today' ]] && params="$location?u0QF$color"
-	[[ $command == 'forecast' ]] && params="$location?u3QF$color"
-
-	response="$(curl "wttr.in/$params")"
-	status=$?
-	echo "hello" && exit 0;
-
-	if [ $status -eq 0 ]; then
-		echo "$response" > "$cache"
-	else
-
-		# Step 1: Find the gridpoint URL
-		gridpoint_response=$(curl -s "https://api.weather.gov/points/$coords")
-
-		# Extract gridpoint URL for forecast data (you might need jq installed to parse JSON)
-		gridpoint_url=$(echo $gridpoint_response | jq -r '.properties.forecastGridData')
-
-		# Step 2: Request the weather station information from the gridpoint data
-		grid_response=$(curl -s "$gridpoint_url")
-		station_url=$(echo $grid_response | jq -r '.properties.observationStations')
-
-		# Get the station identifier; choosing the first station in the list
-		station_list_response=$(curl -s "$station_url")
-		station_identifier=$(echo $station_list_response | jq -r '.features[0].properties.stationIdentifier')
-
-		# Step 3: Request the current weather observations for that station
-		weather_response=$(curl -s "https://api.weather.gov/stations/$station_identifier/observations/latest")
-		current_temperature=$(echo $weather_response | jq -r '.properties.temperature.value')
-
-		# Output the current temperature
-		echo "Current temperature at location $latlong is $current_temperature°C"
-
-	fi
-
-	if [[ $? -ne 0 ]]; then
-		echo "Error: Failed to fetch weather data."
-		exit 1
-	fi
-	cat "$cache" && echo && exit 0
-fi
+curl -sL "wttr.in/$params"

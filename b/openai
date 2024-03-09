@@ -1,32 +1,35 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-declare doc_name="openai"
-declare doc_description="OpenAI API client"
+doc="$(cat <<'EOF'
 
-declare -a doc_options=(
-	"chat"						"Send a message to an AI model"
-	"assistants.create"			"Create a new assistant"
-	"threads.create"			"Create a new thread"
-	"thread.messages.append"	"Append a message to a thread"
-	"thread.messages.list"		"List messages in a thread"
-	"thread.run"				"Run an assistant on a thread"
-	"thread.run.poll"			"Poll the status of a thread run"
-	"files.upload"				"Upload a file to the OpenAI API"
-	"files.list"				"List files uploaded to the OpenAI API"
-	"file.delete"				"Delete a file from the OpenAI API"
-	"images.create"				"Generate images from a prompt"
-	"audio.create"				"Generate audio from a text prompt"
-	"audio.transcribe"			"Transcribe an audio file"
-)
+# openai
 
-declare -a doc_examples=(
-	"openai chat -m 'What is the meaning of life?'" "Sends a message to a chat assistant"
-	"openai assistants.create -n 'My New Assistant' -i 'This is a helpful AI assistant.'" "Sends a message to a chat assistant with declared assistant instructions"
-	"openai threads.create -m 'Hello, world!'" "Creates a thread with an initial message"
-	"openai thread.messages.append -t 'thread_id' -m 'Hello, world!'" "Appends a message to a thread"
-	"openai thread.messages.list -t 'thread_id'" "Lists messages from a given thread"
-) && [[ $1 == '--inspect' ]] && return 0
+OpenAI API client
+
+`chat`						| Send a message to an AI model
+`assistants.create`			| Create a new assistant
+`threads.create`			| Create a new thread
+`thread.messages.append`	| Append a message to a thread
+`thread.messages.list`		| List messages in a thread
+`thread.run`				| Run an assistant on a thread
+`thread.run.poll`			| Poll the status of a thread run
+`files.upload`				| Upload a file to the OpenAI API
+`files.list`				| List files uploaded to the OpenAI API
+`file.delete`				| Delete a file from the OpenAI API
+`images.create`				| Generate images from a prompt
+`audio.create`				| Generate audio from a text prompt
+`audio.transcribe`			| Transcribe an audio file"
+
+> openai chat "What is the capital of France?"									| Send a message to an AI model
+> openai assistants.create -n "My Assistant" -i "This is a helpful assistant"	| Create a new assistant
+> openai threads.create -m "Hello, world!"										| Create a new thread
+> openai thread.messages.append -t "thread_id" -m "Hello, world!"				| Append a message to a thread
+> openai thread.messages.list -t "thread_id"									| List messages in a thread
+
+EOF
+)" && inspect "$1"
+
 
 # Requirements
 [ -z "$OPENAI_API_KEY" ] && b/error env_error "OPENAI_API_KEY environment variable is not set"
@@ -63,8 +66,7 @@ curlRequest() {
 # Set default values
 api_url="https://api.openai.com/v1"
 default_model="gpt-3.5-turbo-0125"
-command="$1"
-shift
+command="$1" && shift
 
 
 # Parse command line options
@@ -72,18 +74,23 @@ case $command in
 
 
 
-    # ========================================================
-	chat )
-		doc_name+=" chat"
-		doc_description="Send a message to an AI model"
+	# ========================================================
+	chat ) doc=$(cat <<'EOF'
+# chat
 
-		declare -a doc_options=(
-			"-m" "* The message to send"
-			"-a" "  The system prompt (assistant prompt)"
-			"-o" "  The model to use"
-			"-j" "  Requests OpenAI's response be JSON"
-			"-V" "  Return the vendor response, verbosely"
-		) && [[ $1 == "--inspect" ]] && return 0
+Send a message to an AI model
+
+`-m`	| * The message to send
+`-a`	|   The system prompt (assistant prompt)
+`-o`	|   The model to use
+`-j`	|   Requests OpenAI's response be JSON
+`-V`	|   Return the vendor response, verbosely
+
+> openai chat "What is the capital of France?"											| Send a message to an AI model
+> openai chat -m "What is the capital of France?" -a "You are a helpful AI assistant."	| Send a message to an AI model
+
+EOF
+		) && inspect "$1"
 
 		format="text"
 		message="$1"
@@ -116,21 +123,23 @@ case $command in
 
 
     # ========================================================
-    assistants.create )
+    assistants.create ) doc=$(cat <<'EOF'
 
-		# ==========================
-		doc_name+=" assistants.create"
-		doc_description="Create a new assistant"
+# assistants.create
 
-		declare -a doc_options=(
-			"-n" "* The name of the assistant"
-			"-i" "* Instructions for the assistant"
-			"-o" "  The model to use"
-			"-t" "  The tools to enable (pipe separated)"
-			"-J" "  Return the response as JSON"
-			"-V" "  Return the vendor response in verbose mode"
-		) && [[ $1 == "--inspect" ]] && return 0
-		# ==========================
+Create a new assistant
+
+`-n`	| * The name of the assistant
+`-i`	| * Instructions for the assistant
+`-o`	|   The model to use
+`-t`	|   The tools to enable (pipe separated)
+`-J`	|   Requests OpenAI's response be JSON
+`-V`	|   Return the vendor response, verbosely
+
+> openai assistants.create -n "My Assistant" -i "This is a helpful assistant"	| Create a new assistant
+
+EOF
+		) && export doc && inspect "$1"
 
         tools=()
         model=$default_model
@@ -172,17 +181,21 @@ case $command in
 
 
     # ========================================================
-    threads.create )
+    threads.create ) doc=$(cat <<'EOF'
 
-		doc_name+=" threads.create"
-		doc_description="Create a new thread"
+# threads.create
 
-		declare -a doc_options=(
-			"-m" "* The initial message to send"
-			"-f" "  The file IDs to attach (comma-separated list)"
-			"-J" "  Return the response as JSON"
-			"-V" "  Return the response in verbose mode"
-		) && [[ $1 == "--inspect" ]] && return 0
+Create a new thread
+
+`-m`	| * The initial message to send
+`-f`	|   The file IDs to attach (comma-separated list)
+`-J`	|   Requests OpenAI's response be JSON
+`-V`	|   Return the vendor response, verbosely
+
+> openai threads.create -m "Hello, world!"	| Create a new thread
+
+EOF
+		) && export doc && inspect "$1"
 
         file_ids=""
 
@@ -217,63 +230,71 @@ case $command in
 
 
     # ========================================================
-    thread.messages.append)
+    thread.messages.append) doc=$(cat <<'EOF'
 
-		doc_name+=" thread.messages.append"
-		doc_description="Append a message to a thread"
+# thread.messages.append
 
-		declare -a doc_options=(
-			"-t" "* The thread ID"
-			"-m" "* The message to send"
-			"-f" "  The file IDs to attach (array)"
-			"-J" "  Return the response as JSON"
-			"-V" "  Return the vendor response in verbose mode"
-		) && [[ $1 == "--inspect" ]] && return 0
+Append a message to a thread
 
-        file_ids="[]"
+`-t`	| * The thread ID
+`-m`	| * The message to send
+`-f`	|   The file IDs to attach (array)
+`-J`	|   Requests OpenAI's response be JSON
+`-V`	|   Return the vendor response, verbosely
 
-        while getopts ":t:m:f:JV" opt; do
-            case ${opt} in
-                t ) thread_id="$OPTARG" ;;
-                m ) message="$OPTARG" ;;
-                f ) file_ids="$OPTARG" ;;
-                J ) respond="as_json" ;;
-                V ) verbose=true ;;
-                \? ) b/error invalid_option "$OPTARG" && exit 1 ;;
-            esac
-        done
+> openai thread.messages.append -t "thread_id" -m "Hello, world!"	| Append a message to a thread
 
-        payload=$(jq -n --arg role "user" --arg content "$message" --argjson file_ids "$file_ids" '{
-            role: $role,
-            content: $content,
-            file_ids: $file_ids
-        }')
+EOF
+		) && export doc && inspect "$1"
 
-        response=$(curlRequest -u "$api_url/threads/$thread_id/messages" -d "$payload" -j)
+		file_ids="[]"
 
-        if [[ "$verbose" == true ]]; then
-            echo "$response" | jq -r
-        elif [[ "$respond" == "as_json" ]]; then
-            echo "$response" | jq -r '{thread_id: .thread_id, message_id: .id}'
-        else
-            exit 0
-        fi
-        ;;
+		while getopts ":t:m:f:JV" opt; do
+			case ${opt} in
+				t ) thread_id="$OPTARG" ;;
+				m ) message="$OPTARG" ;;
+				f ) file_ids="$OPTARG" ;;
+				J ) respond="as_json" ;;
+				V ) verbose=true ;;
+				\? ) b/error invalid_option "$OPTARG" && exit 1 ;;
+			esac
+		done
+
+		payload=$(jq -n --arg role "user" --arg content "$message" --argjson file_ids "$file_ids" '{
+			role: $role,
+			content: $content,
+			file_ids: $file_ids
+		}')
+
+		response=$(curlRequest -u "$api_url/threads/$thread_id/messages" -d "$payload" -j)
+
+		if [[ "$verbose" == true ]]; then
+			echo "$response" | jq -r
+		elif [[ "$respond" == "as_json" ]]; then
+			echo "$response" | jq -r '{thread_id: .thread_id, message_id: .id}'
+		else
+			exit 0
+		fi
+		;;
 
 
 
     # ========================================================
-    thread.messages.list )
+    thread.messages.list ) doc=$(cat <<'EOF'
 
-		doc_name+=" thread.messages.list"
-		doc_description="List messages in a thread"
+# thread.messages.list
 
-		declare -a doc_options=(
-			"-t" "* The thread ID"
-			"-l" "  The number of messages to return (default: 5)"
-			"-J" "  Return the response as JSON"
-			"-V" "  Return the vendor response in verbose mode"
-		) && [[ $1 == "--inspect" ]] && return 0
+List messages in a thread
+
+`-t`	| * The thread ID
+`-l`	|   The number of messages to return (default: 5)
+`-J`	|   Requests OpenAI's response be JSON
+`-V`	|   Return the vendor response, verbosely
+
+> openai thread.messages.list -t "thread_id"	| List messages in a thread
+
+EOF
+		) && export doc && inspect "$1"
 
         limit=5
         
@@ -304,58 +325,66 @@ case $command in
 
 
     # ========================================================
-    thread.run)
+    thread.run) doc=$(cat <<'EOF'
 
-		doc_name+=" thread.run"
-		doc_description="Run an assistant on a thread"
-		
-		declare -a doc_options=(
-			"-t" "* The thread ID"
-			"-a" "* The assistant ID"
-			"-J" "  Return the response as JSON"
-			"-V" "  Return the vendor response in verbose mode"
-		) && [[ $1 == "--inspect" ]] && return 0
+# thread.run
 
-        while getopts ":t:a:JV" opt; do
-            case ${opt} in
-                t ) thread_id="$OPTARG" ;;
-                a ) assistant_id="$OPTARG" ;;
-                J ) respond="as_json" ;;
-                V ) verbose=true ;;
-                \? ) b/error invalid_option "$OPTARG" && exit 1 ;;
-            esac
-        done
+Run an assistant on a thread
 
-        payload=$(jq -n --arg assistant_id "$assistant_id" '{
-            assistant_id: $assistant_id
-        }')
+`-t`	| * The thread ID
+`-a`	| * The assistant ID
+`-J`	|   Requests OpenAI's response be JSON
+`-V`	|   Return the vendor response, verbosely
 
-        response=$(curlRequest -u "$api_url/threads/$thread_id/runs" -d "$payload" -j)
+> openai thread.run -t "thread_id" -a "assistant_id"	| Run an assistant on a thread
 
-        # [[ "$verbose" == true ]] && echo "$response" | jq -r || echo "$response" | jq -r '{thread_id: .thread_id, run_id: .id, status: .status}'
-        if [[ "$verbose" == true ]]; then
-            echo "$response" | jq -r
-        elif [[ "$respond" == "as_json" ]]; then
-            echo "$response" | jq -r '{thread_id: .thread_id, run_id: .id, status: .status}'
-        else
-            echo "$response" | jq -r '.id'
-        fi
-        ;;
+EOF
+		) && export doc && inspect "$1"
+
+		while getopts ":t:a:JV" opt; do
+			case ${opt} in
+				t ) thread_id="$OPTARG" ;;
+				a ) assistant_id="$OPTARG" ;;
+				J ) respond="as_json" ;;
+				V ) verbose=true ;;
+				\? ) b/error invalid_option "$OPTARG" && exit 1 ;;
+			esac
+		done
+
+		payload=$(jq -n --arg assistant_id "$assistant_id" '{
+			assistant_id: $assistant_id
+		}')
+
+		response=$(curlRequest -u "$api_url/threads/$thread_id/runs" -d "$payload" -j)
+
+		# [[ "$verbose" == true ]] && echo "$response" | jq -r || echo "$response" | jq -r '{thread_id: .thread_id, run_id: .id, status: .status}'
+		if [[ "$verbose" == true ]]; then
+			echo "$response" | jq -r
+		elif [[ "$respond" == "as_json" ]]; then
+			echo "$response" | jq -r '{thread_id: .thread_id, run_id: .id, status: .status}'
+		else
+			echo "$response" | jq -r '.id'
+		fi
+		;;
 
 
 
     # ========================================================
-    thread.run.poll )
+    thread.run.poll ) doc=$(cat <<'EOF'
 
-		doc_name+=" thread.run.poll"
-		doc_description="Poll the status of a thread run"
+# thread.run.poll
 
-		declare -a doc_options=(
-			"-t" "* The thread ID"
-			"-r" "* The run ID"
-			"-J" "  Return the response as JSON"
-			"-V" "  Return the vendor response in verbose mode"
-		) && [[ $1 == "--inspect" ]] && return 0
+Poll the status of a thread run
+
+`-t`	| * The thread ID
+`-r`	| * The run ID
+`-J`	|   Requests OpenAI's response be JSON
+`-V`	|   Return the vendor response, verbosely
+
+> openai thread.run.poll -t "thread_id" -r "run_id"	| Poll the status of a thread run
+
+EOF
+		) && export doc && inspect "$1"
 
         while getopts ":t:r:JV" opt; do
             case ${opt} in
@@ -382,17 +411,21 @@ case $command in
 
 
     # ========================================================
-    files.upload )
+    files.upload ) doc=$(cat <<'EOF'
 
-		doc_name+=" files.upload"
-		doc_description="Upload a file to the OpenAI API"
+# files.upload
 
-		declare -a doc_options=(
-			"-f" "* The file to upload"
-			"-p" "  The purpose of the file [assistants] defaults to assistants"
-			"-J" "  Return the response as JSON"
-			"-V" "  Return the vendor response in verbose mode"
-		) && [[ $1 == "--inspect" ]] && return 0
+Upload a file to the OpenAI API
+
+`-f`	| * The file to upload
+`-p`	|   The purpose of the file (assistants)
+`-J`	|   Requests OpenAI's response be JSON
+`-V`	|   Return the vendor response, verbosely
+
+> openai files.upload -f "path/to/file"	| Upload a file to the OpenAI API
+
+EOF
+		) && export doc && inspect "$1"
 
         purpose="assistants"
         while getopts ":f:p:JV" opt; do
@@ -418,53 +451,60 @@ case $command in
 
 
     # ========================================================
-    files.list )
-	
-		doc_name+=" files.list"
-		doc_description="List files uploaded to the OpenAI API"
+    files.list ) doc=$(cat <<'EOF'
 
-		declare -a doc_options=(
-			"-p" "  The purpose of the file [assistants] defaults to assistants"
-			"-J" "  Return the response as JSON"
-			"-V" "  Return the vendor response in verbose mode"
-		) && [[ $1 == "--inspect" ]] && return 0
+# files.list
 
-        purpose="assistants"
+List files uploaded to the OpenAI API
 
-        while getopts ":p:JV" opt; do
-            case ${opt} in
-                p ) purpose="$OPTARG" ;;
-                J ) respond="as_json" ;;
-                V ) verbose=true ;;
-                \? ) b/error invalid_option "$OPTARG" && exit 1 ;;
-            esac
-        done
+`-p`	|   The purpose of the file (assistants)
+`-J`	|   Requests OpenAI's response be JSON
+`-V`	|   Return the vendor response, verbosely
 
-        url="$api_url/files?purpose=$purpose"
+> openai files.list	| List files uploaded to the OpenAI API
 
-        response=$(curlRequest -u "$url")
+EOF
+		) && export doc && inspect "$1"
 
-        if [[ "$verbose" == true ]]; then
-            echo "$response" | jq -r
-        elif [[ "$respond" == "as_json" ]]; then
-            echo "$response" | jq -r '[.data[] | {id: .id, purpose: .purpose, created_at: .created_at}]'
-        else
-            echo "$response" | jq -r '.data[] | .id'
-        fi
-        ;;
+		purpose="assistants"
+		while getopts ":p:JV" opt; do
+			case ${opt} in
+				p ) purpose="$OPTARG" ;;
+				J ) respond="as_json" ;;
+				V ) verbose=true ;;
+				\? ) b/error invalid_option "$OPTARG" && exit 1 ;;
+			esac
+		done
+
+		url="$api_url/files?purpose=$purpose"
+
+		response=$(curlRequest -u "$url")
+
+		if [[ "$verbose" == true ]]; then
+			echo "$response" | jq -r
+		elif [[ "$respond" == "as_json" ]]; then
+			echo "$response" | jq -r '[.data[] | {id: .id, purpose: .purpose, created_at: .created_at}]'
+		else
+			echo "$response" | jq -r '.data[] | .id'
+		fi
+		;;
 
 
     # ========================================================
-    file.show )
+    file.show ) doc=$(cat <<'EOF'
 
-		doc_name+=" file.show"
-		doc_description="Show details of a file uploaded to the OpenAI API"
-		
-		declare -a doc_options=(
-			"-f" "* The file ID"
-			"-J" "  Return the response as JSON"
-			"-V" "  Return the vendor response in verbose mode"
-		) && [[ $1 == "--inspect" ]] && return 0
+# file.show
+
+Show details of a file uploaded to the OpenAI API
+
+`-f`	| * The file ID
+`-J`	|   Requests OpenAI's response be JSON
+`-V`	|   Return the vendor response, verbosely
+
+> openai file.show -f "file_id"	| Show details of a file uploaded to the OpenAI API
+
+EOF
+		) && export doc && inspect "$1"
     
 		while getopts ":f:JV" opt; do
 			case ${opt} in
@@ -489,16 +529,20 @@ case $command in
 
 
     # ========================================================
-    file.delete )
-	
-		doc_name+=" file.delete"
-		doc_description="Delete a file from the OpenAI API"
+    file.delete ) doc=$(cat <<'EOF'
 
-		declare -a doc_options=(
-			"-f" "* The file ID"
-			"-J" "  Return the response as JSON"
-			"-V" "  Return the vendor response in verbose mode"
-		) && [[ $1 == "--inspect" ]] && return 0
+# file.delete
+
+Delete a file from the OpenAI API
+
+`-f`	| * The file ID
+`-J`	|   Requests OpenAI's response be JSON
+`-V`	|   Return the vendor response, verbosely
+
+> openai file.delete -f "file_id"	| Delete a file from the OpenAI API
+
+EOF
+		) && export doc && inspect "$1"
     
 		while getopts ":f:JV" opt; do
 			case ${opt} in
@@ -522,23 +566,27 @@ case $command in
 
 
     # ========================================================
-    images.create )
+    images.create ) doc=$(cat <<'EOF'
 
-		doc_name+=" images.create"
-		doc_description="Generate images from a prompt"
+# images.create
 
-		declare -a doc_options=(
-			"-p" "* The prompt to generate images from"
-			"-m" "  The model to use"
-			"-n" "  The number of images to generate"
-			"-q" "  The quality of the images"
-			"-r" "  The response format"
-			"-s" "  The size of the images"
-			"-t" "  The style of the images"
-			"-u" "  A unique identifier representing your end-user"
-			"-J" "  Return the response as JSON"
-			"-V" "  Return the vendor response in verbose mode"
-		) && [[ $1 == "--inspect" ]] && return 0
+Generate images from a prompt
+
+`-p`	| * The prompt to generate images from
+`-m`	|   The model to use
+`-n`	|   The number of images to generate
+`-q`	|   The quality of the images
+`-r`	|   The response format
+`-s`	|   The size of the images
+`-t`	|   The style of the images
+`-u`	|   A unique identifier representing your end-user
+`-J`	|   Requests OpenAI's response be JSON
+`-V`	|   Return the vendor response, verbosely
+
+> openai images.create -p "A painting of a sunset over the ocean"	| Generate images from a prompt
+
+EOF
+		) && export doc && inspect "$1"
     
 		model="dall-e-3"
 		n=1
@@ -589,21 +637,25 @@ case $command in
 
         
     # ========================================================
-    audio.create )
-	
-		doc_name+=" audio.create"
-		doc_description="Generate audio from a text prompt"
+    audio.create ) doc=$(cat <<'EOF'
 
-		declare -a doc_options=(
-			"-i" "* The input text"
-			"-m" "  The model to use"
-			"-v" "  The voice to use"
-			"-r" "  The response format"
-			"-s" "  The speed of the audio"
-			"-u" "  A unique identifier representing your end-user"
-			"-J" "  Return the response as JSON"
-			"-V" "  Return the vendor response in verbose mode"
-		) && [[ $1 == "--inspect" ]] && return 0
+# audio.create
+
+Generate audio from a text prompt
+
+`-i`	| * The input text
+`-m`	|   The model to use
+`-v`	|   The voice to use
+`-r`	|   The response format
+`-s`	|   The speed of the audio
+`-u`	|   A unique identifier representing your end-user
+`-J`	|   Requests OpenAI's response be JSON
+`-V`	|   Return the vendor response, verbosely
+
+> openai audio.create -i "Hello, world!"	| Generate audio from a text prompt
+
+EOF
+		) && export doc && inspect "$1"
     
 		model="tts-1"
 		voice="alloy"
@@ -653,23 +705,27 @@ case $command in
 
 
     # ========================================================
-    audio.transcribe )
-	
-		doc_name+=" audio.transcribe"
-		doc_description="Transcribe an audio file"
+    audio.transcribe ) doc=$(cat <<'EOF'
 
-		declare -a doc_options=(
-			"-f" "* The audio file to transcribe"
-			"-o" "  The output file"
-			"-m" "  The model to use"
-			"-l" "  The language of the audio"
-			"-p" "  The prompt to use"
-			"-r" "  The response format"
-			"-t" "  The temperature of the transcription"
-			"-g" "  The timestamp granularities"
-			"-J" "  Return the response as JSON"
-			"-V" "  Return the vendor response in verbose mode"
-		) && [[ $1 == "--inspect" ]] && return 0
+# audio.transcribe
+
+Transcribe an audio file
+
+`-f`	| * The audio file to transcribe
+`-o`	|   The output file
+`-m`	|   The model to use
+`-l`	|   The language of the audio
+`-p`	|   The prompt to use
+`-r`	|   The response format
+`-t`	|   The temperature of the transcription
+`-g`	|   The timestamp granularities
+`-J`	|   Requests OpenAI's response be JSON
+`-V`	|   Return the vendor response, verbosely
+
+> openai audio.transcribe -f "path/to/audio"	| Transcribe an audio file
+
+EOF
+		) && export doc && inspect "$1"
 
         language="en"
         output_file="$BARE_DIR/tmp/transcription-$(date +%Y%m%d-%H%M%S).txt"

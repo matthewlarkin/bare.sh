@@ -1,52 +1,39 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-declare doc_name="geo"
-declare doc_description="Geographical information"
-declare -a doc_options=(
-	"ip"		"Get generally available info given an IP address"
-	"coords"	"Get the 'latitude,longitude' of a given city, ip address (defaults to current ip)"
-) && [[ "$1" == '--inspect' ]] && return 0
+doc=$(cat <<'EOF'
 
+# geo
 
-command="$1" && shift 1
-location="${1:-$(curl -s https://ipinfo.io/ip)}"
-[[ $1 =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]] && type="ip" || type="city"
+Geographical information
+
+`:city|ip`	| Get the 'latitue,longitude' for a give IP address or city
+
+> geo 130.23.11.299		| Get details of given an IP address
+> geo "asheville nc"	| Get details a city
+
+EOF
+) && export doc && inspect "$1"
+
+# set command default to current IP
+if [[ -z $1 ]]; then
+	command=$(curl -sL https://ipinfo.io/ip)
+else
+	command="$1"
+	shift 1
+fi
 
 case $command in
 
-	ip )
-
-		doc_name+=" ip"
-		doc_description="Get generally available info given an IP address"
-		declare -a doc_options=(
-			":ip"	"The IP address"
-		) && [[ "$1" == '--inspect' ]] && return 0
-
-		[[ -z $1 ]] && echo "Error: No IP address provided" && exit 1
-
-		curl -s "https://ipinfo.io/$1" | jq -r
-
-		;;
-
-	coords )
-
-		doc_name+=" coords"
-		doc_description="Get the latitude and longitude of a given city or IP address"
-		declare -a doc_options=(
-			":location"	"The city name or IP address"
-		) && [[ "$1" == '--inspect' ]] && return 0
-
-		[[ $type == "ip" ]] && b/geo ip "$location" | jq -r '.loc' && exit 0
-
-		curl -s "https://nominatim.openstreetmap.org/search?format=json&q=$location" | jq -r '.[0] | .lat + "," + .lon' && exit 0
-
-		;;
-
 	* )
 
-		echo "Error: Invalid command"
-		exit 1
+		location=$(b/codec url.encode "$command")
+		[[ -z $location ]] && location=$(curl -s https://ipinfo.io/ip)
+		[[ $location =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]] && type="ip" || type="city"
+
+		[[ $type == "city" ]] && curl -s "https://nominatim.openstreetmap.org/search?format=json&q=$location" | jq -r '.[0].lat + "," + .[0].lon' | awk -F, '{printf "%.2f,%.2f\n", $1, $2}' && exit 0
+
+		curl -s "https://ipinfo.io/$location" | jq -r '.loc' | awk -F, '{printf "%.2f,%.2f\n", $1, $2}' && exit 0
 
 		;;
 

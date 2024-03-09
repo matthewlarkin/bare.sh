@@ -1,12 +1,20 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/lib/init"
 
-declare doc_name="bare"
-declare doc_description="A collection of scripts for common tasks"
-declare -a doc_options=(
-	":command | :return_string"		"The command to run or the string to return"
-) && [[ "$1" == '--inspect' ]] && return 0
+doc=$(cat <<'EOF'
+	# bare
+	The bare interface
+	`:scope`	| * The scope to activate (e.g. `b/openai`)
+	> b/bare :scope [args]	| Activate a scope with arguments
+EOF
+) && export doc
 
-[[ -e "b/$1" ]] && scope="$1" && shift && "b/$scope" "$@" && exit 0
+[[ -z $1 ]] && echo "No scope specified" && exit 1
+
+[[ -e "b/$1" ]] && {
+	scope="$1" && shift
+	"b/$scope" "$@"
+	exit 0
+}
 
 echo "$@"

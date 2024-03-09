@@ -1,21 +1,32 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-# ================================== DOC ===================================
-declare doc_name="notes"
-declare doc_description="Manage notes with nb"
-declare -a doc_options=(
-	"notebooks.create"	"Create a new notebook"
-	"notebooks.list"	"List notebooks"
-	"list"				"List notes"
-	"show"				"Show a note"
-	"create"			"Create a new note"
-	"edit"				"Edit a note"
-	"delete"			"Delete a note"
-) && [[ "$1" == '--inspect' ]] && return 0
+doc=$(cat <<'EOF'
+
+# notes
+
+Manage notes with nb
+
+`notebooks.create`	| Create a new notebook
+`notebooks.list`	| List notebooks
+`list`				| List notes
+`show`				| Show a note
+`create`			| Create a new note
+`edit`				| Edit a note
+`delete`			| Delete a note
+
+> notes list										| List notes
+> notes show 1										| Show a note its ID
+> notes show scripts:weather.bare					| Show a note by its notebook:filename
+> notes create -T "My note" -C "This is my note"	| Create a new note
+
+EOF
+) && export doc && inspect "$1"
 
 command="$1"
 shift
+
+nb use home > /dev/null
 
 # make sure nb home notebook is present
 [[ ! -d $BARE_NOTES_DIR/home ]] && nb notebooks add home > /dev/null 2>&1
@@ -26,6 +37,7 @@ shift
 case $command in
 
 	notebooks.create )
+
 		nb notebooks add "$1"
 		;;
 
@@ -42,22 +54,38 @@ case $command in
 		nb notebooks delete "$1" --force --no-color
 		;;
 
-    list )
+    list ) doc=$(cat <<'EOF'
 
-		doc_name+=" list"
-		doc_description="List notes"
-		declare -a doc_options=(
-			"-l"		"Limit the number of notes to display"
-		) && [[ "$1" == '--inspect' ]] && return 0
+# notes list
+
+List notes
+
+`-l`		| Limit the number of notes to display
+`-t`		| Filter by note type
+`-r`		| Reverse the order of the notes
+`-i`		| IDs only
+`-n`		| Names only
+`-N`		| Notebook to list notes from
+
+> notes list -l 5		| List the last 5 notes
+> notes list -t todo	| List notes with the 'todo' type
+> notes list -r			| List notes in reverse order
+
+EOF
+		) && export doc && inspect "$1"
 
 		declare -a args=()
 		args+=("--no-color" "--no-indicator" "--filenames")
-		while getopts "l:t:rN:" opt; do
+		names_only=false
+		ids_only=false
+		while getopts "l:t:rinN:" opt; do
 			case $opt in
-				l ) args+=("--limit" "$OPTARG"); shift 2 ;;
-				t ) args+=("--type" "$OPTARG"); shift 2 ;;
-				r ) args+=("--reverse"); shift 1 ;;
-				N ) notebook=$OPTARG; shift 2 ;;
+				l ) args+=("--limit" "$OPTARG") ;;
+				t ) args+=("--type" "$OPTARG") ;;
+				r ) args+=("--reverse") ;;
+				i ) ids_only=true ;;
+				n ) names_only=true ;;
+				N ) notebook=$OPTARG ;;
 				\? )
 					echo "Invalid option: -$OPTARG" 1>&2
 					exit 1
@@ -67,19 +95,18 @@ case $command in
 		scope=${1:-"home:"}
 		args+=("$scope")
 
-        list=$(nb list "${args[@]}")
-		[[ $(echo "$list" | head -n 1) == "0 items." ]] && exit 0 || echo "$list"
+		list=$(nb list "${args[@]}")
+		if [[ $list != "0 items." ]]; then
+			echo "$list"
+		fi
 
-        ;;
+		if [[ $ids_only == true ]]; then
+			echo "$list" | awk -F'[][]' '{print $2}'
+		fi
+
+		;;
 
     show )
-
-		doc_name+=" show"
-		doc_description="Show a note"
-		declare -a doc_options=(
-			"<:id>"		"Print a note by given ID"
-		) && [[ "$1" == '--inspect' ]] && return 0
-
 
 		id="$1" && shift
 		if [[ "$1" == "--title" ]]; then
@@ -90,20 +117,26 @@ case $command in
 
 		;;
 
-    create )
+    create ) doc=$(cat <<'EOF'
 
-		doc_name+=" create"
-		doc_description="Create a new note"
-		declare -a doc_options=(
-			"-T"	"Title of the note"
-			"-C"	"Content of the note"
-			"-t"	"Comma-separated tags for the note (my-tag,tag2,another-tag)"
-			"-E"	"Encrypt the note"
-			"-P"	"Password for the note"
-			"-N"	"Notebook to save the note in (defaults to 'home')"
-			"-F"	"Folder to save the note in"
-			"-f"	"Filename for the note"
-		) && [[ "$1" == '--inspect' ]] && return 0
+# notes create
+
+Create a new note
+
+`-T`		| Title of the note
+`-C`		| Content of the note
+`-t`		| Comma-separated tags for the note (my-tag,tag2,another-tag)
+`-E`		| Encrypt the note
+`-P`		| Password for the note
+`-N`		| Notebook to save the note in (defaults to 'home')
+`-F`		| Folder to save the note in
+`-f`		| Filename for the note
+
+> notes create -T "My note" -C "This is my note"								| Create a new note
+> notes create -T "My note" -C "This is my note" -t "my-tag,tag2,another-tag"	| Create a new note with tags
+
+EOF
+		) && export doc && inspect "$1"
 
         notebook="home"
 		title="$1"
@@ -148,13 +181,6 @@ case $command in
 
 	open )
 
-		doc_name+=" open"
-		doc_description="Open a note in the default editor"
-		declare -a doc_options=(
-			"<:id>"		"Open a note by given ID"
-			"-N"		"Notebook to open the note from"
-		) && [[ "$1" == '--inspect' ]] && return 0
-
 		id="$1" && shift
 		notebook="home"
 		while getopts "N:" opt; do
@@ -169,20 +195,25 @@ case $command in
 
 		;;
 
-    edit )
+    edit ) doc=$(cat <<'EOF'
 
-		doc_name+=" edit"
-		doc_description="Edit a note"
-		declare -a doc_options=(
-			"-n"	"ID of the note"
-			"-T"	"Title of the note"
-			"-C"	"Content of the note"
-			"-E"	"Encrypt the note"
-			"-P"	"Password for the note"
-			"-N"	"Notebook to save the note in (defaults to 'home')"
-			"-F"	"Folder to save the note in"
-			"-f"	"Filename for the note"
-		) && [[ "$1" == '--inspect' ]] && return 0
+# notes edit
+
+Edit a note
+
+`-n`	| ID of the note
+`-T`	| Title of the note
+`-C`	| Content of the note
+`-E`	| Encrypt the note
+`-P`	| Password for the note
+`-N`	| Notebook to save the note in (defaults to 'home')
+`-F`	| Folder to save the note in
+`-f`	| Filename for the note
+
+> notes edit -n 1 -T "My note" -C "This is my note"	| Edit a note
+
+EOF
+		) && export doc && inspect "$1"
 
 		id="$1" && shift
         notebook="home"
@@ -221,26 +252,10 @@ case $command in
 
 		nb "${args[@]}" > /dev/null
 
-		# reset
-		nb use home > /dev/null
-
         ;;
 
     delete )
 
-		doc='{
-			"name": "delete",
-			"description": "Delete a note",
-			"options" : [
-				{
-					"name": "-f",
-					"description": "Filename of the note"
-				}
-			]
-		}'
-
-		doc_name+=" delete"
-		doc_description="Delete a note"
 		declare -a doc_options=(
 			"-f"		"Filename of the note"
 		) && [[ "$1" == '--inspect' ]] && return 0

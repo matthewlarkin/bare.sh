@@ -1,25 +1,29 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-# ================================== DOC ===================================
-declare doc_name="encrypt"
-declare doc_description="Encrypt strings and files with AES-256-CBC"
-declare -a doc_options=(
-	"-s"		"  The string to encrypt"
-	"-f"		"  The file to encrypt"
-	"-o"		"  The output file"
-	"-k"		"  The encryption key"
-) && [[ $1 == '--inspect' ]] && return 0
-# ==========================================================================
+doc=$(cat <<'EOF'
 
-# checks for bare_encryption_key environment variable
+# encrypt
+
+Encrypt strings and files with AES-256-CBC
+
+`-s`		| The string to encrypt
+`-f`		| The file to encrypt
+`-o`		| The output file
+`-k`		| The encryption key
+
+> b/encrypt -s "Hello, world!" -k "mypassword"		| Encrypt a string
+> b/encrypt -f file.txt -o file.enc -k "mypassword"	| Encrypt a file
+
+EOF
+) && export doc && inspect "$1"
+
 [[ -z "$BARE_ENCRYPTION_KEY" ]] && echo "bare_encryption_key environment variable not set" && exit 1
-
 
 string=""
 input_file=""
 output_file=""
-key=$bare_encryption_key
+key=$BARE_ENCRYPTION_KEY
 
 [[ $2 == '--inspect' ]] && unset doc_options && return 0
 

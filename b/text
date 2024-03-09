@@ -1,57 +1,30 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-# ================================== DOC ===================================
-declare doc_name="text"
-declare doc_description="Text manipulation, uppercasing, lowercasing, etc."
-declare -a doc_options=(
-	"lowercase"		"lowercase given text"
-	"uppercase"		"UPPERCASE given text"
-	"capitalize" 	"Capitalize given text"
-) && [[ "$1" == '--inspect' ]] && return 0
-# ==========================================================================
+doc=$(cat <<'EOF'
+
+# text
+
+Text manipulation, uppercasing, lowercasing, etc.
+
+`lowercase`		| Lowercase given text
+`uppercase`		| UPPERCASE given text
+`capitalize` 	| Capitalize given text
+
+> text lowercase "Hello, World!"		| hello, world!
+> text uppercase "Hello, World!"		| HELLO, WORLD!
+> text capitalize "hello, world!"		| Hello, world!
+
+EOF
+) && export doc && inspect "$1"
 
 # Get the command and text
 command=$1
 text=$2
 
 case $command in
-
-	lowercase )
-
-		doc_name+=" lowercase"
-		doc_description="Lowercase given text"
-		declare -a doc_options=(
-			":text"		"The text to lowercase"
-		) && [[ "$1" == '--inspect' ]] && return 0
-
-		# Lowercase the given text
-		echo "$text" | tr '[:upper:]' '[:lower:]'
-		;;
-	uppercase )
-
-		doc_name+=" uppercase"
-		doc_description="UPPERCASE given text"
-		declare -a doc_options=(
-			":text"		"The text to uppercase"
-		) && [[ "$1" == '--inspect' ]] && return 0
-
-		# Uppercase the given text
-		echo "$text" | tr '[:lower:]' '[:upper:]'
-		;;
-	capitalize )
-
-		doc_name+=" capitalize"
-		doc_description="Capitalize given text"
-		declare -a doc_options=(
-			":text"		"The text to capitalize"
-		) && [[ "$1" == '--inspect' ]] && return 0
-
-		# Capitalize the given text
-		echo "$text" | awk '{print toupper(substr($0,1,1)) tolower(substr($0,2))}'
-		;;
-	* )
-		echo "Invalid command: $command. Must be 'lowercase', 'uppercase', or 'capitalize'."
-		exit 1
-		;;
+	lowercase ) echo "$text" | tr '[:upper:]' '[:lower:]' ;;
+	uppercase ) echo "$text" | tr '[:lower:]' '[:upper:]' ;;
+	capitalize ) echo "$text" | awk '{print toupper(substr($0,1,1)) tolower(substr($0,2))}' ;;
+	* ) echo "Invalid command: $command" && exit 1 ;;
 esac

@@ -1,16 +1,23 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-# ================================== DOC ===================================
-declare doc_name="stripe"
-declare doc_description="Interact with the Stripe API"
-declare -a doc_options=(
-	"checkouts.create"  "Create a new checkout session"
-	"checkout.get"      "Get a checkout session"
-	"customers.list"    "List all customers"
-	"customers.create"  "Create a new customer"
-) && [[ "$1" == '--inspect' ]] && return 0
-# ==========================================================================
+doc=$(cat <<'EOF'
+
+# stripe
+
+Interact with the Stripe API
+
+`checkouts.create`		| Create a new checkout session
+`checkout.get`			| Get a checkout session
+`customers.list`		| List all customers
+`customers.create`		| Create a new customer
+
+> stripe checkouts.create -a 100 -c usd -u customer_123 -s https://example.com/success -l 100|usd|Item | Create a new checkout session
+> stripe checkout.get -i cs_test_123 | Get a checkout session
+> stripe customers.list | List all customers
+
+EOF
+) && export doc && inspect "$1"
 
 
 [[ -z "$STRIPE_SECRET_KEY" ]] && b/error "env_error" "Please set the STRIPE_SECRET_KEY variable in your .env file"
@@ -20,112 +27,129 @@ shift
 
 case $command in
 
-    checkouts.create)
+    checkouts.create) doc=$(cat <<'EOF'
 
-		# ============== DOC ==============
-		doc_name+=" checkouts.create"
-		doc_description="Create a new checkout session"
-		declare -a doc_options=(
-			"-a"		"* The amount to charge"
-			"-c"		"* The currency to charge"
-			"-u"		"* The customer to charge"
-			"-s"		"* The success URL"
-			"-l"		"* A line item to charge"
-		) && [[ "$1" == '--inspect' ]] && return 0
+# stripe checkouts.create
 
-        amount=""
-        currency=""
-        customer=""
-        success_url=""
-        cancel_url=""
-        line_items=()
-        while getopts "a:c:u:s:l:" opt; do
-            case $opt in
-                a) amount="$OPTARG";;
-                c) currency="$OPTARG";;
-                u) customer="$OPTARG";;
-                s) success_url="$OPTARG";;
-                l) line_items+=("$OPTARG");;
-                \?) echo "Invalid option: -$OPTARG" && exit 1;;
-            esac
-        done
+Create a new checkout session
 
-        # ... (rest of the script)
+`-a`		| The amount to charge
+`-c`		| The currency to charge
+`-u`		| The customer to charge
+`-s`		| The success URL
+`-l`		| A line item to charge
 
-        for line_item in "${line_items[@]}"; do
-            IFS='|' read -r -a parts <<< "$line_item"
-            amount="${parts[0]}"
-            currency="${parts[1]}"
-            description="${parts[2]}"
+> stripe checkouts.create -a 100 -c usd -u customer_123 -s https://example.com/success -l "100,usd,Item" | Create a new checkout session
 
-            curl -s -X POST https://api.stripe.com/v1/checkout/sessions \
-                -u $bare_stripe_api_key: \
-                -d "payment_method_types[]=card" \
-                -d "line_items[][amount]=$amount" \
-                -d "line_items[][currency]=$currency" \
-                -d "line_items[][quantity]=1" \
-                -d "line_items[][description]=$description" \
-                -d "success_url=$success_url" \
-                -d "cancel_url=$cancel_url" \
-                -d "customer=$customer" | jq
-        done
-        ;;
-    checkout.get)
+EOF
+) && export doc && inspect "$1"
 
-		# ============== DOC ==============
-		doc_name+=" checkout.get"
-		doc_description="Get a checkout session"
-		declare -a doc_options=(
-			"-i"		"* The ID of the checkout session"
-		) && [[ "$1" == '--inspect' ]] && return 0
-		# ================================
+		amount=""
+		currency=""
+		customer=""
+		success_url=""
+		cancel_url=""
+		line_items=()
+		while getopts "a:c:u:s:l:" opt; do
+			case $opt in
+				a) amount="$OPTARG";;
+				c) currency="$OPTARG";;
+				u) customer="$OPTARG";;
+				s) success_url="$OPTARG";;
+				l) line_items+=("$OPTARG");;
+				\?) echo "Invalid option: -$OPTARG" && exit 1;;
+			esac
+		done
 
-        id=""
-        while getopts "i:" opt; do
-            case $opt in
-                i) id="$OPTARG";;
-                \?) echo "Invalid option: -$OPTARG" && exit 1;;
-            esac
-        done
-        [[ -z "$id" ]] && echo "No ID specified" && exit 1
-        curl -s -X GET https://api.stripe.com/v1/checkout/sessions/$id \
-            -u $bare_stripe_api_key: | jq
-        ;;
+		for line_item in "${line_items[@]}"; do
+			IFS=',' read -r -a parts <<< "$line_item"
+			amount="${parts[0]}"
+			currency="${parts[1]}"
+			description="${parts[2]}"
 
-    customers.list)
+			curl -s -X POST https://api.stripe.com/v1/checkout/sessions \
+				-u "$STRIPE_SECRET_KEY": \
+				-d "payment_method_types[]=card" \
+				-d "line_items[][amount]=$amount" \
+				-d "line_items[][currency]=$currency" \
+				-d "line_items[][quantity]=1" \
+				-d "line_items[][description]=$description" \
+				-d "success_url=$success_url" \
+				-d "cancel_url=$cancel_url" \
+				-d "customer=$customer" | jq
+		done
+		;;
 
-		# ============== DOC ==============
-		doc_name+=" customers.list"
-		doc_description="List all customers"
-		declare -a doc_options=(
-			"-l"		"Limit the number of customers returned"
-		) && [[ "$1" == '--inspect' ]] && return 0
-		# ================================
 
-        curl -s -X GET https://api.stripe.com/v1/customers \
-            -u $bare_stripe_api_key: | jq
+
+    checkout.get) doc=$(cat <<'EOF'
+
+# stripe checkout.get
+
+Get a checkout session
+
+`-i`		| The ID of the checkout session
+
+> stripe checkout.get -i cs_test_123 | Get a checkout session
+
+EOF
+
+) && export doc && inspect "$1"
+
+		id=""
+		while getopts "i:" opt; do
+			case $opt in
+				i) id="$OPTARG";;
+				\?) echo "Invalid option: -$OPTARG" && exit 1;;
+			esac
+		done
+		[[ -z "$id" ]] && echo "No ID specified" && exit 1
+		curl -s -X GET "https://api.stripe.com/v1/checkout/sessions/$id" -u "$STRIPE_SECRET_KEY": | jq
+		;;
+
+
+
+	customers.list) doc=$(cat <<'EOF'
+
+# stripe customers.list
+
+List all customers
+
+`-l`	| Limit the number of customers returned
+
+> stripe customers.list			| List all customers
+> stripe customers.list -l 5	| List the first 5 customers
+
+EOF
+		) && export doc && inspect "$1"
+
+        curl -s -X GET https://api.stripe.com/v1/customers -u "$STRIPE_SECRET_KEY": | jq
         ;;
     
-	customers.create)
+	customers.create) doc=$(cat <<'EOF'
 
-		# ============== DOC ==============
-		doc_name+=" customers.create"
-		doc_description="Create a new customer"
-		declare -a doc_options=(
-			"-e"		"* The email of the customer"
-		) && [[ "$1" == '--inspect' ]] && return 0
+# stripe customers.create
 
-        email=""
-        while getopts "e:" opt; do
-            case $opt in
-                e) email="$OPTARG";;
-                \?) echo "Invalid option: -$OPTARG" && exit 1;;
-            esac
-        done
-        [[ -z "$email" ]] && echo "No email specified" && exit 1
-        curl -s -X POST https://api.stripe.com/v1/customers \
-            -u $bare_stripe_api_key: \
-            -d "email=$email" | jq
-        ;;
+Create a new customer
+
+`-e`		| The email of the customer
+
+> stripe customers.create -e "customer@theirdomain.com" | Create a new customer
+
+EOF
+		) && export doc && inspect "$1"
+
+		email=""
+		while getopts "e:" opt; do
+			case $opt in
+				e) email="$OPTARG";;
+				\?) echo "Invalid option: -$OPTARG" && exit 1;;
+			esac
+		done
+		[[ -z "$email" ]] && echo "No email specified" && exit 1
+		curl -s -X POST https://api.stripe.com/v1/customers \
+			-u "$STRIPE_SECRET_KEY": \
+			-d "email=$email" | jq
+		;;
     
 esac

@@ -2,21 +2,28 @@
 # Date functions, calendars, and reminders
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-# ================================== DOC ===================================
+doc=$(cat <<'EOF'
 
-declare doc_name="date"
-declare doc_description="Date functions, calendars, and reminders"
+# date
 
-declare -a doc_options=(
-	"cal"		"Print a calendar"
-	"date"		"Print the current date and time"
-	"stamp"		"Print the current date and time in a timestamp format"
-	"countdown"	"Print a countdown to a given date and time"
-	"add"		"Add a given number of days to the current date"
-	"subtract"	"Subtract a given number of days from the current date"
-	"format"	"Format a given date and time string"
-	"parse"		"Parse a given date and time string"
-) && [[ "$1" == '--inspect' ]] && return 0
+Date functions, calendars, and reminders
+
+`cal`		| Print a calendar
+`date`		| Print the current date and time
+`stamp`		| Print the current date and time in a timestamp format
+`countdown`	| Print a countdown to a given date and time
+`add`		| Add a given number of days to the current date
+`subtract`	| Subtract a given number of days from the current date
+`format`	| Format a given date and time string
+`parse`		| Parse a given date and time string
+
+> b/date cal -m 12 -y 2020					| Print a calendar for December 2020
+> b/date date								| Print the current date and time
+> b/date stamp								| Print the current date and time in a timestamp format
+> b/date countdown -d "2020-12-25 00:00:00"	| Print a countdown to Christmas
+
+EOF
+) && export doc && inspect "$1"
 
 # ==========================================================================
 
@@ -26,16 +33,19 @@ command="$1" && shift
 
 case $command in
 
-	cal )
-	
-		# ============== DOC ==============
-		doc_name+=" cal"
-		doc_description="Print a calendar"
-		declare -a doc_options=(
-			"-m"		"  The month to print a calendar for"
-			"-y"		"  The year to print a calendar for"
-		) && [[ "$1" == '--inspect' ]] && return 0
-		# ================================
+	cal ) doc=$(cat <<'EOF'
+
+# date cal
+
+Print a calendar
+
+`-m`	| The month to print a calendar for
+`-y`	| The year to print a calendar for
+
+> b/date cal -m 12 -y 2020		| Print a calendar for December 2020
+
+EOF
+		) && export doc && inspect "$1"
 
 		cal "$@" ;;
 

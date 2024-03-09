@@ -4,15 +4,19 @@ source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
 # ================================== DOC ===================================
 
-declare doc_name="daily"
-declare doc_description="Daily.co API"
+doc=$(cat <<'EOF'
 
-declare -a doc_options=(
-	"rooms.create" "Create a new room"
-	"transcriptions.list" "List transcriptions"
-) && [[ "$1" == '--inspect' ]] && return 0
+# daily
 
-# ==========================================================================
+Daily.co API
+
+`rooms.create`		| Create a new room
+`transcriptions.list`	| List transcriptions
+
+> b/daily rooms.create -n "My Room" -p private -l 5		| Create a new room
+
+EOF
+) && export doc && inspect "$1"
 
 [ -z "$DAILY_API_KEY" ] && b/error missing_key "Daily.co API key not set (DAILY_API_KEY)" && exit 1
 
@@ -21,24 +25,27 @@ shift
 
 case $command in
 
-    rooms.create )
+    rooms.create ) doc=$(cat <<'EOF'
 
-		# ============== DOC ==============
-		doc_name+=" rooms.create"
-		doc_description="Create a new room"
-		declare -a doc_options=(
-			"-n"		"* Name of the room"
-			"-p"		"Privacy of the room (public or private)"
-			"-w"		"Not before date"
-			"-x"		"Expiration date"
-			"-l"		"Participants limit"
-			"-s"		"Screensharing"
-			"-k"		"Knocking"
-			"-e"		"Eject at expiration"
-			"-r"		"Allow recording"
-			"-t"		"Allow transcription"
-		) && [[ "$1" == '--inspect' ]] && return 0
-		# ================================
+# daily rooms.create
+
+Create a new room
+
+`-n`	| * Name of the room
+`-p`	| Privacy of the room (public or private)
+`-w`	| Not before date
+`-x`	| Expiration date
+`-l`	| Participants limit
+`-s`	| Screensharing
+`-k`	| Knocking
+`-e`	| Eject at expiration
+`-r`	| Allow recording
+`-t`	| Allow transcription
+
+> b/daily rooms.create -n "My Room" -p private -l 5		| Create a new room
+
+EOF
+) && export doc && inspect "$1"
 
         while getopts "hn:p:w:x:l:s:k:e:r:t" opt; do
             case $opt in
@@ -118,15 +125,18 @@ case $command in
         ;;
 
 
-    transcriptions.list )
+    transcriptions.list ) doc=$(cat <<'EOF'
 
-		# ============== DOC ==============
-		doc_name+=" transcriptions.list"
-		doc_description="List transcriptions"
-		declare -a doc_options=(
-			"None" "No options"
-		) && [[ "$1" == '--inspect' ]] && return 0
-		# ================================
+# daily transcriptions.list
+
+List transcriptions
+
+`n/a`	| No options
+
+> daily transcriptions.list		| List transcriptions
+
+EOF
+) && export doc && inspect "$1"
 
         response=$(curl https://api.daily.co/v1/transcript -s \
             -H "Content-Type: application/json" \
