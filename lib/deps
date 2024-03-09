@@ -18,11 +18,11 @@ check_install() {
 		if ! [ -x "$(command -v $cmd)" ]; then
 			if [ "$OS" = "Linux" ]; then
 				if [ $UPDATED -eq 0 ]; then
-					sudo snap install core
+					sudo apt update
 					UPDATED=1
 				fi
 				if [ -n "$linux_pkg" ]; then
-					sudo snap install "$linux_pkg"
+					sudo apt install -y "$linux_pkg"
 				fi
 			elif [ "$OS" = "Darwin" ]; then
 				# Check if Homebrew is installed, if not install it
