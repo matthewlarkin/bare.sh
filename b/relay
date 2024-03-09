@@ -17,7 +17,7 @@ Relays information (outputs it to the stdout or a file)
 > relay -l scripts				| List the files and directories of the specified directory within the .nb folder
 
 EOF
-) && export doc && inspect "$1"
+) && export doc && b/inspect "$@"
 
 content=""
 output="/dev/stdout"

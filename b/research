@@ -12,7 +12,7 @@ Go do some research on a given topic, outputs the resulting research markdown
 > research "how to make a cake"	| Search for how to make a cake
 
 EOF
-) && export doc && inspect "$1"
+) && export doc && b/inspect "$@"
 
 # make sure research notebook exists
 [[ ! -d $BARE_DIR/var/.nb/research ]] && b/notes notebooks.create "research" > /dev/null 2>&1

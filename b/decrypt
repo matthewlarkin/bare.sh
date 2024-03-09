@@ -15,7 +15,7 @@ Decrypt text symmetrically encrypted by your BARE_ENCRYPTION_KEY
 > b/decrypt -s "U2FsdGVkX1+
 
 EOF
-) && export doc && inspect "$1"
+) && export doc && b/inspect "$@"
 
 [[ -z "$BARE_ENCRYPTION_KEY" ]] && echo "bare_encryption_key environment variable not set" && exit 1
 

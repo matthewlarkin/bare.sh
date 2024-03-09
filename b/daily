@@ -16,7 +16,7 @@ Daily.co API
 > b/daily rooms.create -n "My Room" -p private -l 5		| Create a new room
 
 EOF
-) && export doc && inspect "$1"
+) && export doc && b/inspect "$@"
 
 [ -z "$DAILY_API_KEY" ] && b/error missing_key "Daily.co API key not set (DAILY_API_KEY)" && exit 1
 
@@ -45,7 +45,7 @@ Create a new room
 > b/daily rooms.create -n "My Room" -p private -l 5		| Create a new room
 
 EOF
-) && export doc && inspect "$1"
+) && export doc && b/inspect "$@"
 
         while getopts "hn:p:w:x:l:s:k:e:r:t" opt; do
             case $opt in
@@ -136,7 +136,7 @@ List transcriptions
 > daily transcriptions.list		| List transcriptions
 
 EOF
-) && export doc && inspect "$1"
+) && export doc && b/inspect "$@"
 
         response=$(curl https://api.daily.co/v1/transcript -s \
             -H "Content-Type: application/json" \

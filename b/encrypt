@@ -16,7 +16,7 @@ Encrypt strings and files with AES-256-CBC
 > b/encrypt -f file.txt -o file.enc -k "mypassword"	| Encrypt a file
 
 EOF
-) && export doc && inspect "$1"
+) && export doc && b/inspect "$@"
 
 [[ -z "$BARE_ENCRYPTION_KEY" ]] && echo "bare_encryption_key environment variable not set" && exit 1
 

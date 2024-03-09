@@ -23,7 +23,7 @@ Date functions, calendars, and reminders
 > b/date countdown -d "2020-12-25 00:00:00"	| Print a countdown to Christmas
 
 EOF
-) && export doc && inspect "$1"
+) && export doc && b/inspect "$@"
 
 # ==========================================================================
 
@@ -45,7 +45,7 @@ Print a calendar
 > b/date cal -m 12 -y 2020		| Print a calendar for December 2020
 
 EOF
-		) && export doc && inspect "$1"
+		) && export doc && b/inspect "$@"
 
 		cal "$@" ;;
 

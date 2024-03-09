@@ -21,7 +21,7 @@ Manage notes with nb
 > notes create -T "My note" -C "This is my note"	| Create a new note
 
 EOF
-) && export doc && inspect "$1"
+) && export doc && b/inspect "$@"
 
 command="$1"
 shift
@@ -72,7 +72,7 @@ List notes
 > notes list -r			| List notes in reverse order
 
 EOF
-		) && export doc && inspect "$1"
+		) && export doc && b/inspect "$@"
 
 		declare -a args=()
 		args+=("--no-color" "--no-indicator" "--filenames")
@@ -136,7 +136,7 @@ Create a new note
 > notes create -T "My note" -C "This is my note" -t "my-tag,tag2,another-tag"	| Create a new note with tags
 
 EOF
-		) && export doc && inspect "$1"
+		) && export doc && b/inspect "$@"
 
         notebook="home"
 		title="$1"
@@ -213,7 +213,7 @@ Edit a note
 > notes edit -n 1 -T "My note" -C "This is my note"	| Edit a note
 
 EOF
-		) && export doc && inspect "$1"
+		) && export doc && b/inspect "$@"
 
 		id="$1" && shift
         notebook="home"

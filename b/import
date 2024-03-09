@@ -14,7 +14,7 @@ Import a file or directory into the $BARE_DIR/var/.nb directory
 > b/import /path/to/file.txt files/myfolder/imported-file.txt` | Import a file from a file path 
 
 EOF
-) && export doc && inspect "$1"
+) && export doc && b/inspect "$@"
 
 input="$1"
 destination_directory="$BARE_DIR/var/.nb/${2:-imports}"

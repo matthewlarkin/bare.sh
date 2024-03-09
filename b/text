@@ -16,7 +16,7 @@ Text manipulation, uppercasing, lowercasing, etc.
 > text capitalize "hello, world!"		| Hello, world!
 
 EOF
-) && export doc && inspect "$1"
+) && export doc && b/inspect "$@"
 
 # Get the command and text
 command=$1

@@ -12,7 +12,7 @@ Interface with LXC containers
 > lxc create mycontainer -c 2 -m 512MiB -d 5GiB -D ubuntu:22.04 | Create a new container
 
 EOF
-) && export doc && inspect "$1"
+) && export doc && b/inspect "$@"
 
 
 # if on mac, recommend installing lxc via brew with remote lxd
@@ -40,7 +40,7 @@ Create a new container
 > lxc create mycontainer -c 2 -m 512MiB -d 5GiB -D ubuntu:22.04 | Create a new container
 
 EOF
-		) && export doc && inspect "$1"
+		) && export doc && b/inspect "$@"
 
         container_name=$1
         shift

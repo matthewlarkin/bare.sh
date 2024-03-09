@@ -12,7 +12,7 @@ Print the size of a file
 > size bigvideo.mp4		| Print the size of file.txt
 
 EOF
-) && export doc && inspect "$1"
+) && export doc && b/inspect "$@"
 
 [[ -z "$1" ]] && echo "No file specified" && exit 1
 

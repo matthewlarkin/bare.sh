@@ -13,7 +13,7 @@ Geographical information
 > geo "asheville nc"	| Get details a city
 
 EOF
-) && export doc && inspect "$1"
+) && export doc && b/inspect "$@"
 
 # set command default to current IP
 if [[ -z $1 ]]; then

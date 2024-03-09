@@ -2,7 +2,7 @@
 
 OS=$(uname)
 UPDATED=0
-CACHE_FILE="$BARE_DIR/lib/.deps_cache"
+CACHE_FILE="./lib/.deps_cache"
 
 # Create the cache file if it doesn't exist
 touch "$CACHE_FILE"
@@ -51,8 +51,6 @@ check_install() {
 
 # Use the function to check and install each package
 check_install curl curl curl
-check_install npm npm npm
-check_install marp marp-cli-carroarmato0 marp-cli
 check_install feh feh feh
 check_install glow glow glow
 check_install snap snapd

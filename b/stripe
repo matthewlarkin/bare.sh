@@ -17,7 +17,7 @@ Interact with the Stripe API
 > stripe customers.list | List all customers
 
 EOF
-) && export doc && inspect "$1"
+) && export doc && b/inspect "$@"
 
 
 [[ -z "$STRIPE_SECRET_KEY" ]] && b/error "env_error" "Please set the STRIPE_SECRET_KEY variable in your .env file"
@@ -42,7 +42,7 @@ Create a new checkout session
 > stripe checkouts.create -a 100 -c usd -u customer_123 -s https://example.com/success -l "100,usd,Item" | Create a new checkout session
 
 EOF
-) && export doc && inspect "$1"
+) && export doc && b/inspect "$@"
 
 		amount=""
 		currency=""
@@ -94,7 +94,7 @@ Get a checkout session
 
 EOF
 
-) && export doc && inspect "$1"
+) && export doc && b/inspect "$@"
 
 		id=""
 		while getopts "i:" opt; do
@@ -121,7 +121,7 @@ List all customers
 > stripe customers.list -l 5	| List the first 5 customers
 
 EOF
-		) && export doc && inspect "$1"
+		) && export doc && b/inspect "$@"
 
         curl -s -X GET https://api.stripe.com/v1/customers -u "$STRIPE_SECRET_KEY": | jq
         ;;
@@ -137,7 +137,7 @@ Create a new customer
 > stripe customers.create -e "customer@theirdomain.com" | Create a new customer
 
 EOF
-		) && export doc && inspect "$1"
+		) && export doc && b/inspect "$@"
 
 		email=""
 		while getopts "e:" opt; do

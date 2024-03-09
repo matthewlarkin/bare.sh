@@ -14,7 +14,7 @@ Get the current weather for a location
 > weather forecast	| Get a three-day forecast
 
 EOF
-) && export doc && inspect "$1"
+) && export doc && b/inspect "$@"
 
 [[ $1 == 'clear' ]] && rm "$BARE_DIR"/tmp/weather.* && exit 0
 

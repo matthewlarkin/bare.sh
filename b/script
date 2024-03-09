@@ -18,7 +18,7 @@ Manage bare scripts
 > script open invoice-customers.bare	| Open a bare script given its filename
 
 EOF
-) && export doc && inspect "$1"
+) && export doc && b/inspect "$@"
 
 command="$1" && shift
 

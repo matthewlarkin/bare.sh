@@ -28,7 +28,7 @@ OpenAI API client
 > openai thread.messages.list -t "thread_id"									| List messages in a thread
 
 EOF
-)" && inspect "$1"
+)" && b/inspect "$@"
 
 
 # Requirements
@@ -90,7 +90,7 @@ Send a message to an AI model
 > openai chat -m "What is the capital of France?" -a "You are a helpful AI assistant."	| Send a message to an AI model
 
 EOF
-		)" && inspect "$1"
+		)" && b/inspect "$@"
 
 		format="text"
 		message="$1"
@@ -139,7 +139,7 @@ Create a new assistant
 > openai assistants.create -n "My Assistant" -i "This is a helpful assistant"	| Create a new assistant
 
 EOF
-		)" && export doc && inspect "$1"
+		)" && export doc && b/inspect "$@"
 
         tools=()
         model=$default_model
@@ -195,7 +195,7 @@ Create a new thread
 > openai threads.create -m "Hello, world!"	| Create a new thread
 
 EOF
-		)" && export doc && inspect "$1"
+		)" && export doc && b/inspect "$@"
 
         file_ids=""
 
@@ -245,7 +245,7 @@ Append a message to a thread
 > openai thread.messages.append -t "thread_id" -m "Hello, world!"	| Append a message to a thread
 
 EOF
-		)" && export doc && inspect "$1"
+		)" && export doc && b/inspect "$@"
 
 		file_ids="[]"
 
@@ -294,7 +294,7 @@ List messages in a thread
 > openai thread.messages.list -t "thread_id"	| List messages in a thread
 
 EOF
-		)" && export doc && inspect "$1"
+		)" && export doc && b/inspect "$@"
 
         limit=5
         
@@ -339,7 +339,7 @@ Run an assistant on a thread
 > openai thread.run -t "thread_id" -a "assistant_id"	| Run an assistant on a thread
 
 EOF
-		)" && export doc && inspect "$1"
+		)" && export doc && b/inspect "$@"
 
 		while getopts ":t:a:JV" opt; do
 			case ${opt} in
@@ -384,7 +384,7 @@ Poll the status of a thread run
 > openai thread.run.poll -t "thread_id" -r "run_id"	| Poll the status of a thread run
 
 EOF
-		)" && export doc && inspect "$1"
+		)" && export doc && b/inspect "$@"
 
         while getopts ":t:r:JV" opt; do
             case ${opt} in
@@ -425,7 +425,7 @@ Upload a file to the OpenAI API
 > openai files.upload -f "path/to/file"	| Upload a file to the OpenAI API
 
 EOF
-		)" && export doc && inspect "$1"
+		)" && export doc && b/inspect "$@"
 
         purpose="assistants"
         while getopts ":f:p:JV" opt; do
@@ -464,7 +464,7 @@ List files uploaded to the OpenAI API
 > openai files.list	| List files uploaded to the OpenAI API
 
 EOF
-		)" && export doc && inspect "$1"
+		)" && export doc && b/inspect "$@"
 
 		purpose="assistants"
 		while getopts ":p:JV" opt; do
@@ -504,7 +504,7 @@ Show details of a file uploaded to the OpenAI API
 > openai file.show -f "file_id"	| Show details of a file uploaded to the OpenAI API
 
 EOF
-		)" && export doc && inspect "$1"
+		)" && export doc && b/inspect "$@"
     
 		while getopts ":f:JV" opt; do
 			case ${opt} in
@@ -542,7 +542,7 @@ Delete a file from the OpenAI API
 > openai file.delete -f "file_id"	| Delete a file from the OpenAI API
 
 EOF
-		)" && export doc && inspect "$1"
+		)" && export doc && b/inspect "$@"
     
 		while getopts ":f:JV" opt; do
 			case ${opt} in
@@ -586,7 +586,7 @@ Generate images from a prompt
 > openai images.create -p "A painting of a sunset over the ocean"	| Generate images from a prompt
 
 EOF
-		)" && export doc && inspect "$1"
+		)" && export doc && b/inspect "$@"
     
 		model="dall-e-3"
 		n=1
@@ -655,7 +655,7 @@ Generate audio from a text prompt
 > openai audio.create -i "Hello, world!"	| Generate audio from a text prompt
 
 EOF
-		)" && export doc && inspect "$1"
+		)" && export doc && b/inspect "$@"
     
 		model="tts-1"
 		voice="alloy"
@@ -725,7 +725,7 @@ Transcribe an audio file
 > openai audio.transcribe -f "path/to/audio"	| Transcribe an audio file
 
 EOF
-		)" && export doc && inspect "$1"
+		)" && export doc && b/inspect "$@"
 
         language="en"
         output_file="$BARE_DIR/tmp/transcription-$(date +%Y%m%d-%H%M%S).txt"

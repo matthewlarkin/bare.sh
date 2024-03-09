@@ -14,7 +14,7 @@ Send and receive email with SMTP/POP3
 > b/email check -H "pop3.mydomain.com" -P 995 -u "me@mydomain.com" -p "mypassword" | Check email
 
 EOF
-) && export doc && inspect "$1"
+) && export doc && b/inspect "$@"
 
 command="$1"
 shift

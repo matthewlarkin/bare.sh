@@ -16,7 +16,7 @@ Video and audio manipulation with ffmpeg
 > ffmpeg video.size 240 -v video.mp4 -o video.240.mp4	| Converts a video to a specified size
 
 EOF
-) && export doc && inspect "$1"
+) && export doc && b/inspect "$@"
 
 [ ! -x $(command -v ffmpeg) ] && b/error "ffmpeg not installed" "Please install ffmpeg to use this feature"
 
@@ -67,7 +67,7 @@ Convert video to mp3
 > ffmpeg video-to-mp3 -v video.mp4 -o audio.mp3 | Convert video to mp3
 
 EOF
-		) && export doc && inspect "$1"
+		) && export doc && b/inspect "$@"
 
         output="./tmp/$(openssl rand -hex 8).mp3"
 
@@ -108,7 +108,7 @@ Takes a file as input and separates it into equal chunks
 > ffmpeg video.chunk -v video.mp4 -o ./chunks -d 30 | Takes a file as input and separates it into equal chunks
 
 EOF
-		) && export doc && inspect "$1"
+		) && export doc && b/inspect "$@"
 
         duration=60
         output="./tmp/$(openssl rand -hex 8)"
@@ -186,7 +186,7 @@ Merges given chunks into a single file
 > ffmpeg merge -v "chunk-1.mp4|chunk-2.mp4|chunk-3.mp4" -o video.mp4 | Merges given chunks into a single file
 
 EOF
-		) && export doc && inspect "$1"
+		) && export doc && b/inspect "$@"
 
         [ -z "$1" ] && b/error "No input files provided" "Please provide files to merge" && exit 1
         [ -z "$2" ] && b/error "No output file provided" "Please provide a file to merge" && exit 1
@@ -209,7 +209,7 @@ Converts a video to a specified size
 `(-S)`		| Suppress output
 
 EOF
-		) && export doc && inspect "$1"
+		) && export doc && b/inspect "$@"
 
 		case "$size" in
 			240)

@@ -12,7 +12,7 @@ Work with images, including viewing, converting, and resizing
 > image view -u https://example.com/image.jpg -w 100 -h 100 -o /path/to/output.jpg | View an image from a URL
 
 EOF
-) && export doc && inspect "$1"
+) && export doc && b/inspect "$@"
 
 command="$1" && shift
 
@@ -33,7 +33,7 @@ View an image
 > image view -u https://example.com/image.jpg -w 100 -h 100 -o /path/to/output.jpg | View an image from a URL
 
 EOF
-		) && export doc && inspect "$1"
+		) && export doc && b/inspect "$@"
 
 		width=80
 		height=80

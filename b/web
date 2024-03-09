@@ -10,7 +10,7 @@ Starts the bare web interface
 > web 	| Start the server
 
 EOF
-) && export doc && inspect "$1"
+) && export doc && b/inspect "$@"
 
 # Start the server
 cd "$BARE_DIR"/var/www && sqlpage

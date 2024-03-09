@@ -14,7 +14,7 @@ Interpret scripts and commands
 > interpret weather.bare	| Run a the weather script
 
 EOF
-) && export doc && inspect "$1"
+) && export doc && b/inspect "$@"
 
 process_line() {
 	# Check if the line starts with a word ending in a colon

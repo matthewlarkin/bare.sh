@@ -24,7 +24,7 @@ EOF
 
 # ==========================================================================
 
-inspect "$1"
+b/inspect "$@"
 
 command="$1" && shift
 
@@ -45,7 +45,7 @@ Perform math operations on a csv file
 > b/csv math -f file.csv -c invoice_amount -o sum		| Sum the values in the invoice_amount column
 
 EOF
-	) && export doc && inspect "$1"
+	) && export doc && b/inspect "$@"
 
 	while getopts "f:c:o:" opt; do
 		case $opt in
@@ -93,7 +93,7 @@ Print the first n lines of a csv file
 > b/csv limit 10 -f file.csv -o output.csv		| Print the first n lines of a csv file
 
 EOF
-	) && export doc && inspect "$1"
+	) && export doc && b/inspect "$@"
 
 	while getopts "f:o:" opt; do
 		case $opt in
@@ -161,7 +161,7 @@ Filter a csv file based on a given column and match string
 > b/csv filter -f file.csv -c column -m match	| Filter a csv file based on a given column and match string
 
 EOF
-	) && export doc && inspect "$1"
+	) && export doc && b/inspect "$@"
 
 	while getopts "f:c:m:b:C" opt; do
 		case $opt in

@@ -16,7 +16,7 @@ Manage SSH keys
 > ssh -d		| Display the default SSH key
 
 EOF
-) && export doc && inspect "$1"
+) && export doc && b/inspect "$@"
 
 while getopts "l:n:d:" opt; do
     case $opt in

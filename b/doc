@@ -13,7 +13,7 @@ View documentation for a command
 > doc openai chat 	| View documentation for the `openai chat` command
 
 EOF
-) && export doc && inspect "$1"
+) && export doc && b/inspect "$@"
 
 command="$1" && shift
 

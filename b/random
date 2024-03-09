@@ -14,7 +14,7 @@ Generate a random string or number of a given length
 > random number 8	| Generate a random number of length 8
 
 EOF
-) && export doc && inspect "$1"
+) && export doc && b/inspect "$@"
 
 # Get the command and length
 command=$1

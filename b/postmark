@@ -12,7 +12,7 @@ Send and receive email with Postmark
 > postmark send -t "info@example.com" -s "Hello, world!" -b "<h1>Hello there!</h1>" -f "me@mydomain.com" | Send an email with HTML body
 
 EOF
-) && export doc && inspect "$1"
+) && export doc && b/inspect "$@"
 
 [ ! -x "$(command -v curl)" ] && echo "🚨 curl is not installed" && exit 1
 [ ! -x "$(command -v jq)" ] && echo "🚨 jq is not installed" && exit 1
@@ -59,7 +59,7 @@ Send email
 > postmark send -t "info@example.com" -s "Hello, world!" -b "<h1>Hello there!</h1>" -f "me@mydomain.com" | Send an email with HTML body
 
 EOF
-		) && export doc && inspect "$1"
+		) && export doc && b/inspect "$@"
 
         while getopts ":t:s:b:f:r:x:j:f:" opt; do
             case $opt in
