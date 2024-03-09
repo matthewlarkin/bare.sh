@@ -96,7 +96,13 @@ EOF
 		args+=("$scope")
 
 		list=$(nb list "${args[@]}")
-		if [[ $list != "0 items." ]]; then
+
+		# Check if the list contains any lines that look like list items
+		if ! echo "$list" | grep -q '^\[.*\]'; then
+			list=""
+		fi
+
+		if [[ -n $list ]]; then
 			echo "$list"
 		fi
 

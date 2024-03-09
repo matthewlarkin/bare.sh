@@ -42,4 +42,23 @@ done
 	perl -i -pe "s/BARE_ENCRYPTION_KEY=.*/BARE_ENCRYPTION_KEY=$(openssl rand -base64 32)/g" lib/.env
 }
 
+
+# make sure git name and git email are set up for notes (git global settings)
+[[ -z "$(git config --global user.name)" ]] && {
+	read -rp "Please enter your name (for use with note authoring): " git_name
+	git config --global user.name "$git_name"
+}
+
+[[ -z "$(git config --global user.email)" ]] && {
+	read -rp "Please enter your email (for use with note authoring): " git_email
+	git config --global user.email "$git_email"
+}
+
+mkdir -p "$BARE_NOTES_DIR/scripts"
+mkdir -p "$BARE_NOTES_DIR/research"
+mkdir -p "$BARE_NOTES_DIR/assistants"
+mkdir -p "$BARE_NOTES_DIR/imports"
+mkdir -p "$BARE_NOTES_DIR/images"
+
+
 source "$BARE_DIR"/lib/.env

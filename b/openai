@@ -37,29 +37,29 @@ EOF
 
 # Function to make a request to the OpenAI API
 curlRequest() {
-    local OPTIND opt url file purpose data
+	local OPTIND opt url file purpose data
 
-    curl_opts=(-H "Authorization: Bearer $OPENAI_API_KEY" -H "OpenAI-Beta: assistants=v1" --silent)
+	curl_opts=(-H "Authorization: Bearer $OPENAI_API_KEY" -H "OpenAI-Beta: assistants=v1" --silent)
 
-    while getopts "u:f:p:d:j" opt; do
-        case $opt in
-            u ) url="$OPTARG" ;;
-            f ) file="$OPTARG" ;;
-            p ) purpose="$OPTARG" ;;
-            d ) data="$OPTARG" ;;
-            j ) json=true ;;
-            \? ) echo "Invalid option: -$OPTARG" >&2; return 1 ;;
-        esac
-    done
+	while getopts "u:f:p:d:j" opt; do
+		case $opt in
+			u ) url="$OPTARG" ;;
+			f ) file="$OPTARG" ;;
+			p ) purpose="$OPTARG" ;;
+			d ) data="$OPTARG" ;;
+			j ) json=true ;;
+			\? ) echo "Invalid option: -$OPTARG" >&2; return 1 ;;
+		esac
+	done
 
-    [[ -n "$file" ]] && curl_opts+=(-F "file=@$file")
-    [[ -n "$purpose" ]] && curl_opts+=(-F "purpose=$purpose")
-    [[ -n "$data" ]] && curl_opts+=(-d "$data")
-    [[ -n "$json" ]] && curl_opts+=(-H "Content-Type: application/json") || curl_opts+=(-H "Content-Type: multipart/form-data")
-    
-    response=$(curl "$url" "${curl_opts[@]}")
+	[[ -n "$file" ]] && curl_opts+=(-F "file=@$file")
+	[[ -n "$purpose" ]] && curl_opts+=(-F "purpose=$purpose")
+	[[ -n "$data" ]] && curl_opts+=(-d "$data")
+	[[ -n "$json" ]] && curl_opts+=(-H "Content-Type: application/json") || curl_opts+=(-H "Content-Type: multipart/form-data")
+	
+	response=$(curl "$url" "${curl_opts[@]}")
 
-    echo "$response" | jq -r
+	echo "$response" | jq -r '.'
 }
 
 
