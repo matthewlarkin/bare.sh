@@ -20,28 +20,47 @@ EOF
 
 
 input="$1"
-destination_directory="$BARE_DIR/var/.nb/${2:-imports}"
-
-# separate file destination filename and path
-if [[ $input == *'/'* ]]; then
-	destination_directory="$BARE_DIR/var/.nb/${2%/*}"
-	destination_filename="${2##*/}"
-fi
-
-destination_path="${destination_directory:+/}$destination_filename"
+root_dir="$BARE_DIR/var/.nb"
+[[ $input == *'youtube.com'* ]] && ext='mp4' || ext="${input##*.}"
+[[ -n $2 ]] && filename="$(basename "$2")" || filename="$(date +%s).$ext"
+destination="$root_dir/imports/$filename"
 
 # make sure the destination directory exists
-mkdir -p "$destination_directory"
+mkdir -p "$(dirname "$destination")"
 
 # check if the input is a URL
 if [[ $input == http* ]]; then
-	file_name=$(basename "$input")
-	curl -sL "$input" -o "$destination_directory/$file_name"
-	chown $(whoami) "$destination_directory/$file_name"
+
+	# check if URL is a youtube video (if so, download with youtube-dl)
+	if [[ $input == *'youtube.com'* ]]; then
+		# check if youtube-dl is installed
+
+		if ! command -v yt-dlp &> /dev/null; then
+			read -p "yt-dlp is not installed. Would you like to install it? (y/n) " -n 1 -r
+			echo
+			if [[ $BARE_OS == 'Linux' ]]; then
+				if [[ $REPLY =~ ^[Yy]$ ]]; then
+					sudo snap install yt-dlp
+				fi
+			elif [[ $BARE_OS == 'Darwin' ]]; then
+				if [[ $REPLY =~ ^[Yy]$ ]]; then
+					brew install yt-dlp
+				fi
+			fi
+		fi
+
+		yt-dlp -o "$destination" "$input" -f "bestvideo[height<=480][ext=mp4][vcodec^=avc]+bestaudio[ext=m4a]/best[ext=mp4]/best" >/dev/null 2>&1
+		chown "$(whoami)" "$destination"
+		echo "imports:$filename" && exit 0
+	else
+		destination="$root_dir/imports/$date.$(basename "$input")"
+		curl -sL "$input" -o "$destination"
+		chown "$(whoami)" "$destination"
+	fi
 # check if the input is a file path
 elif [[ -f $input ]]; then
-	cp "$input" "$destination_directory"
-	chown $(whoami) "$destination_directory/$(basename "$input")"
+	cp "$input" "$destination"
+	chown "$(whoami)" "$destination"
 else
 	echo "Error: Invalid URL or file path"
 fi
