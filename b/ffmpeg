@@ -64,8 +64,6 @@ Convert video to mp3
 
 `-v`	| Input file
 `(-o)`	| Output file (default: ./tmp/xxxxxxxxxx)
-`(-s)`	| Suppress process
-`(-S)`	| Suppress output
 
 > ffmpeg video-to-mp3 -v video.mp4 -o audio.mp3 | Convert video to mp3
 
@@ -74,25 +72,24 @@ EOF
 		# ======================
 
         output="./tmp/$(openssl rand -hex 8).mp3"
+		suppress_process=true
+		suppress_output=true
 
         while getopts "v:o:sS" opt; do
             case $opt in
                 v) video="$OPTARG" ;;
                 o) output="$OPTARG" ;;
-                s) suppress_process=true ;;
-                S) suppress_output=true ;;
 				*) b/error invalid_option "Invalid option: -$OPTARG" ;;
             esac
         done
 
-        check_file "$video"
-        if [ -n "$suppress_process" ]; then
-            ffmpeg -i "$video" -vn -acodec libmp3lame "$output"
-        else
-            ffmpeg -i "$video" -vn -acodec libmp3lame "$output"
-        fi
+		file="$BARE_DIR/var/.nb/$video"
 
-		[[ -z "$suppress_output" ]] && echo '{"mp3_file": "'"$output"'"}' | jq -r && exit 0 || exit 0
+		[[ ! -f "$file" ]] && b/error file_not_found "Please provide a valid file"
+
+        ffmpeg -i "$file" -vn -acodec libmp3lame "$output" >> /dev/null 2>&1
+
+		echo "$output" && exit 0
 
         ;;
 
