@@ -62,3 +62,15 @@ mkdir -p "$BARE_NOTES_DIR/images"
 
 
 source "$BARE_DIR"/lib/.env
+
+
+
+# Common Functions
+
+inspect() {
+	doc="$1"
+	export doc
+	if [[ $2 == "--inspect" ]]; then
+		b/inspect "$2" && exit 0
+	fi
+}

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-doc=$(cat <<'EOF'
+doc="$(cat <<'EOF'
 
 # interpret
 
@@ -14,7 +14,10 @@ Interpret scripts and commands
 > interpret weather.bare	| Run a the weather script
 
 EOF
-) && export doc && b/inspect "$@"
+)" && inspect "$doc" "$1"
+# =============================================================================
+
+
 
 process_line() {
 	# Check if the line starts with a word ending in a colon

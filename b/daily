@@ -1,10 +1,7 @@
 #!/usr/bin/env bash
-# Print usage information for a script or command
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-# ================================== DOC ===================================
-
-doc=$(cat <<'EOF'
+doc="$(cat <<'EOF'
 
 # daily
 
@@ -16,7 +13,10 @@ Daily.co API
 > b/daily rooms.create -n "My Room" -p private -l 5		| Create a new room
 
 EOF
-) && export doc && b/inspect "$@"
+)" && inspect "$doc" "$1"
+# =============================================================================
+
+
 
 [ -z "$DAILY_API_KEY" ] && b/error missing_key "Daily.co API key not set (DAILY_API_KEY)" && exit 1
 
@@ -25,7 +25,7 @@ shift
 
 case $command in
 
-    rooms.create ) doc=$(cat <<'EOF'
+    rooms.create ) doc="$(cat <<'EOF'
 
 # daily rooms.create
 
@@ -45,87 +45,88 @@ Create a new room
 > b/daily rooms.create -n "My Room" -p private -l 5		| Create a new room
 
 EOF
-) && export doc && b/inspect "$@"
+	)" && inspect "$doc" "$1"
+	# ======================
 
-        while getopts "hn:p:w:x:l:s:k:e:r:t" opt; do
-            case $opt in
-                h ) b/usage -t options -w 4 $0 \
-                    -n "sets the name of the room" \
-                    -p "sets the privacy of the room" \
-                    -w "sets the not before date" \
-                    -x "sets the expiration date" \
-                    -l "sets the participants limit" \
-                    -s "sets the screensharing" \
-                    -k "sets the knocking" \
-                    -e "sets the eject at expiration" \
-                    -r "allow recording" \
-                    -t "allows transcription" && exit 0 ;;
-                n ) name=${OPTARG:-$(b/random string)} ;;
-                p ) privacy=${OPTARG:-'private'} ;;
-                w ) not_before=$OPTARG ;;
-                x ) expires=$OPTARG ;;
-                l ) participants_limit=${OPTARG:-2} ;;
-                s ) screensharing=${OPTARG:-true} ;;
-                k ) knocking=${OPTARG:-true} ;;
-                e ) eject_at_expiration=${OPTARG:-false} ;;
-                r ) recordable=${OPTARG:-'cloud'} ;;
-                t ) transcribable=${OPTARG:-false} ;;
-                \? ) echo "Invalid option: -$OPTARG" ;;
-            esac
-        done
+	while getopts "hn:p:w:x:l:s:k:e:r:t" opt; do
+		case $opt in
+			h ) b/usage -t options -w 4 $0 \
+				-n "sets the name of the room" \
+				-p "sets the privacy of the room" \
+				-w "sets the not before date" \
+				-x "sets the expiration date" \
+				-l "sets the participants limit" \
+				-s "sets the screensharing" \
+				-k "sets the knocking" \
+				-e "sets the eject at expiration" \
+				-r "allow recording" \
+				-t "allows transcription" && exit 0 ;;
+			n ) name=${OPTARG:-$(b/random string)} ;;
+			p ) privacy=${OPTARG:-'private'} ;;
+			w ) not_before=$OPTARG ;;
+			x ) expires=$OPTARG ;;
+			l ) participants_limit=${OPTARG:-2} ;;
+			s ) screensharing=${OPTARG:-true} ;;
+			k ) knocking=${OPTARG:-true} ;;
+			e ) eject_at_expiration=${OPTARG:-false} ;;
+			r ) recordable=${OPTARG:-'cloud'} ;;
+			t ) transcribable=${OPTARG:-false} ;;
+			\? ) echo "Invalid option: -$OPTARG" ;;
+		esac
+	done
 
-        # Ensure the variables are set to a valid JSON value
-        [ -z "$screensharing" ] && screensharing=true
-        [ -z "$knocking" ] && knocking=true
-        [ -z "$eject_at_expiration" ] && eject_at_expiration=false
-        [ -z "$transcribable" ] && transcribable=false
-        [ -z "$participants_limit" ] && participants_limit=2
+	# Ensure the variables are set to a valid JSON value
+	[ -z "$screensharing" ] && screensharing=true
+	[ -z "$knocking" ] && knocking=true
+	[ -z "$eject_at_expiration" ] && eject_at_expiration=false
+	[ -z "$transcribable" ] && transcribable=false
+	[ -z "$participants_limit" ] && participants_limit=2
 
-        # Start of the JSON payload
-        json_payload=$(jq -n \
-            --arg name "$name" \
-            --arg privacy "$privacy" \
-            --argjson screensharing "$screensharing" \
-            --argjson knocking "$knocking" \
-            --argjson eject_at_expiration "$eject_at_expiration" \
-            --arg transcribable "$transcribable" \
-            --argjson participants_limit "$participants_limit" \
-            --arg not_before "$not_before" \
-            '{
-                "name": $name,
-                "privacy": $privacy,
-                "properties": {
-                    "enable_screenshare": $screensharing,
-                    "enable_knocking": $knocking,
-                    "enable_advanced_chat": true,
-                    "eject_at_room_exp": $eject_at_expiration,
-                    "enable_transcription_storage": true,
-                    "max_participants": $participants_limit,
-                    "nbf": $not_before
-                }
-            }')
+	# Start of the JSON payload
+	json_payload=$(jq -n \
+		--arg name "$name" \
+		--arg privacy "$privacy" \
+		--argjson screensharing "$screensharing" \
+		--argjson knocking "$knocking" \
+		--argjson eject_at_expiration "$eject_at_expiration" \
+		--arg transcribable "$transcribable" \
+		--argjson participants_limit "$participants_limit" \
+		--arg not_before "$not_before" \
+		'{
+			"name": $name,
+			"privacy": $privacy,
+			"properties": {
+				"enable_screenshare": $screensharing,
+				"enable_knocking": $knocking,
+				"enable_advanced_chat": true,
+				"eject_at_room_exp": $eject_at_expiration,
+				"enable_transcription_storage": true,
+				"max_participants": $participants_limit,
+				"nbf": $not_before
+			}
+		}')
 
-        # Conditionally add 'enable_recording' to the JSON payload
-        if [ -n "$recordable" ]; then
-            json_payload=$(echo $json_payload | jq --arg recordable "$recordable" '.properties.enable_recording = $recordable')
-        fi
+	# Conditionally add 'enable_recording' to the JSON payload
+	if [ -n "$recordable" ]; then
+		json_payload=$(echo $json_payload | jq --arg recordable "$recordable" '.properties.enable_recording = $recordable')
+	fi
 
-        # Conditionally add 'exp' to the JSON payload
-        if [ -n "$expires" ]; then
-            json_payload=$(echo $json_payload | jq --arg expires "$expires" '.properties.exp = $expires')
-        fi
+	# Conditionally add 'exp' to the JSON payload
+	if [ -n "$expires" ]; then
+		json_payload=$(echo $json_payload | jq --arg expires "$expires" '.properties.exp = $expires')
+	fi
 
-        response=$(curl https://api.daily.co/v1/rooms -s \
-            -H "Content-Type: application/json" \
-            -H "Authorization: Bearer $DAILY_API_KEY" \
-            -d "$json_payload") || { b/error api_error "Failed to create room"; exit 1; }
+	response=$(curl https://api.daily.co/v1/rooms -s \
+		-H "Content-Type: application/json" \
+		-H "Authorization: Bearer $DAILY_API_KEY" \
+		-d "$json_payload") || { b/error api_error "Failed to create room"; exit 1; }
 
-        echo "$response" | jq
+	echo "$response" | jq
 
-        ;;
+	;;
 
 
-    transcriptions.list ) doc=$(cat <<'EOF'
+	transcriptions.list ) doc="$(cat <<'EOF'
 
 # daily transcriptions.list
 
@@ -136,15 +137,16 @@ List transcriptions
 > daily transcriptions.list		| List transcriptions
 
 EOF
-) && export doc && b/inspect "$@"
+	)" && inspect "$doc" "$1"
+	# ======================
 
-        response=$(curl https://api.daily.co/v1/transcript -s \
-            -H "Content-Type: application/json" \
-            -H "Authorization: Bearer $DAILY_API_KEY") || { b/error api_error "Failed to list transcriptions"; exit 1; }
+	response=$(curl https://api.daily.co/v1/transcript -s \
+		-H "Content-Type: application/json" \
+		-H "Authorization: Bearer $DAILY_API_KEY") || { b/error api_error "Failed to list transcriptions"; exit 1; }
 
-        echo "$response" | jq
+	echo "$response" | jq
 
-        ;;
+	;;
 
 
 esac

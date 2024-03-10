@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-doc=$(cat <<'EOF'
+doc="$(cat <<'EOF'
 
 # size
 
@@ -12,7 +12,10 @@ Print the size of a file
 > size bigvideo.mp4		| Print the size of file.txt
 
 EOF
-) && export doc && b/inspect "$@"
+)" && inspect "$doc" "$1"
+# =============================================================================
+
+
 
 [[ -z "$1" ]] && echo "No file specified" && exit 1
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-doc=$(cat <<'EOF'
+doc="$(cat <<'EOF'
 
 # codec
 
@@ -22,13 +22,11 @@ Encode and decode strings to and from various formats
 > codec base64.decode 'aGVsbG8gd29ybGQ='			| Decode a base64 string
 
 EOF
-) && export doc
-
-
+)" && inspect "$doc" "$1"
 # =============================================================================
 
 
-b/inspect "$@"
+
 scope="$1" && shift
 
 case $scope in

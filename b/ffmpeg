@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-doc=$(cat <<'EOF'
+doc="$(cat <<'EOF'
 
 # ffmpeg
 
@@ -16,9 +16,12 @@ Video and audio manipulation with ffmpeg
 > ffmpeg video.size 240 -v video.mp4 -o video.240.mp4	| Converts a video to a specified size
 
 EOF
-) && export doc && b/inspect "$@"
+)" && inspect "$doc" "$1"
+# =============================================================================
 
-[ ! -x $(command -v ffmpeg) ] && b/error "ffmpeg not installed" "Please install ffmpeg to use this feature"
+
+
+[ ! -x "$(command -v ffmpeg)" ] && b/error "ffmpeg not installed" "Please install ffmpeg to use this feature"
 
 
 # Check if a file exists and is not empty
@@ -53,7 +56,7 @@ case $command in
 
     # Convert video to mp3
     # ========================================================================
-    video-to-mp3) doc=$(cat <<'EOF'
+    video-to-mp3) doc="$(cat <<'EOF'
 
 # video-to-mp3
 
@@ -67,7 +70,8 @@ Convert video to mp3
 > ffmpeg video-to-mp3 -v video.mp4 -o audio.mp3 | Convert video to mp3
 
 EOF
-		) && export doc && b/inspect "$@"
+		)" && inspect "$doc" "$1"
+		# ======================
 
         output="./tmp/$(openssl rand -hex 8).mp3"
 
@@ -88,14 +92,14 @@ EOF
             ffmpeg -i "$video" -vn -acodec libmp3lame "$output"
         fi
 
-        [[ ! -n "$suppress_output" ]] && echo '{"mp3_file": "'$output'"}' | jq -r && exit 0 || exit 0
+		[[ -z "$suppress_output" ]] && echo '{"mp3_file": "'"$output"'"}' | jq -r && exit 0 || exit 0
 
         ;;
 
 
 
     # ========================================================================
-    video.chunk) doc=$(cat <<'EOF'
+    video.chunk) doc="$(cat <<'EOF'
 
 # video.chunk
 
@@ -108,7 +112,8 @@ Takes a file as input and separates it into equal chunks
 > ffmpeg video.chunk -v video.mp4 -o ./chunks -d 30 | Takes a file as input and separates it into equal chunks
 
 EOF
-		) && export doc && b/inspect "$@"
+		)" && inspect "$doc" "$1"
+		# ======================
 
         duration=60
         output="./tmp/$(openssl rand -hex 8)"
@@ -157,10 +162,10 @@ EOF
         chunks=$(echo "($total_duration / $duration) + 1" | bc)
         
         # create chunks
-        for ((i=0; i<$chunks; i++)); do
+        for ((i=0; i<chunks; i++)); do
             start=$(echo "$i * $duration" | bc)
             # video
-            ffmpeg -i "$video" -ss $start -t $duration -c copy "$output/chunk-$i.mp4" >> /dev/null 2>&1
+			ffmpeg -i "$video" -ss "$start" -t "$duration" -c copy "$output/chunk-$i.mp4" >> /dev/null 2>&1
             # thumbnail
             ffmpeg -i "$output/chunk-$i.mp4" -ss 00:00:01 -vframes 1 "$output/chunk-$i.jpg" >> /dev/null 2>&1
             # audio
@@ -174,7 +179,7 @@ EOF
 
 
     # ========================================================================
-    merge) doc=$(cat <<'EOF'
+    merge) doc="$(cat <<'EOF'
 
 # merge
 
@@ -186,7 +191,8 @@ Merges given chunks into a single file
 > ffmpeg merge -v "chunk-1.mp4|chunk-2.mp4|chunk-3.mp4" -o video.mp4 | Merges given chunks into a single file
 
 EOF
-		) && export doc && b/inspect "$@"
+		)" && inspect "$doc" "$1"
+		# ======================
 
         [ -z "$1" ] && b/error "No input files provided" "Please provide files to merge" && exit 1
         [ -z "$2" ] && b/error "No output file provided" "Please provide a file to merge" && exit 1
@@ -196,7 +202,7 @@ EOF
 
 
     # ========================================================================
-	video.size) doc=$(cat <<'EOF'
+	video.size) doc="$(cat <<'EOF'
 
 # video.size
 
@@ -209,7 +215,8 @@ Converts a video to a specified size
 `(-S)`		| Suppress output
 
 EOF
-		) && export doc && b/inspect "$@"
+		)" && inspect "$doc" "$1"
+		# ======================
 
 		case "$size" in
 			240)
@@ -241,7 +248,7 @@ EOF
 		check_file "$video"
 		run_ffmpeg "$video" "$scale" "$output"
 
-		[ -z "$suppress_output" ] && echo '{"$sizep_file": "$output"}' && exit 0 || exit 0
+		[ -z "$suppress_output" ] && { echo '{"$sizep_file": "$output"}'; exit 0; } >> file || exit 0
 		;;
 
 

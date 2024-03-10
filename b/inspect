@@ -1,7 +1,21 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-[[ $1 == '--inspect' ]] && {
+doc="$(cat <<'EOF'
+
+# inspect
+
+Inspect a command's documentation
+
+`--inspect`	| Receives an exported documentation string and outputs it as markdown
+
+EOF
+)" # no need for inspect call, here at the source 🧘
+# =============================================================================
+
+
+
+[[ $1 == "--inspect" ]] && {
 
 	[[ -z "$doc" ]] && echo "No documentation found" && exit 1
 
@@ -58,5 +72,3 @@ source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 		fi
 	done <<< "$doc" | glow && exit 0
 }
-
-exit 0

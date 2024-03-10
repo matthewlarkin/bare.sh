@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-doc=$(cat <<'EOF'
+doc="$(cat <<'EOF'
 
 # email
 
@@ -14,7 +14,10 @@ Send and receive email with SMTP/POP3
 > b/email check -H "pop3.mydomain.com" -P 995 -u "me@mydomain.com" -p "mypassword" | Check email
 
 EOF
-) && export doc && b/inspect "$@"
+)" && inspect "$doc" "$1"
+# =============================================================================
+
+
 
 command="$1"
 shift
@@ -25,20 +28,26 @@ case "$command" in
     # ========================================
     send ) # send email
 
-		doc_name+=" send"
-		doc_description="Send email"
-		declare -a doc_options=(
-			"-t"		"* To"
-			"-f"		"* From"
-			"-c"		"  Cc"
-			"-b"		"  Bcc"
-			"-s"		"* Subject"
-			"-h"		"* HTML Body"
-			"-a"		"  Attachment"
-			"-H"		"* Host SMTP Server"
-			"-P"		"  Port"
-			"-p"		"= Password"
-		) && [[ "$1" == '--inspect' ]] && return 0
+		doc="$(cat <<'EOF'
+
+# email send
+
+Send email
+
+`-t`		| * To
+`-f`		| * From
+`-c`		|   Cc
+`-b`		|   Bcc
+`-s`		| * Subject
+`-h`		| * HTML Body
+`-a`		|   Attachment
+`-H`		| * Host SMTP Server
+`-P`		|   Port
+`-p`		| = Password
+
+EOF
+		)" && inspect "$doc" "$1"
+		# ======================
 
         [[ -z "$1" ]] && b/usage -w 8 "$0" \
             -f "* From" \
@@ -150,16 +159,22 @@ EOF
     # ========================================
     check ) # check email
 
-		doc_name+=" check"
-		doc_description="Check email"
-		declare -a doc_options=(
-			"-l"		"List messages"
-			"-m"		"Message number"
-			"-H"		"Host POP3 Server"
-			"-P"		"Port"
-			"-u"		"= Username"
-			"-p"		"= Password"
-		) && [[ "$1" == '--inspect' ]] && return 0
+		doc="$(cat <<'EOF'
+
+# email check
+
+Check email
+
+`-l`		| List messages
+`-m`		| Message number
+`-H`		| * Host POP3 Server
+`-P`		|   Port
+`-u`		| * Username
+`-p`		| = Password
+
+EOF
+		)" && inspect "$doc" "$1"
+		# ======================
 
         server=""
         port="995"

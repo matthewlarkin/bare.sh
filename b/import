@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-doc=$(cat <<'EOF'
+doc="$(cat <<'EOF'
 
 # import
 
@@ -14,7 +14,10 @@ Import a file or directory into the $BARE_DIR/var/.nb directory
 > b/import /path/to/file.txt files/myfolder/imported-file.txt` | Import a file from a file path 
 
 EOF
-) && export doc && b/inspect "$@"
+)" && inspect "$doc" "$1"
+# =============================================================================
+
+
 
 input="$1"
 destination_directory="$BARE_DIR/var/.nb/${2:-imports}"

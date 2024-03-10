@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-doc=$(cat <<'EOF'
+doc="$(cat <<'EOF'
 
 # relay
 
@@ -17,7 +17,10 @@ Relays information (outputs it to the stdout or a file)
 > relay -l scripts				| List the files and directories of the specified directory within the .nb folder
 
 EOF
-) && export doc && b/inspect "$@"
+)" && inspect "$doc" "$1"
+# =============================================================================
+
+
 
 content=""
 output="/dev/stdout"

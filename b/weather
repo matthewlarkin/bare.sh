@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-doc=$(cat <<'EOF'
+doc="$(cat <<'EOF'
 
 # weather
 
@@ -14,7 +14,10 @@ Get the current weather for a location
 > weather forecast	| Get a three-day forecast
 
 EOF
-) && export doc && b/inspect "$@"
+)" && inspect "$doc" "$1"
+# =============================================================================
+
+
 
 [[ $1 == 'clear' ]] && rm "$BARE_DIR"/tmp/weather.* && exit 0
 

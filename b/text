@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-doc=$(cat <<'EOF'
+doc="$(cat <<'EOF'
 
 # text
 
@@ -16,7 +16,10 @@ Text manipulation, uppercasing, lowercasing, etc.
 > text capitalize "hello, world!"		| Hello, world!
 
 EOF
-) && export doc && b/inspect "$@"
+)" && inspect "$doc" "$1"
+# =============================================================================
+
+
 
 # Get the command and text
 command=$1

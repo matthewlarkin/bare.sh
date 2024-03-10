@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-doc=$(cat <<'EOF'
+doc="$(cat <<'EOF'
 
 # research
 
@@ -12,7 +12,10 @@ Go do some research on a given topic, outputs the resulting research markdown
 > research "how to make a cake"	| Search for how to make a cake
 
 EOF
-) && export doc && b/inspect "$@"
+)" && inspect "$doc" "$1"
+# =============================================================================
+
+
 
 # make sure research notebook exists
 [[ ! -d $BARE_DIR/var/.nb/research ]] && b/notes notebooks.create "research" > /dev/null 2>&1

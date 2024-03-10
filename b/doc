@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-doc=$(cat <<'EOF'
+doc="$(cat <<'EOF'
 
 # doc
 
@@ -13,14 +13,15 @@ View documentation for a command
 > doc openai chat 	| View documentation for the `openai chat` command
 
 EOF
-) && export doc && b/inspect "$@"
+)" && inspect "$doc" "$1"
+# =============================================================================
+
+
 
 command="$1" && shift
 
 # Handle the command
 case $command in
-	
-	--inspect ) inspect ;;
 
 	* )
 

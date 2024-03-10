@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-doc=$(cat <<'EOF'
+doc="$(cat <<'EOF'
 
 # notes
 
@@ -21,7 +21,10 @@ Manage notes with nb
 > notes create -T "My note" -C "This is my note"	| Create a new note
 
 EOF
-) && export doc && b/inspect "$@"
+)" && inspect "$doc" "$1"
+# =============================================================================
+
+
 
 command="$1"
 shift
@@ -54,25 +57,26 @@ case $command in
 		nb notebooks delete "$1" --force --no-color
 		;;
 
-    list ) doc=$(cat <<'EOF'
+    list ) doc="$(cat <<'EOF'
 
 # notes list
 
 List notes
 
-`-l`		| Limit the number of notes to display
-`-t`		| Filter by note type
-`-r`		| Reverse the order of the notes
-`-i`		| IDs only
-`-n`		| Names only
-`-N`		| Notebook to list notes from
+`-l`	| Limit the number of notes to display
+`-t`	| Filter by note type
+`-r`	| Reverse the order of the notes
+`-i`	| IDs only
+`-n`	| Names only
+`-N`	| Notebook to list notes from
 
 > notes list -l 5		| List the last 5 notes
 > notes list -t todo	| List notes with the 'todo' type
 > notes list -r			| List notes in reverse order
 
 EOF
-		) && export doc && b/inspect "$@"
+		)" && inspect "$doc" "$1"
+		# ======================
 
 		declare -a args=()
 		args+=("--no-color" "--no-indicator" "--filenames")
@@ -123,7 +127,7 @@ EOF
 
 		;;
 
-    create ) doc=$(cat <<'EOF'
+    create ) doc="$(cat <<'EOF'
 
 # notes create
 
@@ -142,7 +146,8 @@ Create a new note
 > notes create -T "My note" -C "This is my note" -t "my-tag,tag2,another-tag"	| Create a new note with tags
 
 EOF
-		) && export doc && b/inspect "$@"
+		)" && inspect "$doc" "$1"
+		# ======================
 
         notebook="home"
 		title="$1"
@@ -201,7 +206,7 @@ EOF
 
 		;;
 
-    edit ) doc=$(cat <<'EOF'
+    edit ) doc="$(cat <<'EOF'
 
 # notes edit
 
@@ -219,7 +224,8 @@ Edit a note
 > notes edit -n 1 -T "My note" -C "This is my note"	| Edit a note
 
 EOF
-		) && export doc && b/inspect "$@"
+		)" && inspect "$doc" "$1"
+		# ======================
 
 		id="$1" && shift
         notebook="home"
@@ -261,10 +267,6 @@ EOF
         ;;
 
     delete )
-
-		declare -a doc_options=(
-			"-f"		"Filename of the note"
-		) && [[ "$1" == '--inspect' ]] && return 0
 
         file="$1"
         nb delete "$file" --force --no-color > /dev/null

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-doc=$(cat <<'EOF'
+doc="$(cat <<'EOF'
 
 # image
 
@@ -12,13 +12,16 @@ Work with images, including viewing, converting, and resizing
 > image view -u https://example.com/image.jpg -w 100 -h 100 -o /path/to/output.jpg | View an image from a URL
 
 EOF
-) && export doc && b/inspect "$@"
+)" && inspect "$doc" "$1"
+# =============================================================================
+
+
 
 command="$1" && shift
 
 case $command in
 
-	view ) doc=$(cat <<'EOF'
+	view ) doc="$(cat <<'EOF'
 
 # image view
 
@@ -33,7 +36,8 @@ View an image
 > image view -u https://example.com/image.jpg -w 100 -h 100 -o /path/to/output.jpg | View an image from a URL
 
 EOF
-		) && export doc && b/inspect "$@"
+		)" && inspect "$doc" "$1"
+		# ======================
 
 		width=80
 		height=80

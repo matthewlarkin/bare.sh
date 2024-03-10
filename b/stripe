@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-doc=$(cat <<'EOF'
+doc="$(cat <<'EOF'
 
 # stripe
 
@@ -17,7 +17,9 @@ Interact with the Stripe API
 > stripe customers.list | List all customers
 
 EOF
-) && export doc && b/inspect "$@"
+)" && inspect "$doc" "$1"
+# =============================================================================
+
 
 
 [[ -z "$STRIPE_SECRET_KEY" ]] && b/error "env_error" "Please set the STRIPE_SECRET_KEY variable in your .env file"
@@ -27,7 +29,7 @@ shift
 
 case $command in
 
-    checkouts.create) doc=$(cat <<'EOF'
+    checkouts.create) doc="$(cat <<'EOF'
 
 # stripe checkouts.create
 
@@ -42,7 +44,8 @@ Create a new checkout session
 > stripe checkouts.create -a 100 -c usd -u customer_123 -s https://example.com/success -l "100,usd,Item" | Create a new checkout session
 
 EOF
-) && export doc && b/inspect "$@"
+		)" && inspect "$doc" "$1"
+		# ======================
 
 		amount=""
 		currency=""
@@ -82,7 +85,7 @@ EOF
 
 
 
-    checkout.get) doc=$(cat <<'EOF'
+    checkout.get) doc="$(cat <<'EOF'
 
 # stripe checkout.get
 
@@ -94,7 +97,8 @@ Get a checkout session
 
 EOF
 
-) && export doc && b/inspect "$@"
+		)" && inspect "$doc" "$1"
+		# ======================
 
 		id=""
 		while getopts "i:" opt; do
@@ -109,7 +113,7 @@ EOF
 
 
 
-	customers.list) doc=$(cat <<'EOF'
+	customers.list) doc="$(cat <<'EOF'
 
 # stripe customers.list
 
@@ -121,12 +125,13 @@ List all customers
 > stripe customers.list -l 5	| List the first 5 customers
 
 EOF
-		) && export doc && b/inspect "$@"
+		)" && inspect "$doc" "$1"
+		# ======================
 
         curl -s -X GET https://api.stripe.com/v1/customers -u "$STRIPE_SECRET_KEY": | jq
         ;;
     
-	customers.create) doc=$(cat <<'EOF'
+	customers.create) doc="$(cat <<'EOF'
 
 # stripe customers.create
 
@@ -137,7 +142,8 @@ Create a new customer
 > stripe customers.create -e "customer@theirdomain.com" | Create a new customer
 
 EOF
-		) && export doc && b/inspect "$@"
+		)" && inspect "$doc" "$1"
+		# ======================
 
 		email=""
 		while getopts "e:" opt; do

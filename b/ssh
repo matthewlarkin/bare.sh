@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-doc=$(cat <<'EOF'
+doc="$(cat <<'EOF'
 
 # ssh
 
@@ -16,7 +16,10 @@ Manage SSH keys
 > ssh -d		| Display the default SSH key
 
 EOF
-) && export doc && b/inspect "$@"
+)" && inspect "$doc" "$1"
+# =============================================================================
+
+
 
 while getopts "l:n:d:" opt; do
     case $opt in

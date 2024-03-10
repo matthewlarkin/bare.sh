@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-doc=$(cat <<'EOF'
+doc="$(cat <<'EOF'
 
 # postmark
 
@@ -12,7 +12,10 @@ Send and receive email with Postmark
 > postmark send -t "info@example.com" -s "Hello, world!" -b "<h1>Hello there!</h1>" -f "me@mydomain.com" | Send an email with HTML body
 
 EOF
-) && export doc && b/inspect "$@"
+)" && inspect "$doc" "$1"
+# =============================================================================
+
+
 
 [ ! -x "$(command -v curl)" ] && echo "🚨 curl is not installed" && exit 1
 [ ! -x "$(command -v jq)" ] && echo "🚨 jq is not installed" && exit 1
@@ -41,7 +44,7 @@ jsonString=""
 case $command in
 
     # ========================================================
-    send ) doc=$(cat <<'EOF'
+    send ) doc="$(cat <<'EOF'
 
 # postmark send
 
@@ -59,7 +62,8 @@ Send email
 > postmark send -t "info@example.com" -s "Hello, world!" -b "<h1>Hello there!</h1>" -f "me@mydomain.com" | Send an email with HTML body
 
 EOF
-		) && export doc && b/inspect "$@"
+		)" && inspect "$doc" "$1"
+		# ======================
 
         while getopts ":t:s:b:f:r:x:j:f:" opt; do
             case $opt in

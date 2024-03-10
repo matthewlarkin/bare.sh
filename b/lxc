@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-doc=$(cat <<'EOF'
+doc="$(cat <<'EOF'
 
 # lxc
 
@@ -12,7 +12,9 @@ Interface with LXC containers
 > lxc create mycontainer -c 2 -m 512MiB -d 5GiB -D ubuntu:22.04 | Create a new container
 
 EOF
-) && export doc && b/inspect "$@"
+)" && inspect "$doc" "$1"
+# =============================================================================
+
 
 
 # if on mac, recommend installing lxc via brew with remote lxd
@@ -26,7 +28,7 @@ shift
 
 case "$command" in
 
-    create) doc=$(cat <<'EOF'
+    create) doc="$(cat <<'EOF'
 
 # lxc create
 
@@ -40,7 +42,8 @@ Create a new container
 > lxc create mycontainer -c 2 -m 512MiB -d 5GiB -D ubuntu:22.04 | Create a new container
 
 EOF
-		) && export doc && b/inspect "$@"
+		)" && inspect "$doc" "$1"
+		# ======================
 
         container_name=$1
         shift

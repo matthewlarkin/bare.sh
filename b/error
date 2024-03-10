@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-doc=$(cat <<'EOF'
+doc="$(cat <<'EOF'
 
 # error
 
@@ -13,7 +13,9 @@ Print an error message and exit with status code 1
 > error 999 "An unexpected error occurred" | Print an error message and exit with status code 999
 
 EOF
-) && export doc && b/inspect "$@"
+)" && inspect "$doc" "$1"
+# =============================================================================
+
 
 
 printf "\n❌ ${red}$1${reset}: $2\n\n" && exit 1
