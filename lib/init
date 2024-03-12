@@ -56,7 +56,6 @@ done
 
 mkdir -p "$BARE_NOTES_DIR/scripts"
 mkdir -p "$BARE_NOTES_DIR/research"
-mkdir -p "$BARE_NOTES_DIR/assistants"
 mkdir -p "$BARE_NOTES_DIR/imports"
 mkdir -p "$BARE_NOTES_DIR/images"
 

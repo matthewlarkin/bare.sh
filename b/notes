@@ -68,27 +68,31 @@ List notes
 `-r`	| Reverse the order of the notes
 `-i`	| IDs only
 `-n`	| Names only
+`-J`	| Output as JSON
 `-N`	| Notebook to list notes from
 
-> notes list -l 5		| List the last 5 notes
-> notes list -t todo	| List notes with the 'todo' type
-> notes list -r			| List notes in reverse order
+> notes list -l 5			| List the last 5 notes
+> notes list -t todo		| List notes with the 'todo' type
+> notes list -r				| List notes in reverse order
+> notes list research: -J	| List notes in the 'research' notebook as JSON
 
 EOF
 		)" && inspect "$doc" "$1"
 		# ======================
 
 		declare -a args=()
-		args+=("--no-color" "--no-indicator" "--filenames")
+		args+=("--no-color" "--no-indicator")
 		names_only=false
 		ids_only=false
-		while getopts "l:t:rinN:" opt; do
+		while getopts "l:t:riTnJN:" opt; do
 			case $opt in
 				l ) args+=("--limit" "$OPTARG") ;;
 				t ) args+=("--type" "$OPTARG") ;;
 				r ) args+=("--reverse") ;;
-				i ) ids_only=true ;;
-				n ) names_only=true ;;
+				i ) ids_only=true && shift ;;
+				T ) titles=true && shift ;;
+				n ) names_only=true && shift ;;
+				J ) as_json=true && shift ;;
 				N ) notebook=$OPTARG ;;
 				\? )
 					echo "Invalid option: -$OPTARG" 1>&2
@@ -96,22 +100,35 @@ EOF
 					;;
 			esac
 		done
-		scope=${1:-"home:"}
-		args+=("$scope")
+
+		if [[ -z "$titles" ]]; then
+			args+=("--filenames")
+		fi
+
+		notebook=${notebook:-"home"}
+		args+=("$notebook:")
 
 		list=$(nb list "${args[@]}")
+
+		if [[ $names_only == true ]]; then
+			list="$(echo "$list" | awk '{print substr($0, index($0,$2))}')"
+		fi
 
 		# Check if the list contains any lines that look like list items
 		if ! echo "$list" | grep -q '^\[.*\]'; then
 			list=""
 		fi
 
-		if [[ -n $list ]]; then
-			echo "$list"
-		fi
-
 		if [[ $ids_only == true ]]; then
 			echo "$list" | awk -F'[][]' '{print $2}'
+		elif [[ $as_json == true ]]; then
+			if [[ -z "$list" ]]; then
+				echo '[]'
+			else
+				echo "$list" | awk -F'[][]' '{sub(/^ /, "", $3); split($2, a, ":"); print "{\"notebook\": \"" (length(a) > 1 ? a[1] : "home") "\", \"id\": " (length(a) > 1 ? a[2] : a[1]) ", \"filename\": \"" $3 "\"}"}' | jq -R -s -c 'split("\n")[:-1] | map(fromjson)'
+			fi
+		else
+			echo "$list"
 		fi
 
 		;;

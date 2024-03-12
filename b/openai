@@ -170,14 +170,18 @@ EOF
         }')
 
         response=$(curlRequest -u "$api_url/assistants" -d "$payload" -j)
+		assistant_id="$(echo "$response" | jq -r '.id')"
 
         if [[ "$verbose" == true ]]; then
             echo "$response" | jq -r
         elif [[ "$respond" == "as_json" ]]; then
             echo "$response" | jq -r '{assistant_id: .id, tools: [.tools[] | .type]}'
         else
-            echo "$response" | jq -r .id
+            echo "$assistant_id"
         fi
+
+		sqlite3 "$BARE_DIR/lib/www/sqlpage/sqlpage.db" "INSERT INTO assistants (id, name, content) VALUES ('$assistant_id', '$assistant_name', '$instructions')"
+
         ;;
 
 
@@ -202,15 +206,21 @@ EOF
 
         file_ids=""
 
-        while getopts ":m:f:JV" opt; do
+		title="$(date +%Y%m%d-%H%M%S)"
+		user="user"
+        while getopts ":T:m:f:UJV" opt; do
             case ${opt} in
+				T ) title="$OPTARG" ;;
                 m ) initial_message="$OPTARG" ;;
                 f ) file_ids="$OPTARG" ;;
+				U ) user="$OPTARG" ;;
                 J ) respond="as_json" ;;
                 V ) verbose=true ;;
                 \? ) b/error invalid_option "$OPTARG" && exit 1 ;;
             esac
         done
+
+		[[ -z "$initial_message" ]] && b/error "initial_message is required"
 
         # Convert the comma-separated list of file IDs into a JSON array
         file_ids_json=$(jq -nR '[inputs | split(",") | .[]]' <<< "$file_ids")
@@ -221,6 +231,8 @@ EOF
 
         response=$(curlRequest -u "$api_url/threads" -d "$payload" -j)
 
+		thread_id="$(echo "$response" | jq -r '.id')"
+
         if [[ "$verbose" == true ]]; then
             echo "$response" | jq -r
         elif [[ "$respond" == "as_json" ]]; then
@@ -228,12 +240,22 @@ EOF
         else
             echo "$response" | jq -r .id
         fi
+
+		# format initial message for sqlite insert (using sqlite sytax for handling quotes, etc)
+		initial_message=$(echo "$initial_message" | sed "s/'/''/g")
+		initial_message=$(echo "$initial_message" | sed 's/"/""/g')
+
+		sqlite3 "$BARE_DIR/lib/www/sqlpage/sqlpage.db" "
+			INSERT INTO threads (id, title) VALUES ('$thread_id', '$title');
+			INSERT INTO thread_messages (thread_id, name, content) VALUES ('$thread_id', '$user', '$initial_message');
+		";
+
         ;;
 
 
 
     # ========================================================
-    thread.messages.append) doc="$(cat <<'EOF'
+    thread.messages.append ) doc="$(cat <<'EOF'
 
 # thread.messages.append
 
@@ -252,12 +274,13 @@ EOF
 		# ======================
 
 		file_ids="[]"
-
-		while getopts ":t:m:f:JV" opt; do
+		user="user"
+		while getopts ":t:m:f:U:JV" opt; do
 			case ${opt} in
 				t ) thread_id="$OPTARG" ;;
 				m ) message="$OPTARG" ;;
 				f ) file_ids="$OPTARG" ;;
+				U ) user="$OPTARG" ;;
 				J ) respond="as_json" ;;
 				V ) verbose=true ;;
 				\? ) b/error invalid_option "$OPTARG" && exit 1 ;;
@@ -276,9 +299,16 @@ EOF
 			echo "$response" | jq -r
 		elif [[ "$respond" == "as_json" ]]; then
 			echo "$response" | jq -r '{thread_id: .thread_id, message_id: .id}'
-		else
-			exit 0
 		fi
+
+		# insert message into sqlite db
+		message=$(echo "$message" | sed "s/'/''/g")
+		message=$(echo "$message" | sed 's/"/""/g')
+
+		sqlite3 "$BARE_DIR/lib/www/sqlpage/sqlpage.db" "INSERT INTO thread_messages (thread_id, name, content) VALUES ('$thread_id', '$user', '$message')"
+
+		exit 0
+
 		;;
 
 
@@ -325,6 +355,33 @@ EOF
         else
             echo "$response" | jq -r '.data[] | "\(.role): \(.content[0].text.value) | "' | sed 's/ | $//'
         fi
+
+		# check the date of the last message in the sqlite db
+		last_message_date=$(sqlite3 "$BARE_DIR/lib/www/sqlpage/sqlpage.db" "SELECT created_at FROM thread_messages WHERE thread_id = '$thread_id' ORDER BY created_at DESC LIMIT 1")
+
+		if [[ "$OSTYPE" == "darwin"* ]]; then
+			last_message_timestamp=$(date -j -f "%Y-%m-%d %H:%M:%S" "$last_message_date" +%s)
+		else
+			last_message_timestamp=$(date -d "$last_message_date" +%s)
+		fi
+		
+		# for every message newer than the last one in the sqlite db, insert it into the sqlite db
+		for message in $(echo "$response" | jq -r '.data[] | "\(.role): \(.content[0].text.value) | \(.created_at)"'); do
+			message_date=$(echo "$message" | awk -F" | " '{print $3}')
+			if [[ -n "$message_date" ]]; then
+				if [[ "$OSTYPE" == "darwin"* ]]; then
+					message_timestamp=$(date -j -f "%Y-%m-%d %H:%M:%S" "$message_date" +%s)
+				else
+					message_timestamp=$(date -d "$message_date" +%s)
+				fi
+				if [[ $message_timestamp -gt $last_message_timestamp ]]; then
+					message=$(echo "$message" | sed "s/'/''/g")
+					message=$(echo "$message" | sed 's/"/""/g')
+					sqlite3 "$BARE_DIR/lib/www/sqlpage/sqlpage.db" "INSERT INTO thread_messages (thread_id, name, content) VALUES ('$thread_id', '$user', '$message')"
+				fi
+			fi
+		done
+
         ;;
 
 

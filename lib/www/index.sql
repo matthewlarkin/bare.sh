@@ -1,0 +1,1 @@
+select 'dynamic' as component, sqlpage.read_file_as_text('assets/data/shell.json') as properties;

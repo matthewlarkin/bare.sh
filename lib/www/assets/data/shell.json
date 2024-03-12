@@ -1,0 +1,19 @@
+{
+	"component": "shell",
+	"title": "GroveOS",
+	"image": "https://assets.groveos.net/cdn/logo-sq.min.webp",
+	"menu_item": [
+		{
+			"title": "Assistants",
+			"link": "/assistants.sql"
+		},
+		{
+			"title": "Documents",
+			"link": "/documents.sql"
+		},
+		{
+			"title": "Connect",
+			"link": "/connect.sql"
+		}
+	]
+}

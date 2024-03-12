@@ -1,0 +1,1 @@
+insert into assistants (name, content) values (:name, :content);

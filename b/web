@@ -16,4 +16,4 @@ EOF
 
 
 # Start the server
-cd "$BARE_DIR"/var/www && sqlpage
+cd "$BARE_DIR"/lib/www && sqlpage
