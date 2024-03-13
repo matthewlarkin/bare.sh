@@ -2,6 +2,7 @@
 	"component": "shell",
 	"title": "GroveOS",
 	"image": "https://assets.groveos.net/cdn/logo-sq.min.webp",
+	"font": "DM Mono",
 	"menu_item": [
 		{
 			"title": "Assistants",

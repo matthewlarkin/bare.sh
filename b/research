@@ -47,7 +47,12 @@ for ((i=0; i<length; i++)); do
 	fi
 
 	# Pass the temporary HTML file to xidel
-	content=$(xidel temp.html --silent -e 'css("p") | css("h1")')
+	# if bare_os is linux, use xidel, else use pup
+	if [[ $BARE_OS == "linux" ]]; then
+		content=$(xidel temp.html --silent -e 'css("p") | css("h1")')
+	else
+		content=$(cat temp.html | pup 'p, h1 text{}')
+	fi
 
 	# Check if content contains error message
 	if [[ $content == *"Error:"* ]]; then

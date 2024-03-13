@@ -4,26 +4,27 @@ select 'title' as component,
 	'Documents' as contents,
 	true as center;
 
-set home = sqlpage.exec('./bare', 'notes', 'list', '-J');
-set research = sqlpage.exec('./bare', 'notes', 'list', '-N', 'research', '-J');
+select 'breadcrumb' as component;
 
--- documents is a json array: id:, filename:, notebook:
+	select 
+		'Home' as title,
+		'/'    as link;
+	select 
+		'Documents' as title,
+		true as active;
 
-select 'title' as component,
-	'Home' as contents;
+select 'button' as component;
+
+	select 
+		'/ui/views/documents.create.sql' as link,
+		'azure' as outline,
+		'Create' as title,
+		'plus' as icon;
 
 select 'card' as component,
 	3 as columns;
-select
-	json_extract($home, '$[0].filename') as title,
-	'/documents.sql?id=' || json_extract($home, '$[0].notebook') || ':' || json_extract($home, '$[0].id') as link;
 
-select 'title' as component,
-	'Research' as contents;
-
-select 'card' as component,
-	3 as columns;
-select
-	json_extract($research, '$[0].filename') as title,
-	'/documents.sql?id=' || json_extract($research, '$[0].notebook') || ':' || json_extract($research, '$[0].id') as link;
-
+	select 
+		'/ui/views/document.show.sql?id=' || id as link,
+		title as title,
+		content as contents_md from documents;

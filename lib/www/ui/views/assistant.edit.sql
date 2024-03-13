@@ -10,8 +10,8 @@ select
 		'Assistants' as title,
 		'/assistants.sql' as link;
 	select 
-		'/ui/views/assistants.show.sql?id=' || id as link,
-		name as title from assistants where id = $id;
+		'/ui/views/assistant.show.sql?id=' || id as link,
+		title as title from assistants where id = $id;
 	select
 		'✍️' as title,
 		true as active;
@@ -23,7 +23,7 @@ select 'form' as component,
 	'POST' as method;
 
 	select
-		'name' as name,
+		'title' as name,
 		'Name' as label,
 		name as value from assistants where id = $id;
 	select

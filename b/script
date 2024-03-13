@@ -28,7 +28,7 @@ command="$1" && shift
 
 case $command in
 
-	list ) b/notes list "scripts:" ;;
+	list ) b/notes list -N "scripts" ;;
 	show ) b/notes show "scripts:$1" ;;
 	open ) "${BARE_EDITOR:-vim}" "$BARE_DIR/var/.nb/scripts/$1" ;;
 	run ) b/interpret "$1" ;;

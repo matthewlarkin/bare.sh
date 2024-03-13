@@ -180,8 +180,6 @@ EOF
             echo "$assistant_id"
         fi
 
-		sqlite3 "$BARE_DIR/lib/www/sqlpage/sqlpage.db" "INSERT INTO assistants (id, name, content) VALUES ('$assistant_id', '$assistant_name', '$instructions')"
-
         ;;
 
 
@@ -238,17 +236,8 @@ EOF
         elif [[ "$respond" == "as_json" ]]; then
             echo "$response" | jq -r '{thread_id: .id}'
         else
-            echo "$response" | jq -r .id
+            echo "$thread_id"
         fi
-
-		# format initial message for sqlite insert (using sqlite sytax for handling quotes, etc)
-		initial_message=$(echo "$initial_message" | sed "s/'/''/g")
-		initial_message=$(echo "$initial_message" | sed 's/"/""/g')
-
-		sqlite3 "$BARE_DIR/lib/www/sqlpage/sqlpage.db" "
-			INSERT INTO threads (id, title) VALUES ('$thread_id', '$title');
-			INSERT INTO thread_messages (thread_id, name, content) VALUES ('$thread_id', '$user', '$initial_message');
-		";
 
         ;;
 
@@ -301,12 +290,6 @@ EOF
 			echo "$response" | jq -r '{thread_id: .thread_id, message_id: .id}'
 		fi
 
-		# insert message into sqlite db
-		message=$(echo "$message" | sed "s/'/''/g")
-		message=$(echo "$message" | sed 's/"/""/g')
-
-		sqlite3 "$BARE_DIR/lib/www/sqlpage/sqlpage.db" "INSERT INTO thread_messages (thread_id, name, content) VALUES ('$thread_id', '$user', '$message')"
-
 		exit 0
 
 		;;
@@ -355,32 +338,6 @@ EOF
         else
             echo "$response" | jq -r '.data[] | "\(.role): \(.content[0].text.value) | "' | sed 's/ | $//'
         fi
-
-		# check the date of the last message in the sqlite db
-		last_message_date=$(sqlite3 "$BARE_DIR/lib/www/sqlpage/sqlpage.db" "SELECT created_at FROM thread_messages WHERE thread_id = '$thread_id' ORDER BY created_at DESC LIMIT 1")
-
-		if [[ "$OSTYPE" == "darwin"* ]]; then
-			last_message_timestamp=$(date -j -f "%Y-%m-%d %H:%M:%S" "$last_message_date" +%s)
-		else
-			last_message_timestamp=$(date -d "$last_message_date" +%s)
-		fi
-		
-		# for every message newer than the last one in the sqlite db, insert it into the sqlite db
-		for message in $(echo "$response" | jq -r '.data[] | "\(.role): \(.content[0].text.value) | \(.created_at)"'); do
-			message_date=$(echo "$message" | awk -F" | " '{print $3}')
-			if [[ -n "$message_date" ]]; then
-				if [[ "$OSTYPE" == "darwin"* ]]; then
-					message_timestamp=$(date -j -f "%Y-%m-%d %H:%M:%S" "$message_date" +%s)
-				else
-					message_timestamp=$(date -d "$message_date" +%s)
-				fi
-				if [[ $message_timestamp -gt $last_message_timestamp ]]; then
-					message=$(echo "$message" | sed "s/'/''/g")
-					message=$(echo "$message" | sed 's/"/""/g')
-					sqlite3 "$BARE_DIR/lib/www/sqlpage/sqlpage.db" "INSERT INTO thread_messages (thread_id, name, content) VALUES ('$thread_id', '$user', '$message')"
-				fi
-			fi
-		done
 
         ;;
 
