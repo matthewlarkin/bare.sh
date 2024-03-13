@@ -92,6 +92,9 @@ if [[ -n $list_dir ]]; then
 	content=$(ls -p "$list_dir")
 fi
 
+# Remove carriage return characters from content
+content="${content//$'\r'/}"
+
 printf "%s\n" "$content" > "$output"
 
 exit 0
