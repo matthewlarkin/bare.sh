@@ -49,30 +49,18 @@ EOF
 		)" && inspect "$doc" "$1"
 		# ======================
 
-        [[ -z "$1" ]] && b/usage -w 8 "$0" \
-            -f "* From" \
-            -t "* To" \
-            -c "  Cc" \
-            -b "  Bcc" \
-            -s "* Subject" \
-            -h "* HTML Body" \
-            -a "  Attachment" \
-            -H "* Host SMTP Server" \
-            -P "  Port" \
-            -p "= Password" && exit 0;
-
         to=""
-        from=""
+        from="$BARE_SMTP_EMAIL"
         cc=""
         bcc=""
         subject=""
         html_body=""
         attachment=""
 
-        server=""
-        port="465"
+        server="$BARE_SMTP_SERVER"
+        port="${BARE_SMTP_PORT:-465}"
 
-        password=""
+        password="$BARE_SMTP_PASSWORD"
 
         # getopts
         while getopts "t:f:c:b:s:h:a:p:H:P:" opt; do
@@ -90,6 +78,12 @@ EOF
                 \? ) echo "Invalid option -$OPTARG" >&2; exit 1 ;;
             esac
         done
+
+		shift $((OPTIND -1))
+
+		[[ -z $html_body ]] && html_body="$1" && shift
+		[[ -z $html_body ]] && html_body="$(cat)" # read from stdin
+		[[ -z $html_body ]] && echo "No body provided" && exit 1
 
         # if p not provided, read -s
         if [ -z "$password" ]; then
