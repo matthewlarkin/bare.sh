@@ -1,47 +1,45 @@
 #!/usr/bin/env bash
 set -e
-BARE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.."; pwd)" && export BARE_DIR
+BARE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.."; pwd)" && cd "$BARE_DIR" && export BARE_DIR
 
-cd "$BARE_DIR"
+# check for ~/.barerc file
+[[ ! -f $HOME/.barerc ]] && {
+	touch "$HOME"/.barerc
+} || source "$HOME"/.barerc
+chmod 600 "$HOME"/.barerc # make sure it's only readable and writable by the user
 
-[[ ! -f "$BARE_DIR"/lib/.env ]] && cp "$BARE_DIR"/lib/samples/.env lib/.env
+# Find a port for us to use with the web server
+BARE_PORT=8080
+while lsof -i :$BARE_PORT > /dev/null; do
+	BARE_PORT=$((BARE_PORT + 1))
+done
+export BARE_PORT
 
-source "$BARE_DIR"/lib/.env
+# Detect which OS we are using
+case "$(uname -s)" in
+	Linux*) export BARE_OS=linux ;;
+	Darwin*) export BARE_OS=mac ;;
+	*) echo "Bare only supports Linux and macOS" && exit 1 ;;
+esac
+
+# If lib/www/sqlpage/sqlpage.json doesn't exist, create it with default values
+if [[ ! -f lib/www/sqlpage/sqlpage.json ]]; then
+	echo "{\"allow_exec\": true, \"port\": $BARE_PORT}" > lib/www/sqlpage/sqlpage.json
+fi
+
+# Set up port and allow_exec in sqlpage.json
+if [[ ! -s lib/www/sqlpage/sqlpage.json ]]; then
+	echo "{\"allow_exec\": true, \"port\": $BARE_PORT}" > lib/www/sqlpage/sqlpage.json
+else
+	jq --arg BARE_PORT "$BARE_PORT" '.allow_exec = true | .port = ($BARE_PORT | tonumber)' lib/www/sqlpage/sqlpage.json > tmp.$$.json && mv tmp.$$.json lib/www/sqlpage/sqlpage.json
+fi
+
+# Set up nb to use the correct directory
+export BARE_NOTES_DIR="$BARE_DIR"/var/.nb
 export NB_DIR="$BARE_NOTES_DIR"
 
 source "$BARE_DIR"/lib/colors
 source "$BARE_DIR"/lib/deps
-
-
-declare -A core_env
-
-core_env=(
-	["BARE_ENCRYPTION_KEY"]="used for encryption tools"
-	["OPENAI_API_KEY"]="used for OpenAI interfacing"
-	["STRIPE_SECRET_KEY"]="used for Stripe intrefacing"
-	["BARE_EDITOR"]="Used for command line note editing (defaults to vim)"
-)
-
-for key in "${!core_env[@]}"; do
-	if [[ -z "${!key}" ]]; then
-		echo -e "${RED}Error: ${key} is not set${NC}"
-		echo -e "${key} is ${core_env[$key]}"
-		read -rp "Please enter a value for ${key} (or press enter to skip): " value
-		if [[ -n $value ]]; then
-			perl -i -pe "s/${key}=.*/${key}=${value}/g" lib/.env
-		else
-			# set dummy value
-			perl -i -pe "s/${key}=.*/${key}=xxxxxxxxxx/g" lib/.env
-		fi
-	fi
-done
-
-# if encryption key is still not set, don't ask user, just set it to a random value
-[[ -z "$BARE_ENCRYPTION_KEY" ]] && {
-	echo -e "Setting BARE_ENCRYPTION_KEY to a random value"
-	perl -i -pe "s/BARE_ENCRYPTION_KEY=.*/BARE_ENCRYPTION_KEY=$(openssl rand -base64 32)/g" lib/.env
-}
-
 
 # make sure git name and git email are set up for notes (git global settings)
 [[ -z "$(git config --global user.name)" ]] && {
@@ -60,9 +58,8 @@ mkdir -p "$BARE_NOTES_DIR/imports"
 mkdir -p "$BARE_NOTES_DIR/images"
 
 
-source "$BARE_DIR"/lib/.env
 
-
+# =============================================================================
 
 # Common Functions
 
