@@ -1,89 +1,63 @@
 #!/usr/bin/env bash
 
-OS=$(uname)
 UPDATED=0
-CACHE_FILE="./lib/.deps_cache"
 
-# Create the cache file if it doesn't exist
-touch "$CACHE_FILE"
+CORE_DEPS=(bash curl jq git sqlite3 ffmpeg yt-dlp ddgr feh glow)
+SPECIAL_DEPS=(sqlpage nb csvcut)
 
-# Define a function to check if a command is available, and install a package if it's not
-check_install() {
-	cmd=$1
-	linux_pkg=$2
-	mac_pkg=$3
-
-	# Check the cache file before installing
-	if ! grep -q "^$cmd$" "$CACHE_FILE"; then
-		if ! [ -x "$(command -v $cmd)" ]; then
-			if [ "$OS" = "Linux" ]; then
-				if [ $UPDATED -eq 0 ]; then
-					sudo apt update
-					UPDATED=1
-				fi
-				if [ -n "$linux_pkg" ]; then
-					sudo apt install -y "$linux_pkg"
-				fi
-			elif [ "$OS" = "Darwin" ]; then
-				# Check if Homebrew is installed, if not install it
-				if ! [ -x "$(command -v brew)" ]; then
-					/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-				fi
-				# Check if Git is installed, if not install it
-				if ! [ -x "$(command -v git)" ]; then
-					brew install git
-				fi
-				if [ -n "$mac_pkg" ]; then
-					if [ $UPDATED -eq 0 ]; then
-						brew update
-						UPDATED=1
-					fi
-					brew install "$mac_pkg"
-				else
-					return 0
-				fi
-			fi
-			# Add the command to the cache file
-			echo "$cmd" >> "$CACHE_FILE"
-		fi
-	fi
+# check that mac has brew
+[[ "$BARE_OS" = "mac" ]] && {
+	[[ -x "$(command -v brew)" ]] || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 }
 
-# Use the function to check and install each package
-check_install curl curl curl
-check_install feh feh feh
-check_install glow glow glow
-check_install snap snapd
-check_install jq jq jq
-check_install lxc lxd
-check_install git git git
-check_install nginx nginx nginx
-check_install ffmpeg ffmpeg ffmpeg
-check_install csvlook csvkit csvkit
-
-# Check and install nb
-if ! grep -q "^nb$" "$CACHE_FILE"; then
-	if ! [ -x "$(command -v nb)" ]; then
-		sudo curl -L https://raw.github.com/xwmx/nb/master/nb -o /usr/local/bin/nb && sudo chmod +x /usr/local/bin/nb
-		echo nb >> "$CACHE_FILE"
+# check if each dep is installed
+for dep in "${CORE_DEPS[@]}"; do
+	if ! [ -x "$(command -v "$dep")" ]; then
+		[[ "$BARE_OS" = "linux" ]] && {
+			[[ $UPDATED -eq 0 ]] && sudo apt update && UPDATED=1
+			sudo apt install -y "$dep"
+		} || {
+			[[ $UPDATED -eq 0 ]] && brew update && UPDATED=1
+			brew install "$dep"
+		}
 	fi
-fi
+done
 
-# Check and install sqlpage
-if ! grep -q "^sqlpage$" "$CACHE_FILE"; then
-	if ! [ -x "$(command -v sqlpage)" ]; then
-		if [ "$OS" = "Linux" ]; then
-			sudo curl -s -L -O https://github.com/lovasoa/SQLpage/releases/download/v0.19.1/sqlpage-linux.tgz
-			sudo tar -xzf sqlpage-linux.tgz && sudo rm sqlpage-linux.tgz
-			sudo mv sqlpage.bin /usr/bin/sqlpage
-			sudo chmod 750 /usr/bin/sqlpage
-		elif [ "$OS" = "Darwin" ]; then
-			if [ $UPDATED -eq 0 ]; then
-				brew update
-				UPDATED=1
-			fi
-			brew install sqlpage
-		fi
-		echo sqlpage >> "$CACHE_FILE"
+# check if each special dep is installed
+for dep in "${SPECIAL_DEPS[@]}"; do
+	if ! [ -x "$(command -v "$dep")" ]; then
+		[[ "$BARE_OS" = "linux" ]] && {
+
+			# SQLPage
+			[[ "$dep" = "sqlpage" ]] && {
+				sudo curl -sL -O https://github.com/lovasoa/SQLpage/releases/download/v0.19.1/sqlpage-linux.tgz
+				sudo tar -xzf sqlpage-linux.tgz && sudo rm sqlpage-linux.tgz
+				sudo mv sqlpage.bin /usr/bin/sqlpage
+				sudo chmod 750 /usr/bin/sqlpage
+			}
+
+			# nb
+			[[ "$dep" = "nb" ]] && {
+				sudo curl -L https://raw.github.com/xwmx/nb/master/nb -o /usr/local/bin/nb
+				sudo chmod +x /usr/local/bin/nb
+			}
+
+			# csvkit
+			[[ "$dep" = "csvcut" ]] && sudo apt install -y csvkit
+
+		} || {
+
+			[[ $UPDATED -eq 0 ]] && brew update && UPDATED=1
+			
+			# SQLPage
+			[[ "$dep" = "sqlpage" ]] && brew install sqlpage
+
+			# nb
+			[[ "$dep" = "nb" ]] && brew install nb
+
+			# csvkit
+			[[ "$dep" = "csvcut" ]] && brew install csvkit
+
+		}
 	fi
-fi
+done
