@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
+
+doc="$(cat <<'EOF'
+
+# size
+
+Assigns a value to a variable name
+
+:variable_name		| The name to store the value into
+:value				| The value to store
+
+> set "name" "Matthew"		| Assign the value "Matthew" to the variable "name"
+
+EOF
+)" && inspect "$doc" "$1"
+# =============================================================================
+
+_name="$1"
+_value="${!#}"
+
+export "$_name"="$_value"

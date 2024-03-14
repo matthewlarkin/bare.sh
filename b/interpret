@@ -20,17 +20,17 @@ EOF
 
 
 process_line() {
-	# Check if the line starts with a word ending in a colon
-	if [[ $1 =~ ^.*:$ ]]; then
+	# Check if the line starts with 'set'
+	if [[ ${words[0]} == "set" ]]; then
 		# Get the name of the variable to set
-		var_name=${1%:}
+		var_name=${words[1]}
 		# Validate the variable name
 		if [[ ! $var_name =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
 			echo "Error: Invalid variable name '$var_name'"
 			return 1
 		fi
-		# Capture everything after the colon into the variable
-		command_output=$(./bare "${@:2}" 2>/dev/null)
+		# Capture everything after 'set var_name =' into the variable
+		command_output=$(./bare "${words[@]:3}" 2>/dev/null)
 		# Check the exit status of the command
 		if [[ $? -ne 0 ]]; then
 			echo "Error: Command failed"
@@ -38,13 +38,34 @@ process_line() {
 		fi
 		export "$var_name=$command_output"
 	else
-		if [[ $# -gt 0 ]]; then
-			./bare "$@" 2>/dev/null
-			# Check the exit status of the command
-			if [[ $? -ne 0 ]]; then
-				echo "Error: Command failed"
-				return 1
+		# Replace placeholders with variable values
+		for i in "${!words[@]}"; do
+			if [[ ${words[i]} =~ @@(.*)@@ ]]; then
+				var_name=${BASH_REMATCH[1]}
+				if [[ -n ${!var_name} ]]; then
+					words[i]=${!var_name}
+				else
+					echo "Error: Undefined variable '$var_name'"
+					return 1
+				fi
+			elif [[ ${words[i]} =~ \$\((.*)\) ]]; then
+				# Detect command substitution
+				command=${BASH_REMATCH[1]}
+				# Replace the command substitution with the output of the 'bare' command
+				words[i]=$(./bare $command 2>/dev/null)
+				# Check the exit status of the command
+				if [[ $? -ne 0 ]]; then
+					echo "Error: Command failed"
+					return 1
+				fi
 			fi
+		done
+		# Execute the command
+		echo $(./bare "${words[@]}" 2>/dev/null)
+		# Check the exit status of the command
+		if [[ $? -ne 0 ]]; then
+			echo "Error: Command failed"
+			return 1
 		fi
 	fi
 	return 0
