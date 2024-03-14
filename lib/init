@@ -3,9 +3,11 @@ set -e
 BARE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.."; pwd)" && cd "$BARE_DIR" && export BARE_DIR
 
 # check for ~/.barerc file
-[[ ! -f $HOME/.barerc ]] && {
-	touch "$HOME"/.barerc
-} || source "$HOME"/.barerc
+if [[ ! -f $HOME/.barerc ]]; then
+	cp "$BARE_DIR"/lib/samples/.barerc "$HOME"/.barerc
+else
+	source "$HOME"/.barerc
+fi
 chmod 600 "$HOME"/.barerc # make sure it's only readable and writable by the user
 
 # Find a port for us to use with the web server
@@ -19,7 +21,7 @@ export BARE_PORT
 case "$(uname -s)" in
 	Linux*) export BARE_OS=linux ;;
 	Darwin*) export BARE_OS=mac ;;
-	*) echo "Bare only supports Linux and macOS" && exit 1 ;;
+	*) echo "Bare is written for Linux and macOS environments" && exit 1 ;;
 esac
 
 source "$BARE_DIR"/lib/colors
@@ -41,22 +43,10 @@ fi
 export BARE_NOTES_DIR="$BARE_DIR"/var/.nb
 export NB_DIR="$BARE_NOTES_DIR"
 
-# make sure git name and git email are set up for notes (git global settings)
-[[ -z "$(git config --global user.name)" ]] && {
-	read -rp "Please enter your name (for use with note authoring): " git_name
-	git config --global user.name "$git_name"
-}
-
-[[ -z "$(git config --global user.email)" ]] && {
-	read -rp "Please enter your email (for use with note authoring): " git_email
-	git config --global user.email "$git_email"
-}
-
 mkdir -p "$BARE_NOTES_DIR/scripts"
 mkdir -p "$BARE_NOTES_DIR/research"
 mkdir -p "$BARE_NOTES_DIR/imports"
 mkdir -p "$BARE_NOTES_DIR/images"
-
 
 
 # =============================================================================
@@ -70,3 +60,4 @@ inspect() {
 		b/inspect "$2" && exit 0
 	fi
 }
+

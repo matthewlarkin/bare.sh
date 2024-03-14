@@ -5,6 +5,16 @@ UPDATED=0
 CORE_DEPS=(bash curl jq git sqlite3 ffmpeg yt-dlp ddgr feh)
 SPECIAL_DEPS=(sqlpage nb csvcut glow)
 
+! grep -q "export BARE_GIT_NAME" "$HOME"/.barerc && {
+	read -rp "Please enter your name (for use with note authoring): " git_name
+	echo "export BARE_GIT_NAME=\"$git_name\"" >> "$HOME"/.barerc
+}
+
+! grep -q "export BARE_GIT_EMAIL" "$HOME"/.barerc && {
+	read -rp "Please enter your email (for use with note authoring): " git_email
+	echo "export BARE_GIT_EMAIL=\"$git_email\"" >> "$HOME"/.barerc
+}
+
 # check that mac has brew
 [[ "$BARE_OS" == "mac" ]] && {
 	[[ -x "$(command -v brew)" ]] || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
