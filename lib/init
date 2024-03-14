@@ -22,6 +22,9 @@ case "$(uname -s)" in
 	*) echo "Bare only supports Linux and macOS" && exit 1 ;;
 esac
 
+source "$BARE_DIR"/lib/colors
+source "$BARE_DIR"/lib/deps
+
 # If lib/www/sqlpage/sqlpage.json doesn't exist, create it with default values
 if [[ ! -f lib/www/sqlpage/sqlpage.json ]]; then
 	echo "{\"allow_exec\": true, \"port\": $BARE_PORT}" > lib/www/sqlpage/sqlpage.json
@@ -37,9 +40,6 @@ fi
 # Set up nb to use the correct directory
 export BARE_NOTES_DIR="$BARE_DIR"/var/.nb
 export NB_DIR="$BARE_NOTES_DIR"
-
-source "$BARE_DIR"/lib/colors
-source "$BARE_DIR"/lib/deps
 
 # make sure git name and git email are set up for notes (git global settings)
 [[ -z "$(git config --global user.name)" ]] && {

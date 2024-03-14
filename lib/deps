@@ -2,18 +2,18 @@
 
 UPDATED=0
 
-CORE_DEPS=(bash curl jq git sqlite3 ffmpeg yt-dlp ddgr feh glow)
-SPECIAL_DEPS=(sqlpage nb csvcut)
+CORE_DEPS=(bash curl jq git sqlite3 ffmpeg yt-dlp ddgr feh)
+SPECIAL_DEPS=(sqlpage nb csvcut glow)
 
 # check that mac has brew
-[[ "$BARE_OS" = "mac" ]] && {
+[[ "$BARE_OS" == "mac" ]] && {
 	[[ -x "$(command -v brew)" ]] || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 }
 
 # check if each dep is installed
 for dep in "${CORE_DEPS[@]}"; do
 	if ! [ -x "$(command -v "$dep")" ]; then
-		[[ "$BARE_OS" = "linux" ]] && {
+		[[ "$BARE_OS" == "linux" ]] && {
 			[[ $UPDATED -eq 0 ]] && sudo apt update && UPDATED=1
 			sudo apt install -y "$dep"
 		} || {
@@ -26,10 +26,10 @@ done
 # check if each special dep is installed
 for dep in "${SPECIAL_DEPS[@]}"; do
 	if ! [ -x "$(command -v "$dep")" ]; then
-		[[ "$BARE_OS" = "linux" ]] && {
+		[[ "$BARE_OS" == "linux" ]] && {
 
 			# SQLPage
-			[[ "$dep" = "sqlpage" ]] && {
+			[[ "$dep" == "sqlpage" ]] && {
 				sudo curl -sL -O https://github.com/lovasoa/SQLpage/releases/download/v0.19.1/sqlpage-linux.tgz
 				sudo tar -xzf sqlpage-linux.tgz && sudo rm sqlpage-linux.tgz
 				sudo mv sqlpage.bin /usr/bin/sqlpage
@@ -37,23 +37,25 @@ for dep in "${SPECIAL_DEPS[@]}"; do
 			}
 
 			# nb
-			[[ "$dep" = "nb" ]] && {
+			[[ "$dep" == "nb" ]] && {
 				sudo curl -L https://raw.github.com/xwmx/nb/master/nb -o /usr/local/bin/nb
 				sudo chmod +x /usr/local/bin/nb
 			}
 
 			# csvkit
-			[[ "$dep" = "csvcut" ]] && sudo apt install -y csvkit
+			[[ "$dep" == "csvcut" ]] && sudo apt install -y csvkit
 
-		} || {
+			# glow
+			[[ "$dep" == "glow" ]] && sudo snap install glow
+
+		}
+
+		[[ "$BARE_OS" == "mac" ]] && {
 
 			[[ $UPDATED -eq 0 ]] && brew update && UPDATED=1
-			
-			# SQLPage
-			[[ "$dep" = "sqlpage" ]] && brew install sqlpage
 
-			# nb
-			[[ "$dep" = "nb" ]] && brew install nb
+			# SQLPage, nb, or glow
+			[[ "sqlpage nb glow" =~ $dep ]] && brew install "$dep"
 
 			# csvkit
 			[[ "$dep" = "csvcut" ]] && brew install csvkit
