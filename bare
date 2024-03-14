@@ -3,13 +3,15 @@ set +H
 set +o histexpand
 source "$(dirname "${BASH_SOURCE[0]}")/lib/init"
 
+# if arguments are present, print them and exit
+[[ -n $@ ]] && {
 
-[[ -z $1 ]] && echo "No scope specified" && exit 1
+	[[ -e "b/$1" ]] && {
+		scope="$1" && shift
+		"b/$scope" "$@" && exit 0
+	}
 
-[[ -e "b/$1" ]] && {
-	scope="$1" && shift
-	"b/$scope" "$@"
-	exit 0
+	echo "$@" && exit 0
 }
 
-echo "$@"
+exit 1

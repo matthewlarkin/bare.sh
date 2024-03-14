@@ -21,13 +21,17 @@ EOF
 
 [[ $1 == 'clear' ]] && rm "$BARE_DIR"/tmp/weather.* && exit 0
 
+style="text"
 command="today"
-color="C"
-
+color_param="T"
 while (( "$#" )); do
 	case "$1" in
-		-T)
-			color="T"
+		-C)
+			color_param="C"
+			shift
+			;;
+		-P)
+			style="pretty"
 			shift
 			;;
 		today|forecast)
@@ -50,7 +54,74 @@ location=$(b/geo "$location")
 
 [[ $command == 'json' ]] && params="$location?format=j1"
 # [[ $command == 'basic' ]] && params="$location?uQF$color&format=%c+%m+%t"
-[[ $command == 'today' ]] && params="$location?u0QF$color"
-[[ $command == 'forecast' ]] && params="$location?u3QF$color"
+[[ $command == 'today' ]] && params="$location?u0QF$color_param"
+[[ $command == 'forecast' ]] && params="$location?u3QF$color_param"
 
-curl -sL "wttr.in/$params"
+response=$(curl -sL "wttr.in/$params")
+
+declare -A conditions
+conditions=(
+	["Clear"]="☀️"
+	["Sunny"]="☀️"
+	["Partly cloudy"]="⛅"
+	["Cloudy"]="☁️"
+	["Overcast"]="☁️"
+	["Mist"]="🌫️"
+	["Fog"]="🌫️"
+	["Freezing fog"]="🌫️"
+	["Patchy rain possible"]="🌦️"
+	["Patchy snow possible"]="🌨️"
+	["Patchy sleet possible"]="🌨️"
+	["Patchy freezing drizzle possible"]="🌨️"
+	["Thundery outbreaks possible"]="🌩️"
+	["Blowing snow"]="🌨️"
+	["Blizzard"]="🌨️"
+	["Fog"]="🌫️"
+	["Freezing fog"]="🌫️"
+	["Patchy light drizzle"]="🌧️"
+	["Light drizzle"]="🌧️"
+	["Freezing drizzle"]="🌧️"
+	["Heavy freezing drizzle"]="🌧️"
+	["Patchy light rain"]="🌧️"
+	["Light rain"]="🌧️"
+	["Moderate rain at times"]="🌧️"
+	["Moderate rain"]="🌧️"
+	["Heavy rain at times"]="🌧️"
+	["Heavy rain"]="🌧️"
+	["Light freezing rain"]="🌧️"
+	["Moderate or heavy freezing rain"]="🌧️"
+	["Light sleet"]="🌨️"
+	["Moderate or heavy sleet"]="🌨️"
+	["Patchy light snow"]="🌨️"
+	["Light snow"]="🌨️"
+	["Patchy moderate snow"]="🌨️"
+	["Moderate snow"]="🌨️"
+	["Patchy heavy snow"]="🌨️"
+	["Heavy snow"]="🌨️"
+	["Ice pellets"]="🌨️"
+	["Light rain shower"]="🌧️"
+	["Moderate or heavy rain shower"]="🌧️"
+	["Torrential rain shower"]="🌧️"
+	["Light sleet showers"]="🌨️"
+	["Moderate or heavy sleet showers"]="🌨️"
+	["Light snow showers"]="🌨️"
+	["Moderate or heavy snow showers"]="🌨️"
+)
+
+[[ $style == "text" ]] && {
+	# Use sed to extract the necessary details
+	weather=$(echo "$response" | sed -n '1p' | cut -c 15- | xargs)
+	temperature=$(echo "$response" | sed -n '2p' | cut -c 15- | xargs)
+	wind=$(echo "$response" | sed -n '3p' | cut -c 15- | xargs)
+	visibility=$(echo "$response" | sed -n '4p' | cut -c 15- | xargs)
+	precipitation=$(echo "$response" | sed -n '5p' | cut -c 15- | xargs)
+
+	weather_emoji=${conditions[$weather]}
+
+	# Use emojis to represent wind, precipitation, and visibility
+	echo "${weather_emoji:+}${temperature}, 🌬️ wind ${wind}. 💧 ${precipitation} / 👀 ${visibility}"
+	exit 0
+} || {
+	echo "$response"
+	exit 0
+}
