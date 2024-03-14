@@ -38,4 +38,5 @@ if [[ $_name =~ [^a-zA-Z0-9_] ]]; then
 	exit 1
 fi
 
+_value=$(b/codec base64.encode "$_value")
 echo "export $_name=\"$_value\"" >> "$HOME/.bare_variables"

@@ -31,16 +31,16 @@ scope="$1" && shift
 
 case $scope in
 
-	url.encode ) echo -n "$1" | jq -s -R -r @uri ;;
-	url.decode ) echo -n "$1" | perl -pe 's/%([0-9a-f]{2})/sprintf("%s", pack("H2",$1))/eig' ;;
+	url.encode ) echo "$1" | jq -s -R -r @uri ;;
+	url.decode ) echo "$1" | perl -pe 's/%([0-9a-f]{2})/sprintf("%s", pack("H2",$1))/eig' ;;
 
-	base64.encode ) echo -n "$1" | jq -s -R -r @base64 ;;
-	base64.decode ) echo -n "$1" | perl -MMIME::Base64 -ne 'print decode_base64($_)' ;;
+	base64.encode ) echo "$1" | jq -s -R -r @base64 ;;
+	base64.decode ) echo "$1" | perl -MMIME::Base64 -ne 'print decode_base64($_)' ;;
 
-	hex.encode ) echo -n "$1" | xxd -ps ;;
-	hex.decode ) echo -n "$1" | xxd -r -p ;;
+	hex.encode ) echo "$1" | xxd -ps ;;
+	hex.decode ) echo "$1" | xxd -r -p ;;
 
-	html.encode ) echo -n "$1" | jq -j -s -R -r @html ;;
-	html.decode ) echo -n "$1" | php -R 'echo html_entity_decode($argn, ENT_QUOTES|ENT_HTML5) . "\n";' ;;
+	html.encode ) echo "$1" | jq -j -s -R -r @html ;;
+	html.decode ) echo "$1" | php -R 'echo html_entity_decode($argn, ENT_QUOTES|ENT_HTML5) . "\n";' ;;
 
 esac
