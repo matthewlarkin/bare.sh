@@ -61,3 +61,8 @@ inspect() {
 	fi
 }
 
+if [[ ! -f "$HOME"/.bare_variables ]]; then
+	touch "$HOME"/.bare_variables
+	chmod 600 "$HOME"/.bare_variables
+fi
+

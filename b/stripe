@@ -22,7 +22,7 @@ EOF
 
 
 
-[[ -z "$STRIPE_SECRET_KEY" ]] && b/error "env_error" "Please set the STRIPE_SECRET_KEY variable in your .env file"
+[[ -z "$BARE_STRIPE_SECRET_KEY" ]] && b/error "env_error" "Please set the BARE_STRIPE_SECRET_KEY variable in your .env file"
 
 command="$1"
 shift
@@ -71,7 +71,7 @@ EOF
 			description="${parts[2]}"
 
 			curl -s -X POST https://api.stripe.com/v1/checkout/sessions \
-				-u "$STRIPE_SECRET_KEY": \
+				-u "$BARE_STRIPE_SECRET_KEY": \
 				-d "payment_method_types[]=card" \
 				-d "line_items[][amount]=$amount" \
 				-d "line_items[][currency]=$currency" \
@@ -108,7 +108,7 @@ EOF
 			esac
 		done
 		[[ -z "$id" ]] && echo "No ID specified" && exit 1
-		curl -s -X GET "https://api.stripe.com/v1/checkout/sessions/$id" -u "$STRIPE_SECRET_KEY": | jq
+		curl -s -X GET "https://api.stripe.com/v1/checkout/sessions/$id" -u "$BARE_STRIPE_SECRET_KEY": | jq
 		;;
 
 
@@ -128,7 +128,7 @@ EOF
 		)" && inspect "$doc" "$1"
 		# ======================
 
-        curl -s -X GET https://api.stripe.com/v1/customers -u "$STRIPE_SECRET_KEY": | jq
+        curl -s -X GET https://api.stripe.com/v1/customers -u "$BARE_STRIPE_SECRET_KEY": | jq
         ;;
     
 	customers.create) doc="$(cat <<'EOF'
@@ -154,7 +154,7 @@ EOF
 		done
 		[[ -z "$email" ]] && echo "No email specified" && exit 1
 		curl -s -X POST https://api.stripe.com/v1/customers \
-			-u "$STRIPE_SECRET_KEY": \
+			-u "$BARE_STRIPE_SECRET_KEY": \
 			-d "email=$email" | jq
 		;;
     

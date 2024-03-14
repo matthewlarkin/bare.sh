@@ -35,7 +35,7 @@ echo $(LC_ALL=C tr -dc 'a-zA-Z0-9' < /dev/urandom | head -c 16)
 echo $(LC_ALL=C tr -dc '0-9' < /dev/urandom | head -c 10)
 # >> 6306425682
 
-curl -X POST -H "Authorization: Bearer $OPENAI_API_KEY" -H "Content-Type: application/json" -d '{"model": "gpt-3.5-turbo", "messages": [{"role": "system", "content": "You are a chef"}, {"role": "user", "content": "Are you a chef?"}]}' https://api.openai.com/v1/chat/completions | jq
+curl -X POST -H "Authorization: Bearer $BARE_OPENAI_API_KEY" -H "Content-Type: application/json" -d '{"model": "gpt-3.5-turbo", "messages": [{"role": "system", "content": "You are a chef"}, {"role": "user", "content": "Are you a chef?"}]}' https://api.openai.com/v1/chat/completions | jq
 # >> {"id":"chatcmpl-8wYMvPDyn3O3VBvt0GDuP7mgMhq8W","object":"chat.completion","created":1708965829,"model":"gpt-3.5-turbo-0125","choices":[{"index":0,"message":{"role":"assistant","content":"Yes, I am a virtual chef ready to help you with any cooking-related questions or recipe ideas!"},"logprobs":null,"finish_reason":"stop"}],"usage":{"prompt_tokens":20,"completion_tokens":20,"total_tokens":40},"system_fingerprint":"fp_86156a94a0"}
 
 

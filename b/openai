@@ -33,14 +33,14 @@ EOF
 
 
 # Requirements
-[ -z "$OPENAI_API_KEY" ] && b/error env_error "OPENAI_API_KEY environment variable is not set"
+[ -z "$BARE_OPENAI_API_KEY" ] && b/error env_error "BARE_OPENAI_API_KEY environment variable is not set"
 
 
 # Function to make a request to the OpenAI API
 curlRequest() {
 	local OPTIND opt url file purpose data
 
-	curl_opts=(-H "Authorization: Bearer $OPENAI_API_KEY" -H "OpenAI-Beta: assistants=v1" --silent)
+	curl_opts=(-H "Authorization: Bearer $BARE_OPENAI_API_KEY" -H "OpenAI-Beta: assistants=v1" --silent)
 
 	while getopts "u:f:p:d:j" opt; do
 		case $opt in
@@ -578,7 +578,7 @@ EOF
 			esac
 		done
 
-		response=$(curl -X DELETE -H "Authorization: Bearer $OPENAI_API_KEY" --silent "$api_url/files/$file_id")
+		response=$(curl -X DELETE -H "Authorization: Bearer $BARE_OPENAI_API_KEY" --silent "$api_url/files/$file_id")
 
 		if [[ "$verbose" == true ]]; then
 			echo "$response" | jq -r
@@ -715,7 +715,7 @@ EOF
 		random_file_name=$(openssl rand -hex 16)
 
 		curl https://api.openai.com/v1/audio/speech \
-			-H "Authorization: Bearer $OPENAI_API_KEY" \
+			-H "Authorization: Bearer $BARE_OPENAI_API_KEY" \
 			-H "Content-Type: application/json" \
 			-d "$payload" \
 			--silent \
@@ -809,7 +809,7 @@ EOF
             while IFS= read -r chunk; do
                 chunk_path="$tmp_dir/$chunk"
                 # Send request to API
-                response=$(curl -X POST -H "Authorization: Bearer $OPENAI_API_KEY" -H "Content-Type: multipart/form-data" -F "file=@$chunk_path" -F "model=$model" -F "language=$language" -F "prompt=$prompt" -F "response_format=$response_format" -F "temperature=$temperature" -F "timestamp_granularities[]=$timestamp_granularities" -F "model=$model" --silent --max-time 60 https://api.openai.com/v1/audio/transcriptions)
+                response=$(curl -X POST -H "Authorization: Bearer $BARE_OPENAI_API_KEY" -H "Content-Type: multipart/form-data" -F "file=@$chunk_path" -F "model=$model" -F "language=$language" -F "prompt=$prompt" -F "response_format=$response_format" -F "temperature=$temperature" -F "timestamp_granularities[]=$timestamp_granularities" -F "model=$model" --silent --max-time 60 https://api.openai.com/v1/audio/transcriptions)
 
                 # Check if response is a valid JSON and contains 'text' field
                 if echo "$response" | jq -e . >/dev/null 2>&1 && echo "$response" | jq 'has("text")' | grep -q true; then
@@ -845,7 +845,7 @@ EOF
         else
             # Send the request to the API
             # Send the request to the API
-            response=$(curl -X POST -H "Authorization: Bearer $OPENAI_API_KEY" -H "Content-Type: multipart/form-data" -F "file=@$file" -F "model=$model" -F "language=$language" -F "prompt=$prompt" -F "response_format=$response_format" -F "temperature=$temperature" -F "timestamp_granularities[]=$timestamp_granularities" --silent --max-time 60 https://api.openai.com/v1/audio/transcriptions)
+            response=$(curl -X POST -H "Authorization: Bearer $BARE_OPENAI_API_KEY" -H "Content-Type: multipart/form-data" -F "file=@$file" -F "model=$model" -F "language=$language" -F "prompt=$prompt" -F "response_format=$response_format" -F "temperature=$temperature" -F "timestamp_granularities[]=$timestamp_granularities" --silent --max-time 60 https://api.openai.com/v1/audio/transcriptions)
 
             # Check if the response is valid JSON and contains 'text' field
             if echo "$response" | jq -e . >/dev/null 2>&1 && echo "$response" | jq 'has("text")' | grep -q true; then

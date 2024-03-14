@@ -18,7 +18,7 @@ EOF
 
 
 
-[ -z "$DAILY_API_KEY" ] && b/error missing_key "Daily.co API key not set (DAILY_API_KEY)" && exit 1
+[ -z "$BARE_DAILY_API_KEY" ] && b/error missing_key "Daily.co API key not set (BARE_DAILY_API_KEY)" && exit 1
 
 command=$1
 shift
@@ -118,7 +118,7 @@ EOF
 
 	response=$(curl https://api.daily.co/v1/rooms -s \
 		-H "Content-Type: application/json" \
-		-H "Authorization: Bearer $DAILY_API_KEY" \
+		-H "Authorization: Bearer $BARE_DAILY_API_KEY" \
 		-d "$json_payload") || { b/error api_error "Failed to create room"; exit 1; }
 
 	echo "$response" | jq
@@ -142,7 +142,7 @@ EOF
 
 	response=$(curl https://api.daily.co/v1/transcript -s \
 		-H "Content-Type: application/json" \
-		-H "Authorization: Bearer $DAILY_API_KEY") || { b/error api_error "Failed to list transcriptions"; exit 1; }
+		-H "Authorization: Bearer $BARE_DAILY_API_KEY") || { b/error api_error "Failed to list transcriptions"; exit 1; }
 
 	echo "$response" | jq
 
