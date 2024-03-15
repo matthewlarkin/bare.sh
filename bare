@@ -1,7 +1,8 @@
-#!/usr/bin/env bash
+#!/bin/bash
 set +H
 set +o histexpand
 source "$(dirname "${BASH_SOURCE[0]}")/lib/init"
+[[ $BARE_OS == 'mac' ]] && export PATH="/opt/homebrew/bin:$PATH"
 
 # if arguments are present, print them and exit
 [[ -n $@ ]] && {

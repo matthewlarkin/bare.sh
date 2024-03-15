@@ -17,40 +17,19 @@ EOF
 )" && inspect "$doc" "$1"
 # =============================================================================
 
-
-
-[[ $1 == 'clear' ]] && rm "$BARE_DIR"/tmp/weather.* && exit 0
-
 style="text"
 command="today"
 color_param="T"
+
 while (( "$#" )); do
 	case "$1" in
-		-C)
-			color_param="C"
-			shift
-			;;
-		-P)
-			style="pretty"
-			shift
-			;;
-		today|forecast)
-			location="$2"
-			command="$1"
-			shift 2
-			;;
-		-J)
-			command="json"
-			shift
-			;;
-		*)
-			location="$1"
-			shift
-			;;
+		-C ) color_param="C" && shift ;;
+		-P ) style="pretty" && shift ;;
+		today|forecast ) location="$2" && command="$1" && shift 2 ;;
+		-J ) command="json" && shift ;;
+		* ) location="$1" && shift ;;
 	esac
 done
-
-location=$(b/geo "$location")
 
 [[ $command == 'json' ]] && params="$location?format=j1"
 # [[ $command == 'basic' ]] && params="$location?uQF$color&format=%c+%m+%t"
@@ -119,7 +98,7 @@ conditions=(
 	weather_emoji=${conditions[$weather]}
 
 	# Use emojis to represent wind, precipitation, and visibility
-	echo "${weather_emoji:+}${temperature}, 🌬️ wind ${wind}. 💧 ${precipitation} / 👀 ${visibility}"
+	echo "${weather_emoji:-$weather} ${temperature}, 🌬️ wind ${wind}. 💧 ${precipitation} / 👀 ${visibility}"
 	exit 0
 } || {
 	echo "$response"
