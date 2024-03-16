@@ -5,10 +5,12 @@ doc="$(cat <<'EOF'
 
 # weather
 
-Get the current weather for a location
+Get the weather for a U.S. location
 
-`[:location] today`		| Get today's weather
-`[:location] forecast` 	| Get a three-day forecast
+`:empty`		| Get current weather (defaults to current location)
+`forecast` 		| Get a seven-day forecast
+`tomorrow`		| Get tomorrow's forecast
+`<location>`	| Get current weather for a location
 
 > weather today		| Get today's weather
 > weather forecast	| Get a three-day forecast
@@ -17,90 +19,147 @@ EOF
 )" && inspect "$doc" "$1"
 # =============================================================================
 
-style="text"
-command="today"
-color_param="T"
+# Request current weather from weather.gov
 
-while (( "$#" )); do
-	case "$1" in
-		-C ) color_param="C" && shift ;;
-		-P ) style="pretty" && shift ;;
-		today|forecast ) location="$2" && command="$1" && shift 2 ;;
-		-J ) command="json" && shift ;;
-		* ) location="$1" && shift ;;
-	esac
-done
+if [[ -z $1 ]]; then
+	location="$(b/geo)"
+	type='current'
+elif [[ $1 == 'forecast' ]]; then
+	type='forecast'
+	location="$(b/geo "$2")"
+elif [[ $1 == 'tomorrow' ]]; then
+	type='tomorrow'
+	location="$(b/geo "$2")"
+else
+	location="$(b/geo "$1")"
+	type='current'
+fi
 
-[[ $command == 'json' ]] && params="$location?format=j1"
-# [[ $command == 'basic' ]] && params="$location?uQF$color&format=%c+%m+%t"
-[[ $command == 'today' ]] && params="$location?u0QF$color_param"
-[[ $command == 'forecast' ]] && params="$location?u3QF$color_param"
+weather_options=$(curl -sL "https://api.weather.gov/points/$location")
 
-response=$(curl -sL "wttr.in/$params")
+if [[ $type == 'current' ]]; then
+	weather_endpoint=$(echo "$weather_options" | jq -r '.properties.forecastHourly')
+else
+	weather_endpoint=$(echo "$weather_options" | jq -r '.properties.forecast')
+fi
 
-declare -A conditions
-conditions=(
+# Fetch the weather data
+if [[ $type == 'current' ]]; then
+	weather=$(curl -sL "$weather_endpoint" | jq '.properties.periods[0]')
+elif [[ $type == 'forecast' || $type == 'tomorrow' ]]; then
+	weather=$(curl -sL "$weather_endpoint" | jq '.properties.periods')
+fi
+
+declare -A conditions=(
+	["Sunny"]="☀️"
+	["Mostly Sunny"]="🌤️"
+	["Partly Sunny"]="🌤️"
+	["Mostly Clear"]="🌤️"
 	["Clear"]="☀️"
 	["Sunny"]="☀️"
-	["Partly cloudy"]="⛅"
+	["Fair"]="🌤️"
+	["Partly Cloudy"]="🌤️"
+	["Mostly Cloudy"]="☁️"
 	["Cloudy"]="☁️"
-	["Overcast"]="☁️"
-	["Mist"]="🌫️"
+	["Rain"]="🌧️"
+	["Showers"]="🌧️"
+	["Thunderstorms"]="⛈️"
+	["Snow"]="❄️"
 	["Fog"]="🌫️"
-	["Freezing fog"]="🌫️"
-	["Patchy rain possible"]="🌦️"
-	["Patchy snow possible"]="🌨️"
-	["Patchy sleet possible"]="🌨️"
-	["Patchy freezing drizzle possible"]="🌨️"
-	["Thundery outbreaks possible"]="🌩️"
-	["Blowing snow"]="🌨️"
-	["Blizzard"]="🌨️"
-	["Fog"]="🌫️"
-	["Freezing fog"]="🌫️"
-	["Patchy light drizzle"]="🌧️"
-	["Light drizzle"]="🌧️"
-	["Freezing drizzle"]="🌧️"
-	["Heavy freezing drizzle"]="🌧️"
-	["Patchy light rain"]="🌧️"
-	["Light rain"]="🌧️"
-	["Moderate rain at times"]="🌧️"
-	["Moderate rain"]="🌧️"
-	["Heavy rain at times"]="🌧️"
-	["Heavy rain"]="🌧️"
-	["Light freezing rain"]="🌧️"
-	["Moderate or heavy freezing rain"]="🌧️"
-	["Light sleet"]="🌨️"
-	["Moderate or heavy sleet"]="🌨️"
-	["Patchy light snow"]="🌨️"
-	["Light snow"]="🌨️"
-	["Patchy moderate snow"]="🌨️"
-	["Moderate snow"]="🌨️"
-	["Patchy heavy snow"]="🌨️"
-	["Heavy snow"]="🌨️"
-	["Ice pellets"]="🌨️"
-	["Light rain shower"]="🌧️"
-	["Moderate or heavy rain shower"]="🌧️"
-	["Torrential rain shower"]="🌧️"
-	["Light sleet showers"]="🌨️"
-	["Moderate or heavy sleet showers"]="🌨️"
-	["Light snow showers"]="🌨️"
-	["Moderate or heavy snow showers"]="🌨️"
+	["Haze"]="🌫️"
+	["Smoke"]="🌫️"
+	["Blowing Snow"]="🌨️"
+	["Blowing Dust"]="🌫️"
+	["Blowing Sand"]="🌫️"
+	["Blowing Widespread Dust"]="🌫"
+	["Rain Showers Likely"]="🌧️"
+	["Chance Rain Showers"]="☔️"
 )
 
-[[ $style == "text" ]] && {
-	# Use sed to extract the necessary details
-	weather=$(echo "$response" | sed -n '1p' | cut -c 15- | xargs)
-	temperature=$(echo "$response" | sed -n '2p' | cut -c 15- | xargs)
-	wind=$(echo "$response" | sed -n '3p' | cut -c 15- | xargs)
-	visibility=$(echo "$response" | sed -n '4p' | cut -c 15- | xargs)
-	precipitation=$(echo "$response" | sed -n '5p' | cut -c 15- | xargs)
+declare -A directions=(
+	["N"]="↑"
+	["NNE"]="↗"
+	["NE"]="↗"
+	["ENE"]="→"
+	["E"]="→"
+	["ESE"]="↘"
+	["SE"]="↘"
+	["SSE"]="↓"
+	["S"]="↓"
+	["SSW"]="↙"
+	["SW"]="↙"
+	["WSW"]="←"
+	["W"]="←"
+	["WNW"]="↖"
+	["NW"]="↖"
+	["NNW"]="↑"
+)
 
-	weather_emoji=${conditions[$weather]}
+declare -A precips=(
+	["null"]=""
+	["0%"]=""
+	["10%"]="💧"
+	["20%"]="💧"
+	["30%"]="💧"
+	["40%"]="💧"
+	["50%"]="🌧️"
+	["60%"]="🌧️"
+	["70%"]="🌧️"
+	["80%"]="🌧️"
+	["90%"]="🌧️"
+	["100%"]="🌧️"
+)
 
-	# Use emojis to represent wind, precipitation, and visibility
-	echo "${weather_emoji:-$weather} ${temperature}, 🌬️ wind ${wind}. 💧 ${precipitation} / 👀 ${visibility}"
-	exit 0
-} || {
-	echo "$response"
-	exit 0
+
+# summary with emoji
+
+getSummary() {
+	local name=$(echo "$1" | jq -r '.name')
+	local condition=$(echo "$1" | jq -r '.shortForecast')
+	local temp=$(echo "$1" | jq -r '.temperature')°$(echo "$1" | jq -r '.temperatureUnit')
+	local wind=$(echo "$1" | jq -r '.windSpeed')
+	local wind_dir=$(echo "$1" | jq -r '.windDirection')
+	local humidity=$(echo "$1" | jq -r '.relativeHumidity.value')%
+	local precip=$(echo "$1" | jq -r '.probabilityOfPrecipitation.value')%
+	# Handle null and 0% precipitation
+	if [[ $precip == "null%" || $precip == "0%" ]]; then
+		precip=""
+	else
+		precip=" ($precip) "
+	fi
+	# Determine emoji based on condition
+	local emoji="☀️" # Default to sunny
+	[[ $condition == *"Partly"* ]] && emoji="🌤️"
+	[[ $condition == *"Cloudy"* ]] && emoji="☁️"
+	[[ $condition == *"Rain"* || $condition == *"Showers"* ]] && emoji="🌧️"
+	[[ $condition == *"Snow"* ]] && emoji="❄️"
+	[[ $condition == *"Fog"* ]] && emoji="🌫️"
+	[[ $condition == *"Thunder"* ]] && emoji="⚡️"
+	if [[ $type == "current" ]]; then
+		echo -e "$emoji $temp $condition ${directions[$wind_dir]} $wind${wind_dir:+ $wind_dir}"
+	else
+		echo -e "$name $emoji $temp $condition ${directions[$wind_dir]} $wind${wind_dir:+ $wind_dir}"
+	fi
 }
+
+[[ $type == "current" ]] && getSummary "$weather"
+[[ $type == "forecast" ]] && {
+	# take json array, and get summary for each item
+	echo "$weather" | jq -c '.[]' | while read -r period; do
+		getSummary "$period"
+	done
+}
+[[ $type == "tomorrow" ]] && {
+	# take json array, and get summary for each item
+	periods=$(echo "$weather" | jq -r 'length')
+	for (( i=0; i<$periods; i++ )); do
+		period=$(echo "$weather" | jq -c ".[$i]")
+		name=$(echo "$period" | jq -r '.name')
+		# Only process periods for tomorrow
+		if [[ $name == "Tomorrow" || $name == "Tomorrow Night" ]]; then
+			getSummary "$period"
+		fi
+	done
+}
+
+exit 0

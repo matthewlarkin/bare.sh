@@ -16,28 +16,27 @@ EOF
 )" && inspect "$doc" "$1"
 # =============================================================================
 
+get_location() {
+	if [[ -z $1 ]]; then
+		echo $(curl -sL https://ipinfo.io/ip)
+	else
+		echo $(b/codec url.encode "$1")
+	fi
+}
 
+get_coordinates() {
+	local location=$1
+	local type=$2
 
-# set command default to current IP
-if [[ -z $1 ]]; then
-	command=$(curl -sL https://ipinfo.io/ip)
-else
-	command="$1"
-	shift 1
-fi
+	if [[ $type == "city" ]]; then
+		curl -s "https://nominatim.openstreetmap.org/search?format=json&q=$location" | jq -r '.[0].lat + "," + .[0].lon' | awk -F, '{printf "%.2f,%.2f\n", $1, $2}'
+	else
+		curl -s "https://ipinfo.io/$location" | jq -r '.loc' | awk -F, '{printf "%.2f,%.2f\n", $1, $2}'
+	fi
+}
 
-case $command in
+location=$(get_location "$1")
+[[ -z $location ]] && location=$(curl -s https://ipinfo.io/ip)
+[[ $location =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]] && type="ip" || type="city"
 
-	* )
-
-		location=$(b/codec url.encode "$command")
-		[[ -z $location ]] && location=$(curl -s https://ipinfo.io/ip)
-		[[ $location =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]] && type="ip" || type="city"
-
-		[[ $type == "city" ]] && curl -s "https://nominatim.openstreetmap.org/search?format=json&q=$location" | jq -r '.[0].lat + "," + .[0].lon' | awk -F, '{printf "%.2f,%.2f\n", $1, $2}' && exit 0
-
-		curl -s "https://ipinfo.io/$location" | jq -r '.loc' | awk -F, '{printf "%.2f,%.2f\n", $1, $2}' && exit 0
-
-		;;
-
-esac
+get_coordinates "$location" "$type"
