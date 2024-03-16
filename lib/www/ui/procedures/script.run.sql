@@ -11,8 +11,7 @@ select 'alert' as component,
 	'check' as icon,
 	'green' as color;
 
-select 'text' as component,
-	$run as contents;
-
-select 'code' as component,
-	$content as contents;
+select 'code' as component;
+	select
+		'plaintext' as language,
+		$run as contents;
