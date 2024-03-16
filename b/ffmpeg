@@ -83,7 +83,7 @@ EOF
             esac
         done
 
-		file="$BARE_DIR/var/.nb/$video"
+		file="$BARE_HOME/.nb/$video"
 
 		[[ ! -f "$file" ]] && b/error file_not_found "Please provide a valid file"
 

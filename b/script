@@ -30,7 +30,7 @@ case $command in
 
 	list ) b/notes list -N "scripts" ;;
 	show ) b/notes show "scripts:$1" ;;
-	open ) "${BARE_EDITOR:-vim}" "$BARE_DIR/var/.nb/scripts/$1" ;;
+	open ) "${BARE_EDITOR:-vim}" "$BARE_HOME/.nb/scripts/$1" ;;
 	run ) b/interpret "$1" ;;
 	create ) b/notes create -N scripts -T "$1" ;;
 	* ) echo "Invalid command: $command" && exit 1 ;;

@@ -48,11 +48,11 @@ validate_dirpath() {
 while getopts ":c:o:f:l:" opt; do
 	case ${opt} in
 		c ) content=$OPTARG ;;
-		o ) output="$BARE_DIR/var/.nb/$OPTARG"
+		o ) output="$BARE_HOME/.nb/$OPTARG"
 			validate_filename "$output" ;;
-		f ) file="$BARE_DIR/var/.nb/$OPTARG"
+		f ) file="$BARE_HOME/.nb/$OPTARG"
 			validate_dirpath "$file" ;;
-		l ) list_dir="$BARE_DIR/var/.nb/$OPTARG"
+		l ) list_dir="$BARE_HOME/.nb/$OPTARG"
 			validate_dirpath "$list_dir" ;;
 		\? ) echo "Invalid option: -$OPTARG" 1>&2 && exit 1 ;;
 	esac

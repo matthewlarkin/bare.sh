@@ -8,7 +8,7 @@ doc="$(cat <<'EOF'
 Interpret scripts and commands
 
 `[-I]`			| Start an interactive session
-`[:command]`	| Runs a given script by name (scripts located in $BARE_DIR/var/.nb/scripts)
+`[:command]`	| Runs a given script by name (scripts located in $BARE_HOME/.nb/scripts)
 
 > interpret -I				| Start an interactive session
 > interpret weather.bare	| Run a the weather script
@@ -74,7 +74,7 @@ script_name=$1 && shift
 additional_args=("$@")
 
 # Construct the full path to the file
-file_path="$BARE_DIR/var/.nb/scripts/$script_name"
+file_path="$BARE_HOME/.nb/scripts/$script_name"
 
 # Check if the file exists and is in the var/.nb/scripts directory
 if [[ -f $file_path ]]; then
@@ -82,36 +82,10 @@ if [[ -f $file_path ]]; then
 	while IFS= read -r line || [[ -n $line ]]; do
 		[[ $line = \#* ]] && continue
 		eval "words=($line)"
-		# Check if the line starts with a word ending in a colon
-		if [[ ${words[0]} =~ ^.*:$ ]]; then
-			# Get the name of the variable to set
-			var_name=${words[0]%:}
-			# Validate the variable name
-			if [[ ! $var_name =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
-				echo "Error: Invalid variable name '$var_name'"
-				continue
-			fi
-			# Capture everything after the colon into the variable
-			command_output=$(./bare "${words[@]:1}" "${additional_args[@]}")
-			# Check the exit status of the command
-			if [[ $? -ne 0 ]]; then
-				echo "Error: Command failed"
-				continue
-			fi
-			export "$var_name=$command_output"
-		else
-			if [[ ${#words[@]} -gt 0 ]]; then
-				./bare "${words[@]}"
-				# Check the exit status of the command
-				if [[ $? -ne 0 ]]; then
-					echo "Error: Command failed"
-					continue
-				fi
-			fi
-		fi
+		process_line "${words[@]}"
 	done < "$file_path"
 else
-	echo "Error: $1 is not a file or is not in the "$BARE_DIR"/var/.nb/scripts directory"
+	echo "Error: $1 is not a file or is not in the "$BARE_HOME"/.nb/scripts directory"
 fi
 
 exit 0

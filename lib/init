@@ -1,14 +1,20 @@
 #!/usr/bin/env bash
 set -e
 BARE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.."; pwd)" && cd "$BARE_DIR" && export BARE_DIR
+BARE_HOME="$HOME/.bare"
 
-# check for ~/.barerc file
-if [[ ! -f $HOME/.barerc ]]; then
-	cp "$BARE_DIR"/lib/samples/.barerc "$HOME"/.barerc
-else
-	source "$HOME"/.barerc
+# check for ~/.bare home directory
+if [[ ! -d $BARE_HOME ]]; then
+	mkdir -p "$BARE_HOME"
 fi
-chmod 600 "$HOME"/.barerc # make sure it's only readable and writable by the user
+
+# check for ~/.bare/.barerc file
+if [[ ! -f $BARE_HOME/rc ]]; then
+	cp "$BARE_DIR"/lib/samples/.bare/rc "$BARE_HOME"/rc
+else
+	source "$BARE_HOME"/rc
+fi
+chmod 600 "$BARE_HOME"/rc # make sure it's only readable and writable by the user
 
 # Find a port for us to use with the web server
 BARE_PORT=8080
@@ -32,15 +38,14 @@ if [[ ! -f lib/www/sqlpage/sqlpage.json ]]; then
 	echo "{\"allow_exec\": true, \"port\": $BARE_PORT}" > lib/www/sqlpage/sqlpage.json
 fi
 
-# Set up port and allow_exec in sqlpage.json
-if [[ ! -s lib/www/sqlpage/sqlpage.json ]]; then
-	echo "{\"allow_exec\": true, \"port\": $BARE_PORT}" > lib/www/sqlpage/sqlpage.json
-else
-	jq --arg BARE_PORT "$BARE_PORT" '.allow_exec = true | .port = ($BARE_PORT | tonumber)' lib/www/sqlpage/sqlpage.json > tmp.$$.json && mv tmp.$$.json lib/www/sqlpage/sqlpage.json
-fi
+# SQLPage config
+export port="$BARE_PORT"
+export allow_exec=true
+export database_URL="sqlite://$BARE_HOME/db"
+[[ -f $BARE_HOME/db ]] || touch "$BARE_HOME/db"
 
 # Set up nb to use the correct directory
-export BARE_NOTES_DIR="$BARE_DIR"/var/.nb
+export BARE_NOTES_DIR="$BARE_HOME"/.nb
 export NB_DIR="$BARE_NOTES_DIR"
 
 mkdir -p "$BARE_NOTES_DIR/scripts"
@@ -60,9 +65,4 @@ inspect() {
 		b/inspect "$2" && exit 0
 	fi
 }
-
-if [[ ! -f "$HOME"/.bare_variables ]]; then
-	touch "$HOME"/.bare_variables
-	chmod 600 "$HOME"/.bare_variables
-fi
 

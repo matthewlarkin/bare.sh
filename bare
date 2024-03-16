@@ -5,14 +5,11 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib/init"
 [[ $BARE_OS == 'mac' ]] && export PATH="/opt/homebrew/bin:$PATH"
 
 # if arguments are present, print them and exit
-[[ -n $@ ]] && {
-
-	[[ -e "b/$1" ]] && {
+if [[ $# -gt 0 ]]; then
+	if [[ -e "b/$1" ]]; then
 		scope="$1" && shift
 		"b/$scope" "$@" && exit 0
-	}
+	fi
 
 	echo "$@" && exit 0
-}
-
-exit 1
+fi

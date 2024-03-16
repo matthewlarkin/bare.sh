@@ -41,12 +41,12 @@ EOF
 
 		width=80
 		height=80
-		file_path="$BARE_DIR/var/.nb/$1" # set the file path to the first argument
+		file_path="$BARE_HOME/.nb/$1" # set the file path to the first argument
 
 		while getopts "u:f:o:" opt; do
 			case $opt in
 				u ) url="$OPTARG" ;;
-				f ) file_path="$BARE_DIR/var/.nb/$OPTARG" ;; # overwrite the file path if the -f option is used
+				f ) file_path="$BARE_HOME/.nb/$OPTARG" ;; # overwrite the file path if the -f option is used
 				o ) output_file_path="$OPTARG" ;;
 				* ) echo "Error: Invalid option" && return 1 ;;
 			esac

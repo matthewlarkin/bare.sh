@@ -18,13 +18,13 @@ EOF
 
 
 # make sure research notebook exists
-[[ ! -d $BARE_DIR/var/.nb/research ]] && b/notes notebooks.create "research" > /dev/null 2>&1
+[[ ! -d $BARE_HOME/.nb/research ]] && b/notes notebooks.create "research" > /dev/null 2>&1
 
 query="$1"
 time=$(date +%s)
 
-ddgr --noprompt --json --num 7 "$query" > "$BARE_DIR"/var/.nb/research/"$time".tmp.json
-results_file="$BARE_DIR"/var/.nb/research/"$time".tmp.json
+ddgr --noprompt --json --num 7 "$query" > "$BARE_HOME"/.nb/research/"$time".tmp.json
+results_file="$BARE_HOME"/.nb/research/"$time".tmp.json
 length=$(jq length "$results_file")
 
 for ((i=0; i<length; i++)); do
@@ -74,10 +74,10 @@ for ((i=0; i<length; i++)); do
 		echo ""
 		echo ""
 		echo "- - - - - - - - - - - - - - - - - - - - -"
-	} >> "$BARE_DIR"/var/.nb/research/"$time".tmp.md
+	} >> "$BARE_HOME"/.nb/research/"$time".tmp.md
 done
 
-cat "$BARE_DIR"/var/.nb/research/"$time".tmp.md
+cat "$BARE_HOME"/.nb/research/"$time".tmp.md
 
 rm "$results_file"
-rm "$BARE_DIR"/var/.nb/research/"$time".tmp.md
+rm "$BARE_HOME"/.nb/research/"$time".tmp.md

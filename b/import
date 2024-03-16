@@ -5,10 +5,10 @@ doc="$(cat <<'EOF'
 
 # import
 
-Import a file or directory into the $BARE_DIR/var/.nb directory
+Import a file or directory into the $BARE_HOME/.nb directory
 
 `:1`	| The URL or file path to import
-`(:2)`	| The destination path (defaults to $BARE_DIR/var/.nb/imports/$(basename $1))
+`(:2)`	| The destination path (defaults to $BARE_HOME/.nb/imports/$(basename $1))
 
 > b/import https://example.com/image.jpg images/myfolder/imported-image.jpg` | Import a file from a URL
 > b/import /path/to/file.txt files/myfolder/imported-file.txt` | Import a file from a file path 
@@ -20,7 +20,7 @@ EOF
 
 
 input="$1"
-root_dir="$BARE_DIR/var/.nb"
+root_dir="$BARE_HOME/.nb"
 [[ $input == *'youtube.com'* ]] && ext='mp4' || ext="${input##*.}"
 [[ -n $2 ]] && filename="$(basename "$2")" || filename="$(date +%s).$ext"
 destination="$root_dir/imports/$filename"
