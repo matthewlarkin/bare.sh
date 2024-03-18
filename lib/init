@@ -3,6 +3,10 @@ set -e
 BARE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.."; pwd)" && cd "$BARE_DIR" && export BARE_DIR
 BARE_HOME="$HOME/.bare"
 
+# Set up .cache directory
+export BARE_CACHE_DIR="$BARE_HOME"/.cache
+mkdir -p "$BARE_CACHE_DIR"
+
 # check for ~/.bare home directory
 if [[ ! -d $BARE_HOME ]]; then
 	mkdir -p "$BARE_HOME"
@@ -33,11 +37,6 @@ esac
 source "$BARE_DIR"/lib/colors
 source "$BARE_DIR"/lib/deps
 
-# If lib/www/sqlpage/sqlpage.json doesn't exist, create it with default values
-if [[ ! -f lib/www/sqlpage/sqlpage.json ]]; then
-	echo "{\"allow_exec\": true, \"port\": $BARE_PORT}" > lib/www/sqlpage/sqlpage.json
-fi
-
 # SQLPage config
 export port="$BARE_PORT"
 export allow_exec=true
@@ -47,7 +46,6 @@ export database_URL="sqlite://$BARE_HOME/db"
 # Set up nb to use the correct directory
 export BARE_NOTES_DIR="$BARE_HOME"/.nb
 export NB_DIR="$BARE_NOTES_DIR"
-
 mkdir -p "$BARE_NOTES_DIR/scripts"
 mkdir -p "$BARE_NOTES_DIR/research"
 mkdir -p "$BARE_NOTES_DIR/imports"
