@@ -8,7 +8,9 @@ create table "tags" (
 create table "assistants" (
 	"id" text primary key unique not null,
 	"title" text not null,
-	"content" text not null,
+	"model" text not null,
+	"tools" text not null,
+	"instructions" text not null,
 	"created_at" datetime not null default current_timestamp,
 	"updated_at" datetime not null default current_timestamp
 );
