@@ -45,6 +45,14 @@ process_line() {
 				command=${BASH_REMATCH[1]}
 				# Replace the command substitution with the output of the 'bare' command
 				words[i]=$(./bare "$command" 2>/dev/null)
+			elif [[ ${words[i]} =~ \$([a-zA-Z_][a-zA-Z0-9_]*) ]]; then
+				var_name=${BASH_REMATCH[1]}
+				if [[ -n ${!var_name} ]]; then
+					words[i]=${!var_name}
+				else
+					echo "Error: Undefined variable '$var_name'"
+					return 1
+				fi
 			fi
 		done
 		# Execute the command
@@ -87,5 +95,3 @@ if [[ -f $file_path ]]; then
 else
 	echo "Error: $1 is not a file or is not in the "$BARE_HOME"/.nb/scripts directory"
 fi
-
-exit 0
