@@ -45,6 +45,18 @@ validate_dirpath() {
 	fi
 }
 
+# Check if there is any input from stdin
+if [[ ! -t 0 ]]; then
+	content=$(cat)
+fi
+
+shift $((OPTIND -1))
+
+# If no option is provided, relay the additional arguments as content
+if [[ -z $content && -z $file && -z $list_dir && $# -gt 0 ]]; then
+	content="$*"
+fi
+
 while getopts ":c:o:f:l:" opt; do
 	case ${opt} in
 		c ) content=$OPTARG ;;
