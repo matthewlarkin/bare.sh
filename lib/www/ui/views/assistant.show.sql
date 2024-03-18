@@ -18,8 +18,23 @@ select 'title' as component,
 	from assistants where id = $id;
 
 select 'text' as component,
-	content as contents_md
+	instructions as contents_md
 	from assistants where id = $id;
+
+select 'form' as component,
+	'/ui/procedures/openai.chat.sql' as action,
+	'POST' as method;
+
+	select
+		'hidden' as type,
+		'assistant_id' as name,
+		$id as value;
+
+	select
+		'textarea' as type,
+		'content' as name,
+		'Chat' as label,
+		'' as value;
 
 select
 	'button' as component;
