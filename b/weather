@@ -50,32 +50,6 @@ elif [[ $type == 'forecast' || $type == 'tomorrow' ]]; then
 	weather=$(curl -sL "$weather_endpoint" | jq '.properties.periods')
 fi
 
-declare -A conditions=(
-	["Sunny"]="☀️"
-	["Mostly Sunny"]="🌤️"
-	["Partly Sunny"]="🌤️"
-	["Mostly Clear"]="🌤️"
-	["Clear"]="☀️"
-	["Sunny"]="☀️"
-	["Fair"]="🌤️"
-	["Partly Cloudy"]="🌤️"
-	["Mostly Cloudy"]="☁️"
-	["Cloudy"]="☁️"
-	["Rain"]="🌧️"
-	["Showers"]="🌧️"
-	["Thunderstorms"]="⛈️"
-	["Snow"]="❄️"
-	["Fog"]="🌫️"
-	["Haze"]="🌫️"
-	["Smoke"]="🌫️"
-	["Blowing Snow"]="🌨️"
-	["Blowing Dust"]="🌫️"
-	["Blowing Sand"]="🌫️"
-	["Blowing Widespread Dust"]="🌫"
-	["Rain Showers Likely"]="🌧️"
-	["Chance Rain Showers"]="☔️"
-)
-
 declare -A directions=(
 	["N"]="↑"
 	["NNE"]="↗"
@@ -129,8 +103,8 @@ getSummary() {
 	fi
 	# Determine emoji based on condition
 	local emoji="☀️" # Default to sunny
-	[[ $condition == *"Partly"* ]] && emoji="🌤️"
 	[[ $condition == *"Cloudy"* ]] && emoji="☁️"
+	[[ $condition == *"Partly"* || $condition == *"Mostly"* ]] && emoji="🌤️"
 	[[ $condition == *"Rain"* || $condition == *"Showers"* ]] && emoji="🌧️"
 	[[ $condition == *"Snow"* ]] && emoji="❄️"
 	[[ $condition == *"Fog"* ]] && emoji="🌫️"
