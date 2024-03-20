@@ -4,8 +4,7 @@ select 'title' as component,
 	'Assistants' as contents,
 	true as center;
 
-select 
-'breadcrumb' as component;
+select 'breadcrumb' as component;
 
 	select 
 		'Home' as title,

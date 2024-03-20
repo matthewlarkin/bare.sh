@@ -5,3 +5,6 @@ update assistants set
 	instructions = :instructions,
 	updated_at = current_timestamp
 	where id = $assistant_id;
+
+select 'redirect' as component,
+	'/assistants.sql?message=created' as link;

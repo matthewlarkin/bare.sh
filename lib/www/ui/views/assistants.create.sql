@@ -18,7 +18,8 @@ select 'breadcrumb' as component;
 
 select 'form' as component,
 	'/ui/procedures/assistants.create.sql' as action,
-	'POST' as method;
+	'POST' as method,
+	'Create' as validate;
 
 	select
 		'title' as name,
@@ -28,10 +29,3 @@ select 'form' as component,
 		'instructions' as name,
 		'Instructions' as label,
 		'textarea' as type;
-
-select 'button' as component;
-	select
-		'/assistants.sql' as link,
-		'azure' as outline,
-		'Cancel' as title,
-		'arrow-left' as icon;
