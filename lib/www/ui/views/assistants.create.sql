@@ -25,8 +25,8 @@ select 'form' as component,
 		'Name' as label,
 		'text' as type;
 	select
-		'content' as name,
-		'Content' as label,
+		'instructions' as name,
+		'Instructions' as label,
 		'textarea' as type;
 
 select 'button' as component;

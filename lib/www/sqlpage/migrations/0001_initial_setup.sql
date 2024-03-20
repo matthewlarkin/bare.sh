@@ -8,8 +8,8 @@ create table "tags" (
 create table "assistants" (
 	"id" text primary key unique not null,
 	"title" text not null,
-	"model" text not null,
-	"tools" text not null,
+	"model" text not null default ('gpt-3.5-turbo-0125'),
+	"tools" text not null default ('code-interpreter|retrieval'),
 	"instructions" text not null,
 	"created_at" datetime not null default current_timestamp,
 	"updated_at" datetime not null default current_timestamp

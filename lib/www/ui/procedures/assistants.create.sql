@@ -1,3 +1,7 @@
-set assistant_id = sqlpage.exec('./bare', 'openai', 'assistants.create', '-n', :title, '-i', :content);
+set assistant_id = sqlpage.exec('./bare', 'openai', 'assistants.create', '-n', :title, '-i', :instructions);
 
-insert into assistants (id, title, content) values ($assistant_id, :title, :content);
+update assistants set
+	title = :title,
+	instructions = :instructions,
+	updated_at = current_timestamp
+	where id = $assistant_id;
