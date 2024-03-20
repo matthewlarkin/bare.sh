@@ -1,7 +1,7 @@
 {
 	"component": "shell",
-	"title": "GroveOS",
-	"image": "https://assets.groveos.net/cdn/logo-sq.min.webp",
+	"title": "bare.sh",
+	"image": "https://assets.groveos.net/cdn/bare-building-block.webp",
 	"font": "DM Mono",
 	"menu_item": [
 		{
