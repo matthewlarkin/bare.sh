@@ -21,7 +21,7 @@ EOF
 
 
 
-while getopts "l:n:d:" opt; do
+while getopts "ln:d:" opt; do
     case $opt in
 
         l)
