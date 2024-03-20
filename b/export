@@ -9,7 +9,7 @@ Export data to various locations/formats
 
 `digital-ocean`	| Export (upload) data to a Digital Ocean space
 
-> b/export digital-ocean -f file.csv -b bucket -k key -s secret
+> b/export digital-ocean -f file.csv -b bucket -k key -s secret | Export (upload) data to a Digital Ocean space
 
 EOF
 )" && inspect "$doc" "$1"
@@ -25,9 +25,9 @@ case $command in
 Export (upload) data to a Digital Ocean space
 
 `-f`	| * The file to export
-`-b`	| * The bucket to export to
-`-k`	| * The key to use
-`-s`	| * The secret to use
+`-p`	| * The DO path to write to
+`-k`	|   The key to use
+`-s`	|   The secret to use
 
 > b/export digital-ocean -f file.csv -b bucket -k key -s secret
 
@@ -38,41 +38,48 @@ EOF
 	[[ -z $BARE_DO_SPACES_ACCESS_KEY ]] && echo "No Digital Ocean Spaces key found" && exit 1
 	[[ -z $BARE_DO_SPACES_SECRET ]] && echo "No Digital Ocean Spaces secret found" && exit 1
 
-	while getopts "f:p:k:s:" opt; do
+	key=$BARE_DO_SPACES_ACCESS_KEY
+	secret=$BARE_DO_SPACES_SECRET
+	public=false
+	while getopts "f:p:Pk:s:" opt; do
 		case $opt in
 			f ) file=$OPTARG ;; # file to export
 			p ) path=$OPTARG ;; # DO path to export to
-			k ) BARE_DO_SPACES_ACCESS_KEY=$OPTARG ;; #key to use
-			s ) BARE_DO_SPACES_SECRET=$OPTARG ;; #secret to use
+			P ) public=true ;;
+			k ) key=$OPTARG ;;
+			s ) secret=$OPTARG ;;
 			\? ) echo "Invalid option: -$OPTARG" >&2 ;;
 		esac
 	done
 
 	[[ -z $file ]] && echo "No file specified to export" && exit 1
-	[[ -z $bucket ]] && echo "No bucket specified to export to" && exit 1
+	[[ -z $path ]] && echo "No DO path specified to export to" && exit 1
 	[[ -z $key ]] && echo "No key specified to use" && exit 1
 	[[ -z $secret ]] && echo "No secret specified to use" && exit 1
 
+	# get the mime type of the file
+	content_type=$(file --mime-type -b "$file")
+
 	STORAGETYPE="STANDARD"
 
-	path="$BARE_HOME"
-	file="$1"
 	space_path="/$path"
 	space="${BARE_DO_SPACE}"
 	date=$(date +"%a, %d %b %Y %T %z")
-	acl="x-amz-acl:private"
-	content_type="text/plain"
+	[ "$public" == true ] && acl="x-amz-acl:public-read" || acl="x-amz-acl:private"
 	storage_type="x-amz-storage-class:${STORAGETYPE}"
-	string="PUT\n\n$content_type\n$date\n$acl\n$storage_type\n/$space$space_path$file"
+	string="PUT\n\n$content_type\n$date\n$acl\n$storage_type\n/$space$space_path"
 	signature=$(echo -en "${string}" | openssl sha1 -hmac "${BARE_DO_SPACES_SECRET}" -binary | base64)
-	curl -s -X PUT -T "$path/$file" \
+	response=$(curl -s -X PUT -T "$BARE_HOME/.nb/$file" \
 	-H "Host: $space.${BARE_DO_REGION}.digitaloceanspaces.com" \
 	-H "Date: $date" \
 	-H "Content-Type: $content_type" \
 	-H "$storage_type" \
 	-H "$acl" \
 	-H "Authorization: AWS ${BARE_DO_SPACES_ACCESS_KEY}:$signature" \
-	"https://$space.${BARE_DO_REGION}.digitaloceanspaces.com$space_path$file"
+	"https://$space.${BARE_DO_REGION}.digitaloceanspaces.com$space_path")
+
+	# echo the digital ocean url of the file
+	echo "https://$space.${BARE_DO_REGION}.digitaloceanspaces.com$space_path"
 
 	;;
 
