@@ -87,10 +87,23 @@ declare -A precips=(
 
 # summary with emoji
 
+getTemperatureEmoji() {
+	local temp=$(echo "$1" | jq -r '.temperature')
+	local condition=$(echo "$1" | jq -r '.shortForecast')
+	if (( temp <= 36 )); then
+		echo " 🥶"  # Freezing
+	elif (( temp >= 65 && temp <= 75 )) && [[ $condition == *"Sunny"* || $condition == *"Partly"* ]]; then
+		echo " 😊"  # Pleasant
+	elif (( temp >= 84 )); then
+		echo " 🥵"  # Hot
+	fi
+}
+
 getSummary() {
 	local name=$(echo "$1" | jq -r '.name')
 	local condition=$(echo "$1" | jq -r '.shortForecast')
 	local temp=$(echo "$1" | jq -r '.temperature')°$(echo "$1" | jq -r '.temperatureUnit')
+	local temp_emoji=$(getTemperatureEmoji "$1")
 	local wind=$(echo "$1" | jq -r '.windSpeed')
 	local wind_dir=$(echo "$1" | jq -r '.windDirection')
 	local humidity=$(echo "$1" | jq -r '.relativeHumidity.value')%
@@ -103,16 +116,16 @@ getSummary() {
 	fi
 	# Determine emoji based on condition
 	local emoji="☀️" # Default to sunny
-	[[ $condition == *"Cloudy"* ]] && emoji="☁️"
-	[[ $condition == *"Partly"* || $condition == *"Mostly"* ]] && emoji="🌤️"
-	[[ $condition == *"Rain"* || $condition == *"Showers"* ]] && emoji="🌧️"
-	[[ $condition == *"Snow"* ]] && emoji="❄️"
-	[[ $condition == *"Fog"* ]] && emoji="🌫️"
-	[[ $condition == *"Thunder"* ]] && emoji="⚡️"
+	[[ $condition == *"Cloudy"* ]] && emoji="☁️ "
+	[[ $condition == *"Partly"* || $condition == *"Mostly"* ]] && emoji="🌤️ "
+	[[ $condition == *"Rain"* || $condition == *"Showers"* ]] && emoji="🌧️ "
+	[[ $condition == *"Snow"* ]] && emoji="❄️ "
+	[[ $condition == *"Fog"* ]] && emoji="🌫️ "
+	[[ $condition == *"Thunder"* ]] && emoji="⚡️ "
 	if [[ $type == "current" ]]; then
-		echo -e "$emoji $temp $condition ${directions[$wind_dir]} $wind${wind_dir:+ $wind_dir}"
+		echo -e "$temp$temp_emoji / $emoji$condition ${directions[$wind_dir]} $wind${wind_dir:+ $wind_dir}"
 	else
-		echo -e "$name $emoji $temp $condition ${directions[$wind_dir]} $wind${wind_dir:+ $wind_dir}"
+		echo -e "$name $temp$temp_emoji / $emoji$condition ${directions[$wind_dir]} $wind${wind_dir:+ $wind_dir}"
 	fi
 }
 
