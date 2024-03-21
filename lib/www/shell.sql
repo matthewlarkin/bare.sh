@@ -18,7 +18,7 @@ select 'title' as component,
 	'Bare shell' as contents;
 
 select 'text' as component,
-	'A *shell* is a simple interface to write and execute commands. Think of it as the *shell* of a nut, that let''s you interact with the core fruit of the system.' as contents_md;
+	'A *shell* is a simple interface to write and execute commands. Think of it as the *shell* of a nut that sits on top of the core fruit of the system.' as contents_md;
 
 select 'form' as component,
 	'POST' as method,

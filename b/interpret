@@ -1,79 +1,57 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-doc="$(cat <<'EOF'
-
-# interpret
-
-Interpret scripts and commands
-
-`[-I]`			| Start an interactive session
-`[:command]`	| Runs a given script by name (scripts located in $BARE_HOME/.nb/scripts)
-
-> interpret -I				| Start an interactive session
-> interpret weather.bare	| Run a the weather script
-
-EOF
-)" && inspect "$doc" "$1"
-# =============================================================================
-
-
+touch "$BARE_DIR/tmp/variables"
+touch "$BARE_HOME/.nb/scripts/sandbox.bare"
 
 process_line() {
-	# Check if the line starts with 'set'
-	if [[ ${words[0]} == "set" ]]; then
-		# Get the name of the variable to set
-		var_name=${words[1]}
-		# Validate the variable name
-		if [[ ! $var_name =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
-			echo "Error: Invalid variable name '$var_name'"
-			return 1
-		fi
-		# Capture everything after 'set var_name =' into the variable
-		command_output=$(./bare "${words[@]:3}" 2>/dev/null)
-		# Check the exit status of the command
-		if [[ $? -ne 0 ]]; then
-			echo "Error: Command failed"
-			return 1
-		fi
-		export "$var_name=$command_output"
-	else
-		# Replace placeholders with variable values
-		for i in "${!words[@]}"; do
-			if [[ ${words[i]} =~ \$\((.*)\) ]]; then
-				# Detect command substitution
-				command=${BASH_REMATCH[1]}
-				# Replace the command substitution with the output of the 'bare' command
-				words[i]=$(./bare "$command" 2>/dev/null)
-			elif [[ ${words[i]} =~ \$([a-zA-Z_][a-zA-Z0-9_]*) ]]; then
-				var_name=${BASH_REMATCH[1]}
-				if [[ -n ${!var_name} ]]; then
-					words[i]=${!var_name}
-				else
-					echo "Error: Undefined variable '$var_name'"
-					return 1
-				fi
+	source "$BARE_DIR/tmp/variables" 2>/dev/null
+	source "$BARE_HOME/rc" 2>/dev/null
+	# Replace placeholders with variable values
+	for i in "${!words[@]}"; do
+		if [[ ${words[i]} =~ \$\((.*)\) ]]; then
+			# Detect command substitution
+			command=${BASH_REMATCH[1]}
+			# Replace the command substitution with the output of the 'bare' command
+			words[i]=$(./bare "$command" 2>/dev/null)
+		elif [[ ${words[i]} =~ \$([a-zA-Z_][a-zA-Z0-9_]*) ]]; then
+			var_name=${BASH_REMATCH[1]}
+			if [[ -n ${!var_name} ]]; then
+				words[i]=${!var_name}
+			else
+				echo "Error: Undefined variable '$var_name'"
+				return 1
 			fi
-		done
-		# Execute the command
-		response=$(./bare "${words[@]}" 2>/dev/null)
-		# Check the exit status of the command
-		if [[ $? -eq 0 ]]; then
-			echo "$response"
 		fi
+	done
+	# Execute the command
+	response=$(./bare "${words[@]}" 2>/dev/null)
+	# Check the exit status of the command
+	if [[ $? -eq 0 ]]; then
+		echo "$response"
 	fi
 	return 0
 }
 
-# Check if the first argument is -I
-if [[ $1 == "-I" ]]; then
-	while true; do
-		echo -n "> "
-		read -r line
-		[[ $line == "exit" || $line == ".q" ]] && break
-		eval "words=($line)"
+# Check if the first argument is -I or -i
+if [[ $1 == "-I" || $1 == "-i" ]]; then
+	if [[ $1 == "-I" ]]; then
+		while true; do
+			echo -n "> "
+			read -r line
+			[[ $line == "exit" || $line == ".q" ]] && break
+			read -a words <<< "$line"
+			process_line "${words[@]}"
+		done
+	else
+		shift
+		words=("$@")
 		process_line "${words[@]}"
-	done
+	fi
+	# clear up any temporary variables
+	if [[ -e "$BARE_DIR/tmp/variables" ]]; then
+		rm "$BARE_DIR/tmp/variables"
+	fi
 	exit 0
 fi
 
@@ -94,4 +72,11 @@ if [[ -f $file_path ]]; then
 	done < "$file_path"
 else
 	echo "Error: $1 is not a file or is not in the "$BARE_HOME"/.nb/scripts directory"
+fi
+
+
+
+# clear up any temporary variables
+if [[ -e "$BARE_DIR/tmp/variables" ]]; then
+	rm "$BARE_DIR/tmp/variables"
 fi
