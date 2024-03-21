@@ -1,24 +1,6 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-doc="$(cat <<'EOF'
-
-# weather
-
-Get the weather for a U.S. location
-
-`:empty`		| Get current weather (defaults to current location)
-`forecast` 		| Get a seven-day forecast
-`tomorrow`		| Get tomorrow's forecast
-`<location>`	| Get current weather for a location
-
-> weather today		| Get today's weather
-> weather forecast	| Get a three-day forecast
-
-EOF
-)" && inspect "$doc" "$1"
-# =============================================================================
-
 # Request current weather from weather.gov
 
 if [[ -z $1 ]]; then
@@ -68,22 +50,6 @@ declare -A directions=(
 	["NW"]="↖"
 	["NNW"]="↑"
 )
-
-declare -A precips=(
-	["null"]=""
-	["0%"]=""
-	["10%"]="💧"
-	["20%"]="💧"
-	["30%"]="💧"
-	["40%"]="💧"
-	["50%"]="🌧️"
-	["60%"]="🌧️"
-	["70%"]="🌧️"
-	["80%"]="🌧️"
-	["90%"]="🌧️"
-	["100%"]="🌧️"
-)
-
 
 # summary with emoji
 

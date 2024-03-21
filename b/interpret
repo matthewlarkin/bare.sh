@@ -1,23 +1,6 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-doc="$(cat <<'EOF'
-
-# interpret
-
-Interpret scripts and commands
-
-`[-I]`			| Start an interactive session
-`[:command]`	| Runs a given script by name (scripts located in $BARE_HOME/.nb/scripts)
-
-> interpret -I				| Start an interactive session
-> interpret weather.bare	| Run a the weather script
-
-EOF
-)" && inspect "$doc" "$1"
-# =============================================================================
-
-
 
 process_line() {
 	# Check if the line starts with 'set'

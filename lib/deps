@@ -23,7 +23,7 @@ UPDATED=0
 
 	# macOS
 
-	BREW_DEPS=(bash curl jq git sqlite3 ffmpeg yt-dlp ddgr feh sqlpage nb glow)
+	BREW_DEPS=(bash curl jq git sqlite3 ffmpeg yt-dlp ddgr feh sqlpage nb)
 	SPECIAL_DEPS=(csvcut)
 
 	# check that mac has brew
@@ -49,7 +49,7 @@ UPDATED=0
 	# Ubuntu
 
 	CORE_DEPS=(bash curl jq git sqlite3 ffmpeg yt-dlp ddgr feh)
-	SPECIAL_DEPS=(sqlpage nb csvcut glow)
+	SPECIAL_DEPS=(sqlpage nb csvcut)
 
 	# check if each dep is installed
 	for dep in "${CORE_DEPS[@]}"; do
@@ -83,11 +83,6 @@ UPDATED=0
 		# csvkit
 		[[ "$dep" == "csvcut" ]] && {
 			[[ -x "$(command -v csvcut)" ]] || sudo apt install -y csvkit
-		}
-
-		# glow
-		[[ "$dep" == "glow" ]] && {
-			[[ -x "$(command -v glow)" ]] || sudo snap install glow
 		}
 
 	done

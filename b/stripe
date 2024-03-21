@@ -1,27 +1,6 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-doc="$(cat <<'EOF'
-
-# stripe
-
-Interact with the Stripe API
-
-`checkouts.create`		| Create a new checkout session
-`checkout.get`			| Get a checkout session
-`customers.list`		| List all customers
-`customers.create`		| Create a new customer
-
-> stripe checkouts.create -a 100 -c usd -u customer_123 -s https://example.com/success -l 100|usd|Item | Create a new checkout session
-> stripe checkout.get -i cs_test_123 | Get a checkout session
-> stripe customers.list | List all customers
-
-EOF
-)" && inspect "$doc" "$1"
-# =============================================================================
-
-
-
 [[ -z "$BARE_STRIPE_SECRET_KEY" ]] && b/error "env_error" "Please set the BARE_STRIPE_SECRET_KEY variable in your .env file"
 
 command="$1"
@@ -29,23 +8,7 @@ shift
 
 case $command in
 
-    checkouts.create) doc="$(cat <<'EOF'
-
-# stripe checkouts.create
-
-Create a new checkout session
-
-`-a`		| The amount to charge
-`-c`		| The currency to charge
-`-u`		| The customer to charge
-`-s`		| The success URL
-`-l`		| A line item to charge
-
-> stripe checkouts.create -a 100 -c usd -u customer_123 -s https://example.com/success -l "100,usd,Item" | Create a new checkout session
-
-EOF
-		)" && inspect "$doc" "$1"
-		# ======================
+    checkouts.create)
 
 		amount=""
 		currency=""
@@ -85,20 +48,7 @@ EOF
 
 
 
-    checkout.get) doc="$(cat <<'EOF'
-
-# stripe checkout.get
-
-Get a checkout session
-
-`-i`		| The ID of the checkout session
-
-> stripe checkout.get -i cs_test_123 | Get a checkout session
-
-EOF
-
-		)" && inspect "$doc" "$1"
-		# ======================
+    checkout.get)
 
 		id=""
 		while getopts "i:" opt; do
@@ -113,37 +63,12 @@ EOF
 
 
 
-	customers.list) doc="$(cat <<'EOF'
-
-# stripe customers.list
-
-List all customers
-
-`-l`	| Limit the number of customers returned
-
-> stripe customers.list			| List all customers
-> stripe customers.list -l 5	| List the first 5 customers
-
-EOF
-		)" && inspect "$doc" "$1"
-		# ======================
+	customers.list)
 
         curl -s -X GET https://api.stripe.com/v1/customers -u "$BARE_STRIPE_SECRET_KEY": | jq
         ;;
     
-	customers.create) doc="$(cat <<'EOF'
-
-# stripe customers.create
-
-Create a new customer
-
-`-e`		| The email of the customer
-
-> stripe customers.create -e "customer@theirdomain.com" | Create a new customer
-
-EOF
-		)" && inspect "$doc" "$1"
-		# ======================
+	customers.create)
 
 		email=""
 		while getopts "e:" opt; do

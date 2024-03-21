@@ -1,52 +1,14 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-doc="$(cat <<'EOF'
-
-# date
-
-Date functions, calendars, and reminders
-
-`cal`		| Print a calendar
-`date`		| Print the current date and time
-`stamp`		| Print the current date and time in a timestamp format
-`countdown`	| Print a countdown to a given date and time
-`add`		| Add a given number of days to the current date
-`subtract`	| Subtract a given number of days from the current date
-`format`	| Format a given date and time string
-`parse`		| Parse a given date and time string
-
-> b/date cal -m 12 -y 2020					| Print a calendar for December 2020
-> b/date date								| Print the current date and time
-> b/date stamp								| Print the current date and time in a timestamp format
-> b/date countdown -d "2020-12-25 00:00:00"	| Print a countdown to Christmas
-
-EOF
-)" && inspect "$doc" "$1"
-# =============================================================================
-
-
 
 command="$1" && shift
 
 case $command in
 
-	cal ) doc="$(cat <<'EOF'
+	cal )
 
-# date cal
-
-Print a calendar
-
-`-m`	| The month to print a calendar for
-`-y`	| The year to print a calendar for
-
-> b/date cal -m 12 -y 2020		| Print a calendar for December 2020
-
-EOF
-	)" && inspect "$doc" "$1"
-	# ======================
-
-	cal "$@" ;;
+		cal "$@" ;;
 
 	# date, January 1, 1970 style
 	date )

@@ -1,23 +1,6 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-doc="$(cat <<'EOF'
-
-# random
-
-Generate a random string or number of a given length
-
-`string (:length)`	| Generate a random string
-`number (:length)`	| Generate a random number
-
-> random string 32	| Generate a random string of length 32
-> random number 8	| Generate a random number of length 8
-
-EOF
-)" && inspect "$doc" "$1"
-# =============================================================================
-
-
 
 # Get the command and length
 command=$1

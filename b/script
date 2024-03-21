@@ -1,28 +1,6 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-doc="$(cat <<'EOF'
-
-# script
-
-Manage bare scripts
-
-`list`		| List all bare scripts
-`show`		| Print out a bare script
-`open`		| Open a bare script
-`run`		| Run a bare script
-`create`	| Create a bare script
-
-> script list							| List all bare scripts
-> script show weather.bare				| Print out a bare script given its filename
-> script open invoice-customers.bare	| Open a bare script given its filename
-
-EOF
-)" && inspect "$doc" "$1"
-# =============================================================================
-
-
-
 command="$1" && shift
 
 

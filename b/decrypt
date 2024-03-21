@@ -1,24 +1,6 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-doc="$(cat <<'EOF'
-
-# decrypt
-
-Decrypt text symmetrically encrypted by your BARE_ENCRYPTION_KEY
-
-`-s`	| The string to decrypt
-`-f`	| The file to decrypt
-`-o`	| The output file
-`-k`	| The encryption key
-
-> b/decrypt -s "U2FsdGVkX1+
-
-EOF
-)" && inspect "$doc" "$1"
-# =============================================================================
-
-
 
 [[ -z "$BARE_ENCRYPTION_KEY" ]] && echo "bare_encryption_key environment variable not set" && exit 1
 

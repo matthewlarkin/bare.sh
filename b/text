@@ -1,26 +1,6 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-doc="$(cat <<'EOF'
-
-# text
-
-Text manipulation, uppercasing, lowercasing, etc.
-
-`lowercase`		| Lowercase given text
-`uppercase`		| UPPERCASE given text
-`capitalize` 	| Capitalize given text
-
-> text lowercase "Hello, World!"		| hello, world!
-> text uppercase "Hello, World!"		| HELLO, WORLD!
-> text capitalize "hello, world!"		| Hello, world!
-
-EOF
-)" && inspect "$doc" "$1"
-# =============================================================================
-
-
-
 # Get the command and text
 command=$1
 text=$2

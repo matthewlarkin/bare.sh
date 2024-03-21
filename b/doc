@@ -1,43 +1,16 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-doc="$(cat <<'EOF'
+scope="$1"
 
-# doc
-
-View documentation for a command
-
-`<:scope> (:command)`	| View documentation for a scope (and optionally a command of that scope)
-
-> doc openai		| View documentation for the `openai` scope
-> doc openai chat 	| View documentation for the `openai chat` command
-
-EOF
-)" && inspect "$doc" "$1"
-# =============================================================================
-
-
-
-command="$1" && shift
-
-# Handle the command
-case $command in
-
-	* )
-
-		# Loop over the executables in the b/ directory
-		for executable in "$BARE_DIR/b"/*; do
-			executable=$(basename "$executable")
-
-			# If the command matches the executable
-			if [[ "$command" == "$executable" ]]; then
-				source "$BARE_DIR/b/$executable" "$@" --inspect && exit 0
-			fi
-		done
-
-		# If we've gotten this far, the command is not a valid scope
-		echo "Invalid command: $command" && exit 1
-
-		;;
-		
-esac
+# check if glow is installed
+if command -v glow &> /dev/null; then
+	cat "$BARE_DIR"/lib/docs/b/"$scope".md | glow
+else
+	cat "$BARE_DIR"/lib/docs/b/"$scope".md
+	if [[ "$BARE_OS" == "mac"* ]]; then
+		echo -e "\n- - -\n\n${yellow}Tip:${reset}glow is not installed. To install it, run: ${bold}brew install glow${reset}\n\n"
+	else
+		echo -e "\n- - -\n${yellow}Tip:${reset}glow is not installed. To install it, run: ${bold}sudo snap install glow${reset}"
+	fi
+fi

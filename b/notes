@@ -1,31 +1,6 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-doc="$(cat <<'EOF'
-
-# notes
-
-Manage notes with nb
-
-`notebooks.create`	| Create a new notebook
-`notebooks.list`	| List notebooks
-`list`				| List notes
-`show`				| Show a note
-`create`			| Create a new note
-`edit`				| Edit a note
-`delete`			| Delete a note
-
-> notes list										| List notes
-> notes show 1										| Show a note its ID
-> notes show scripts:weather.bare					| Show a note by its notebook:filename
-> notes create -T "My note" -C "This is my note"	| Create a new note
-
-EOF
-)" && inspect "$doc" "$1"
-# =============================================================================
-
-
-
 command="$1"
 shift
 
@@ -57,28 +32,7 @@ case $command in
 		nb notebooks delete "$1" --force --no-color
 		;;
 
-    list ) doc="$(cat <<'EOF'
-
-# notes list
-
-List notes
-
-`-l`	| Limit the number of notes to display
-`-t`	| Filter by note type
-`-r`	| Reverse the order of the notes
-`-i`	| IDs only
-`-n`	| Names only
-`-J`	| Output as JSON
-`-N`	| Notebook to list notes from
-
-> notes list -l 5			| List the last 5 notes
-> notes list -t todo		| List notes with the 'todo' type
-> notes list -r				| List notes in reverse order
-> notes list research: -J	| List notes in the 'research' notebook as JSON
-
-EOF
-		)" && inspect "$doc" "$1"
-		# ======================
+    list )
 
 		declare -a args=()
 		args+=("--no-color" "--no-indicator")
@@ -144,27 +98,7 @@ EOF
 
 		;;
 
-    create ) doc="$(cat <<'EOF'
-
-# notes create
-
-Create a new note
-
-`-T`		| Title of the note
-`-C`		| Content of the note
-`-t`		| Comma-separated tags for the note (my-tag,tag2,another-tag)
-`-E`		| Encrypt the note
-`-P`		| Password for the note
-`-N`		| Notebook to save the note in (defaults to 'home')
-`-F`		| Folder to save the note in
-`-f`		| Filename for the note
-
-> notes create -T "My note" -C "This is my note"								| Create a new note
-> notes create -T "My note" -C "This is my note" -t "my-tag,tag2,another-tag"	| Create a new note with tags
-
-EOF
-		)" && inspect "$doc" "$1"
-		# ======================
+    create )
 
         notebook="home"
 		title="$1"
@@ -223,26 +157,7 @@ EOF
 
 		;;
 
-    edit ) doc="$(cat <<'EOF'
-
-# notes edit
-
-Edit a note
-
-`-n`	| ID of the note
-`-T`	| Title of the note
-`-C`	| Content of the note
-`-E`	| Encrypt the note
-`-P`	| Password for the note
-`-N`	| Notebook to save the note in (defaults to 'home')
-`-F`	| Folder to save the note in
-`-f`	| Filename for the note
-
-> notes edit -n 1 -T "My note" -C "This is my note"	| Edit a note
-
-EOF
-		)" && inspect "$doc" "$1"
-		# ======================
+    edit )
 
 		id="$1" && shift
         notebook="home"

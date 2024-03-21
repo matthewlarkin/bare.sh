@@ -1,15 +1,6 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-doc="$(cat <<'EOF'
-
-# codec
-
-# ... rest of the doc ...
-
-EOF
-)" && inspect "$doc" "$1"
-# =============================================================================
 
 scope="$1" && shift
 input="${1:-$(</dev/stdin)}"

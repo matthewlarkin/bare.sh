@@ -1,21 +1,6 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-doc="$(cat <<'EOF'
-
-# geo
-
-Geographical information
-
-`:city|ip`	| Get the 'latitue,longitude' for a give IP address or city
-
-> geo 130.23.11.299		| Get details of given an IP address
-> geo "asheville nc"	| Get details a city
-
-EOF
-)" && inspect "$doc" "$1"
-# =============================================================================
-
 get_location() {
 	if [[ -z $1 ]]; then
 		echo $(curl -sL https://ipinfo.io/ip)

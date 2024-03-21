@@ -1,22 +1,6 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-doc="$(cat <<'EOF'
-
-# size
-
-Print the size of a file
-
-:file		| The file to print the size of
-
-> size bigvideo.mp4		| Print the size of file.txt
-
-EOF
-)" && inspect "$doc" "$1"
-# =============================================================================
-
-
-
 [[ -z "$1" ]] && echo "No file specified" && exit 1
 
 find "$1" -printf "%s\n" | awk '{print $5}'

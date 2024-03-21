@@ -1,27 +1,6 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-doc="$(cat <<'EOF'
-
-# relay
-
-Relays information (outputs it to the stdout or a file)
-
-`-c`	| Text string to relay
-`-o`	| Output file to relay to (defaults to stdout)
-`-f`	| File to relay
-`-l`	| List the files and directories of the specified directory within the .nb folder
-
-> relay -c "Hello, world!"		| Relay a string
-> relay -f file.txt				| Relay the contents of a file
-> relay -l scripts				| List the files and directories of the specified directory within the .nb folder
-
-EOF
-)" && inspect "$doc" "$1"
-# =============================================================================
-
-
-
 content=""
 output="/dev/stdout"
 file=""

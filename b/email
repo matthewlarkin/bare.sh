@@ -1,23 +1,6 @@
 #!/usr/bin/env bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
-doc="$(cat <<'EOF'
-
-# email
-
-Send and receive email with SMTP/POP3
-
-`send`		| Send email
-`check`		| Check email
-
-> b/email send -t "info@example.com" -f "me@mydomain.com" -s "Hello" -h "<p>Hey there!</p>" -h "smtp.example.com" -p 465 -p "mypassword" | Send an email
-> b/email check -H "pop3.mydomain.com" -P 995 -u "me@mydomain.com" -p "mypassword" | Check email
-
-EOF
-)" && inspect "$doc" "$1"
-# =============================================================================
-
-
 
 command="$1"
 shift
@@ -26,28 +9,7 @@ case "$command" in
 
 
     # ========================================
-    send ) # send email
-
-		doc="$(cat <<'EOF'
-
-# email send
-
-Send email
-
-`-t`		| * To
-`-f`		| * From
-`-c`		|   Cc
-`-b`		|   Bcc
-`-s`		| * Subject
-`-h`		| * HTML Body
-`-a`		|   Attachment
-`-H`		| * Host SMTP Server
-`-P`		|   Port
-`-p`		| = Password
-
-EOF
-		)" && inspect "$doc" "$1"
-		# ======================
+    send )
 
         to=""
         from="$BARE_SMTP_EMAIL"
@@ -151,24 +113,7 @@ EOF
         ;;
 
     # ========================================
-    check ) # check email
-
-		doc="$(cat <<'EOF'
-
-# email check
-
-Check email
-
-`-l`		| List messages
-`-m`		| Message number
-`-H`		| * Host POP3 Server
-`-P`		|   Port
-`-u`		| * Username
-`-p`		| = Password
-
-EOF
-		)" && inspect "$doc" "$1"
-		# ======================
+    check )
 
         server=""
         port="995"
