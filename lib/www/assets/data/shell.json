@@ -3,6 +3,7 @@
 	"title": "bare.sh",
 	"image": "https://assets.groveos.net/cdn/bare-building-block.webp",
 	"font": "DM Mono",
+	"javascript": "https://cdn.jsdelivr.net/npm/htmx.org@1.9.11/dist/htmx.min.js",
 	"menu_item": [
 		{
 			"title": "Assistants",
@@ -15,6 +16,14 @@
 		{
 			"title": "Connect",
 			"link": "/connect.sql"
+		},
+		{
+			"title": "🧑‍💻",
+			"link": "/shell.sql"
+		},
+		{
+			"title": "📚",
+			"link": "/ui/views/documentation.sql"
 		}
 	]
 }

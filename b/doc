@@ -3,6 +3,8 @@ source "$(dirname "${BASH_SOURCE[0]}")/../lib/init"
 
 scope="$1"
 
+[[ $scope == 'list' ]] && ls "$BARE_DIR"/b/* | xargs -n 1 basename && exit 0
+
 # check if glow is installed
 if command -v glow &> /dev/null; then
 	cat "$BARE_DIR"/lib/docs/b/"$scope".md | glow
