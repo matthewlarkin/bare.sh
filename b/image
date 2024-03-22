@@ -5,47 +5,31 @@ command="$1" && shift
 
 case $command in
 
-	view ) doc="$(cat <<'EOF'
+	view )
 
-# image view
+		file_path="$1" && shift # set the file path to the first argument
+		width="200"
 
-View an image
-
-`-u`	| The URL of the image
-`-f`	| The file path of the image
-`-o`	| The output file path
-`-w`	| The width of the image
-`-h`	| The height of the image
-
-> image view -u https://example.com/image.jpg -w 100 -h 100 -o /path/to/output.jpg | View an image from a URL
-
-EOF
-		)" && inspect "$doc" "$1"
-		# ======================
-
-		width=80
-		height=80
-		file_path="$BARE_HOME/.nb/$1" # set the file path to the first argument
-
-		while getopts "u:f:o:" opt; do
+		while getopts "w:c:h" opt; do
 			case $opt in
-				u ) url="$OPTARG" ;;
-				f ) file_path="$BARE_HOME/.nb/$OPTARG" ;; # overwrite the file path if the -f option is used
-				o ) output_file_path="$OPTARG" ;;
+				w ) width="$OPTARG" ;;
+				c ) char="$OPTARG" ;;
 				* ) echo "Error: Invalid option" && return 1 ;;
 			esac
 		done
 
-		# using tiv
-		# if url, download to tmp file
-
-		if [[ -n $url ]]; then
-			tmp_file_path=$(mktemp)
-			curl -sL "$url" -o "$tmp_file_path"
-			file_path="$tmp_file_path"
+		# if file_path is not an absolute path, prepend it with the default directory
+		if [[ "$file_path" != /* ]]; then
+			file_path="$BARE_HOME/.nb/images/$file_path"
 		fi
 
-		tiv "$file_path"
+		# using catimg
+		declare -a args=()
+		[ -n "$width" ] && args+=("-w" "$width")
+		[ -n "$char" ] && args+=("-c" "$char")
+		args+=("$file_path")
+
+		catimg "${args[@]}"
 
 		;;
 		
