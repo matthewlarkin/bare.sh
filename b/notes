@@ -73,6 +73,11 @@ case $command in
 			list=""
 		fi
 
+		# If the list is empty, exit the script
+		if [[ -z "$list" ]]; then
+			exit 0
+		fi
+
 		if [[ $ids_only == true ]]; then
 			echo "$list" | awk -F'[][]' '{print $2}'
 		elif [[ $as_json == true ]]; then
@@ -82,17 +87,23 @@ case $command in
 				echo "$list" | awk -F'[][]' '{sub(/^ /, "", $3); split($2, a, ":"); print "{\"notebook\": \"" (length(a) > 1 ? a[1] : "home") "\", \"id\": " (length(a) > 1 ? a[2] : a[1]) ", \"filename\": \"" $3 "\"}"}' | jq -R -s -c 'split("\n")[:-1] | map(fromjson)'
 			fi
 		else
-			echo "$list"
+			# Change the way the list is displayed
+			echo "$list" | awk -F'[][]' '{sub(/^ /, "", $3); split($2, a, ":"); print (length(a) > 1 ? a[1] : "home") ":" $3}'
 		fi
 
 		;;
 
-    show )
+	show )
 
 		id="$1" && shift
 		if [[ "$1" == "--title" ]]; then
 			nb list "$1" --no-color --no-indicator | awk '{print substr($0, index($0,$2))}'
 		else
+			# Check if the note exists
+			if ! nb list "$id" --no-color --no-indicator > /dev/null 2>&1; then
+				# If the note doesn't exist, exit the script
+				exit 0
+			fi
 			nb show "$id" --print
 		fi
 
@@ -145,58 +156,59 @@ case $command in
 
 		id="$1" && shift
 		notebook="home"
-		while getopts "N:" opt; do
+		while getopts "N:e:" opt; do
 			case $opt in
 				N ) notebook=$OPTARG ;;
+				e ) BARE_EDITOR=$OPTARG ;;
 				* ) echo "Invalid option: -$OPTARG" 1>&2; exit 1 ;;
 			esac
 		done
 
+		EDITOR=$BARE_EDITOR
+
 		nb use "$notebook" > /dev/null
-		nb edit "$id" --edit
+		nb edit "$id" --edit -e "$BARE_EDITOR"
 
 		;;
 
-    edit )
+	edit )
 
 		id="$1" && shift
-        notebook="home"
-        declare -a content=()
-		append=false
-        while getopts "T:C:EP:N:F:f:a" opt; do
-            case $opt in
-                T ) title=$OPTARG ;;
-                C ) content+=("$OPTARG") ;;
-                E ) encrypt=$OPTARG ;;
-                P ) password=$OPTARG ;;
-                N ) notebook=$OPTARG ;;
-                F ) folder=$OPTARG ;;
-                f ) filename=$OPTARG ;;
-				a ) append=true ;;
+		notebook="home"
+		title=""
+		content=""
+		filename=""
+		while getopts "T:C:N:F:f:" opt; do
+			case $opt in
+				T ) title=$OPTARG ;;
+				C ) content=$OPTARG ;;
+				N ) notebook=$OPTARG ;;
+				F ) folder=$OPTARG ;;
+				f ) filename=$OPTARG ;;
 				* ) echo "Invalid option: -$OPTARG" 1>&2; exit 1 ;;
-            esac
-        done
+			esac
+		done
 
 		[ -z "$id" ] && echo "Error: Must provide an ID (-n)" && exit 1
-		[ -n "$encrypt" ] && [ -z "$password" ] && echo "Error: Encryption flag (-E) requires a password (-P)" && exit 1
 
 		nb use "$notebook" > /dev/null
-		declare -a args=("edit" "$id" "--no-color")
 
-		[[ "$append" = false ]] && {
-			[[ -z "$title" ]] && title=$(nb show "$id" --print | head -n 1)
-			[[ -n "$title" ]] && args+=("--content" "# $title")
-		}
-		[[ "$append" = false ]] && args+=("--overwrite")
-		[ -n "$notebook" ] && args+=("--notebook" "$notebook")
-		[ -n "$folder" ] && args+=("--folder" "$folder")
-		[ -n "$filename" ] && args+=("--filename" "$filename")
-		for item in "${content[@]}"; do args+=("--content" "$item"); done
-        [ -n "$password" ] && args+=("-e" "--password" "$password")
+		if [ -n "$title" ]; then
+			existing_content=$(nb show "$id" --print | tail -n +2)
+			echo -e "# $title\n$existing_content" | nb edit "$id" --overwrite
+		fi
 
-		nb "${args[@]}" > /dev/null
+		if [ -n "$content" ]; then
+			existing_title=$(nb show "$id" --print | head -n 1)
+			echo -e "$existing_title\n$content" | nb edit "$id" --overwrite
+		fi
 
-        ;;
+		if [ -n "$filename" ]; then
+			existing_content=$(nb show "$id" --print)
+			echo "$existing_content" | nb edit "$id" --overwrite --filename "$filename"
+		fi
+
+		;;
 
     delete )
 
