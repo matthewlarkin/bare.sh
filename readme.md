@@ -1,3 +1,11 @@
+# 2026 Update
+
+We're archiving this repo for the time being! It may or may not come back into active development. If you have any questions about the project, feel free to reach out to support@groveos.com.
+
+
+---
+
+
 # `bare.sh`
 
 🎥 YouTube: [@bareDeveloper](https://youtube.com/@bareDeveloper)  
